@@ -8,6 +8,10 @@ function g
     lazygit
 end
 
+function cat 
+    bat $argv
+end
+
 function c 
     z cloud
     conda activate mujoco_py
