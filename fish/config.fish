@@ -8,6 +8,11 @@ function g
     lazygit
 end
 
+
+function ls
+    eza $argv
+end
+
 function c 
     z cloud
     conda activate mujoco_py
@@ -41,7 +46,6 @@ function update -d "update apt, flatpak, fish"
 end
 
 
-alias ls="exa"
 
 # bind \cs '__ethp_commandline_toggle_sudo.fish'
 bind \cs '__ethp_commandline_toggle_sudo'
