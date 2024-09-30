@@ -8,9 +8,8 @@ function g
     lazygit
 end
 
-
-function ls
-    eza $argv
+function cat 
+    bat $argv
 end
 
 function c 
