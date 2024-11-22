@@ -20,8 +20,14 @@ install-brew-packages:
   @brew update
 
 install-rustup:
-  @echo 'Installing rustup 🦀'
-  @curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	@echo "Checking if rustup is installed... 🦀"
+	@if ! command -v rustup &> /dev/null; then \
+		echo "Rustup not found. Installing rustup 🦀"; \
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
+		echo "Rustup installation completed 🦀"; \
+	else \
+		echo "Rustup is already installed 🦀"; \
+	fi
 
 FLATPAK_LIST := "flatpaks.txt"
 
