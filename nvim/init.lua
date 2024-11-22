@@ -214,6 +214,11 @@ require('lazy').setup({
   },
 
   {
+    "NoahTheDuke/vim-just",
+    ft = { "just" },
+  },
+
+  {
     'nvim-lualine/lualine.nvim',
     opts = {
       options = {
@@ -460,6 +465,7 @@ wk.add({ { "<leader>", group = "VISUAL <leader>", mode = "v" }, { "<leader>h", d
 -- Mason and LSP setup
 require('mason').setup()
 require('mason-lspconfig').setup()
+
 
 
 local servers = {
