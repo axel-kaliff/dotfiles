@@ -11,6 +11,7 @@ io.github.zen_browser.zen
 io.missioncenter.MissionCenter
 io.podman_desktop.PodmanDesktop
 md.obsidian.Obsidian
+net.mullvad.MullvadBrowser
 org.fedoraproject.MediaWriter
 org.gnome.Calculator
 org.gnome.Calendar
@@ -32,4 +33,5 @@ org.gnome.font-viewer
 org.kde.dolphin
 org.mozilla.Thunderbird
 org.mozilla.firefox
+org.qbittorrent.qBittorrent
 org.zotero.Zotero
