@@ -1,1 +1,12 @@
 # dotfiles
+
+
+## TODO:
+- ensure docker is installed in installation script
+- make aliases/scripts for setting up devcontainers in new projects
+    - move nvim config into devcontainers
+    - look at https://cadu.dev/running-neovim-on-devcontainers/
+- automatic pull and push from dotfiles repo
+- automatic overwrite of .config from dotfiles
+- install kitty
+- debugger in nvim
