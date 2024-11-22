@@ -69,8 +69,3 @@ generate-ssh-key:
   fi
   @echo "🗝️🗝️ SSH key 🗝️🗝️"
   @bat ~/.ssh/id_ed25519.pub
-
-
-# TODO
-# - docker
-# - possible devcontainer dependencies
