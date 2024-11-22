@@ -16,11 +16,6 @@ function ls
     eza $argv
 end
 
-function c 
-    z cloud
-    conda activate mujoco_py
-end
-
 function vi -d 'vi alias for nvim'
     nvim $argv
 end
@@ -30,23 +25,24 @@ function vim -d 'vi alias for nvim'
 end
 
 
-function update -d "update apt, flatpak, fish"
-
-    echo 'Updating apt...'
-
-    sudo apt-get update -y
-    sudo apt-get upgrade -y
-    sudo apt-get autoclean -y
-
-    echo 'Updating flatpaks...'
-    sudo flatpak update -y
-
-    echo 'Updating fish...'
-    fisher update
-
-    exit 0
-
-end
+# TODO replace with topgrade
+# function update -d "update apt, flatpak, fish"
+#
+#     echo 'Updating apt...'
+#
+#     sudo apt-get update -y
+#     sudo apt-get upgrade -y
+#     sudo apt-get autoclean -y
+#
+#     echo 'Updating flatpaks...'
+#     sudo flatpak update -y
+#
+#     echo 'Updating fish...'
+#     fisher update
+#
+#     exit 0
+#
+# end
 
 
 
@@ -60,19 +56,8 @@ export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 # GO
 export PATH="$PATH:/usr/local/go/bin"
 
-export GOPATH="/home/axelkaliff/go"
-
+export GOPATH="$USER/home/go"
 alias golint="$GOPATH/bin/golangci-lint"
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-if test -f /home/axelkaliff/anaconda3/bin/conda
-    eval /home/axelkaliff/anaconda3/bin/conda "shell.fish" "hook" $argv | source
-end
-# <<< conda initialize <<<
-
-
 
 atuin init fish | source
 starship init fish | source
-
