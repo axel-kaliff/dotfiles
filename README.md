@@ -11,3 +11,5 @@
 - install kitty
 - debugger in nvim
 - config topgrade (and add auto-upgrades)
+- pop shell
+- vscode and extensions
