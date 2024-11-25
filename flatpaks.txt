@@ -34,4 +34,3 @@ org.kde.dolphin
 org.mozilla.Thunderbird
 org.mozilla.firefox
 org.qbittorrent.qBittorrent
-org.zotero.Zotero
