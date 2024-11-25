@@ -13,3 +13,5 @@
 - config topgrade (and add auto-upgrades)
 - pop shell
 - vscode and extensions
+- keymapping
+- change everythings config location to $HOME/dotfiles
