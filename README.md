@@ -15,3 +15,5 @@
 - vscode and extensions
 - keymapping
 - change everythings config location to $HOME/dotfiles
+- change editor to nvim (both in shell and broot)
+- change backup flatpaks to append instead of full replace
