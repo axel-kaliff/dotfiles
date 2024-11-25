@@ -1,4 +1,4 @@
-install-setup: install-cli-tools generate-ssh-key restore-flatpaks
+install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
@@ -69,3 +69,18 @@ generate-ssh-key:
   fi
   @echo "🗝️🗝️ SSH key 🗝️🗝️"
   @bat ~/.ssh/id_ed25519.pub
+
+install-kitty:
+  @echo "Installing Kitty 😻😻😻"
+  @if ! command -v kitty &> /dev/null; then \
+          curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin; \
+          ln -sf ~/.local/kitty.app/bin/kitty ~/.local/kitty.app/bin/kitten ~/.local/bin/; \
+          cp ~/.local/kitty.app/share/applications/kitty.desktop ~/.local/share/applications/; \
+          cp ~/.local/kitty.app/share/applications/kitty-open.desktop ~/.local/share/applications/; \
+          sed -i "s|Icon=kitty|Icon=$(readlink -f ~)/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" ~/.local/share/applications/kitty*.desktop; \
+          sed -i "s|Exec=kitty|Exec=$(readlink -f ~)/.local/kitty.app/bin/kitty|g" ~/.local/share/applications/kitty*.desktop; \
+          echo 'kitty.desktop' > ~/.config/xdg-terminals.list; \
+  else \
+          echo "Kitty already installed 🙀🙀🙀"; \
+  fi
+
