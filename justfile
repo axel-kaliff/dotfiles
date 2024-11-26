@@ -69,3 +69,18 @@ generate-ssh-key:
   fi
   @echo "🗝️🗝️ SSH key 🗝️🗝️"
   @bat ~/.ssh/id_ed25519.pub
+
+# Install Fedora packages from dnf-packages.txt
+install-dnf-packages:
+	@echo "Installing packages from dnf-packages.txt..."
+	@if [ -f dnf-packages.txt ]; then \
+		echo "Installing all packages listed in dnf-packages.txt..."; \
+		cat dnf-packages.txt | while read pkg; do \
+			echo "Installing $pkg..."; \
+			sudo dnf install -y $pkg || echo "Skipping $pkg (already installed or failed)."; \
+		done; \
+		echo "Installation of packages completed."; \
+	else \
+		echo "Error: dnf-packages.txt not found."; \
+		exit 1; \
+	fi
