@@ -1,6 +1,5 @@
 com.bitwarden.desktop
 com.brave.Browser
-com.github.maoschanz.drawing
 com.github.rafostar.Clapper
 com.github.tchx84.Flatseal
 com.github.unrud.VideoDownloader
