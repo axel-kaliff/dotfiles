@@ -70,7 +70,6 @@ generate-ssh-key:
   @echo "🗝️🗝️ SSH key 🗝️🗝️"
   @bat ~/.ssh/id_ed25519.pub
 
-# Install Fedora packages from dnf-packages.txt
 install-dnf-packages:
 	@echo "Installing packages from dnf-packages.txt..."
 	@if [ -f dnf-packages.txt ]; then \
@@ -84,6 +83,7 @@ install-dnf-packages:
 		echo "Error: dnf-packages.txt not found."; \
 		exit 1; \
 	fi
+
 install-kitty:
   @echo "Installing Kitty 😻😻😻"
   @if ! command -v kitty &> /dev/null; then \
