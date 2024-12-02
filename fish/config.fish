@@ -35,6 +35,7 @@ function udot
     echo "Copying dotfiles to the local .config directory..."
     rsync -av --exclude='.git' --exclude='fish/*' --include='fish/config.fish' ~/dotfiles/ ~/.config/
     echo "Local .config directory updated with dotfiles."
+
 end
 
 # TODO replace with topgrade
