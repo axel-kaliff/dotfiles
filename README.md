@@ -9,3 +9,4 @@
 
 - config topgrade (and add auto-upgrades)
 - keymapping
+- read zoxide documentation
