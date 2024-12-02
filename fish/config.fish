@@ -32,6 +32,9 @@ function udot
     git pull --rebase
     git push
     echo "Git repository updated."
+    echo "Copying dotfiles to the local .config directory..."
+    rsync -av --exclude '*/' ~/dotfiles/ ~/.config/
+    echo "Local .config directory updated with dotfiles."
 end
 
 # TODO replace with topgrade
