@@ -10,3 +10,5 @@
 - config topgrade (and add auto-upgrades)
 - keymapping
 - read zoxide documentation
+
+- add terminal shortcuts to open nvim and broot (ctrl+f for br, ctrl+e for nvim/edit)
