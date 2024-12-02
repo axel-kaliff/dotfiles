@@ -1,4 +1,4 @@
-install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks
+install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
@@ -32,9 +32,10 @@ install-rustup:
 FLATPAK_LIST := "flatpaks.txt"
 
 backup-flatpaks:
-  echo "Backing up installed flatpaks to {{FLATPAK_LIST}}..."
-  flatpak list --app --columns=application | grep -v '^org\.freedesktop\.Platform' > {{FLATPAK_LIST}}
-  echo "Backup completed."
+  @echo "Backing up installed flatpaks to {{FLATPAK_LIST}}..."
+  @flatpak list --app --columns=application | grep -v '^org\.freedesktop\.Platform' >> {{FLATPAK_LIST}}
+  @sort -u -o {{FLATPAK_LIST}} {{FLATPAK_LIST}}
+  @echo "Backup completed."
 
 restore-flatpaks:
   @echo "Restoring flatpaks from {{FLATPAK_LIST}}..."
@@ -99,22 +100,51 @@ install-kitty:
   fi
 
 
-startup:
-    # Create a systemd user service file
-    echo """
-    [Unit]
-    Description=Run dotfiles and start applications at startup
-    
-    [Service]
-    ExecStart=/usr/bin/fish ~/dotfiles_obsidian_script.fish
-    Restart=on-failure
-    
-    [Install]
-    WantedBy=default.target
-    """ > ~/.config/systemd/user/on_startup.service
+startup-script-setup:
+        @echo "Setting up system startup script..."
+        @mkdir -p ~/.config/systemd/user
 
-    # Enable the service
-    systemctl --user enable on_startup.service
+        @printf "[Unit]\\nDescription=Run dotfiles and start applications at startup\\n\\n[Service]\\nExecStart=/usr/bin/fish ~/dotfiles/startup.fish\\nRestart=on-failure\\n\\n[Install]\\nWantedBy=default.target\\n" > ~/.config/systemd/user/on_startup.service
 
-    # Start the service immediately
-    systemctl --user start on_startup.service
+        @chmod 644 ~/.config/systemd/user/on_startup.service
+
+        @systemctl --user daemon-reload
+
+        @systemctl --user enable ~/.config/systemd/user/on_startup.service
+
+        @systemctl --user start on_startup.service
+
+
+install-docker:
+        @echo "Checking if Docker is installed... 🐳"
+        @if ! command -v docker &> /dev/null; then \
+                echo "Docker not found. Installing Docker... 🐳"; \
+                sudo dnf -y install dnf-plugins-core \
+                sudo dnf-3 config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo \
+                echo "Docker installation completed 🐳"; \
+                sudo dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
+                sudo systemctl enable --now docker \
+        else \
+                echo "Docker is already installed 🐳"; \
+        fi
+        @echo "Adding current user to Docker group..."
+        @sudo usermod -aG docker $USER
+        @echo "You may need to log out and log back in for Docker group changes to take effect."
+
+setup-git-config:
+  @echo "Setting Git global username and email..."
+  @if ! git config --global user.name &> /dev/null || ! git config --global user.email &> /dev/null; then \
+    git config --global user.name "Axel Kaliff"; \
+    git config --global user.email "axel.kaliff@protonmail.com"; \
+    echo "Git global configuration set."; \
+  else \
+    echo "Git global username and email are already configured."; \
+  fi
+
+udot:
+  @echo "Committing all changes, pulling from remote, and pushing to remote..."
+  @git add .
+  @git commit -m "Update dotfiles"
+  @git pull --rebase
+  @git push
+  @echo "Git repository updated."
