@@ -107,11 +107,8 @@ startup-script-setup:
         @printf "[Unit]\\nDescription=Run dotfiles and start applications at startup\\n\\n[Service]\\nExecStart=/usr/bin/fish ~/dotfiles/startup.fish\\nRestart=on-failure\\n\\n[Install]\\nWantedBy=default.target\\n" > ~/.config/systemd/user/on_startup.service
 
         @chmod 644 ~/.config/systemd/user/on_startup.service
-
         @systemctl --user daemon-reload
-
         @systemctl --user enable ~/.config/systemd/user/on_startup.service
-
         @systemctl --user start on_startup.service
 
 
