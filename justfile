@@ -18,6 +18,7 @@ install-brew-packages:
   @echo 'Installing brew packages 🍻'
   @brew bundle
   @brew update
+  @broot install
 
 install-rustup:
 	@echo "Checking if rustup is installed... 🦀"
