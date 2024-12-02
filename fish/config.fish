@@ -33,7 +33,7 @@ function udot
     git push
     echo "Git repository updated."
     echo "Copying dotfiles to the local .config directory..."
-    rsync -av --exclude '*/' ~/dotfiles/ ~/.config/
+    rsync -av ~/dotfiles/ ~/.config/
     echo "Local .config directory updated with dotfiles."
 end
 
