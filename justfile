@@ -1,4 +1,4 @@
-install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup
+first-time-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup atuin-setup
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
@@ -141,10 +141,6 @@ setup-git-config:
     echo "Git global username and email are already configured."; \
   fi
 
-udot:
-  @echo "Committing all changes, pulling from remote, and pushing to remote..."
-  @git add .
-  @git commit -m "Update dotfiles"
-  @git pull --rebase
-  @git push
-  @echo "Git repository updated."
+setup-atuin:
+        @echo "Setting up atuin sync..."
+        @atuin login -u akaliff

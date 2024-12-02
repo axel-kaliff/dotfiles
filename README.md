@@ -12,4 +12,3 @@
 
 - config topgrade (and add auto-upgrades)
 - keymapping
-- autin sync
