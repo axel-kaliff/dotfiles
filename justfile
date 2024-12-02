@@ -98,3 +98,23 @@ install-kitty:
           echo "Kitty already installed 🙀🙀🙀"; \
   fi
 
+
+startup:
+    # Create a systemd user service file
+    echo """
+    [Unit]
+    Description=Run dotfiles and start applications at startup
+    
+    [Service]
+    ExecStart=/usr/bin/fish ~/dotfiles_obsidian_script.fish
+    Restart=on-failure
+    
+    [Install]
+    WantedBy=default.target
+    """ > ~/.config/systemd/user/on_startup.service
+
+    # Enable the service
+    systemctl --user enable on_startup.service
+
+    # Start the service immediately
+    systemctl --user start on_startup.service
