@@ -29,7 +29,7 @@ function udot
     cd ~/dotfiles/
     git add .
     git commit -m "Update dotfiles"
-    git pull --rebase
+    git pull
     git push
     echo "Git repository updated."
     echo "Copying dotfiles to the local .config directory..."
