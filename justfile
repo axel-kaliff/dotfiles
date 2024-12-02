@@ -1,4 +1,4 @@
-install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup
+install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup overwrite-local-dotfiles
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
@@ -19,6 +19,10 @@ install-brew-packages:
   @brew bundle
   @brew update
   @broot install
+
+overwrite-local-dotfiles:
+        @echo "Overwriting local conflicting dotfiles..."
+        @rsync -av --exclude='.git' --exclude='broot/' --exclude='*fish_variables' ~/dotfiles/ ~/.config/
 
 install-rustup:
 	@echo "Checking if rustup is installed... 🦀"

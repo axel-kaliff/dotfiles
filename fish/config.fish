@@ -37,7 +37,7 @@ function udot
     git push
     echo "Git repository updated."
     echo "Copying dotfiles to the local .config directory..."
-    rsync -av --exclude='.git' --exclude='broot/' --exclude='*fish_variables' ~/dotfiles/ ~/.config/
+    just overwrite-local-dotfiles
     echo "Local .config directory updated with dotfiles."
 
 end
