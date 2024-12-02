@@ -1,4 +1,4 @@
-first-time-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup atuin-setup
+install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
