@@ -20,10 +20,27 @@ function vi -d 'vi alias for nvim'
     nvim $argv
 end
 
+function v -d 'vi alias for nvim'
+    nvim $argv
+end
+
 function vim -d 'vi alias for nvim'
     nvim $argv
 end
 
+function udot
+    echo "Committing all changes, pulling from remote, and pushing to remote..."
+    cd ~/dotfiles/
+    git add .
+    git commit -m "Update dotfiles"
+    git pull
+    git push
+    echo "Git repository updated."
+    echo "Copying dotfiles to the local .config directory..."
+    rsync -av --exclude='.git' --exclude='broot/' --exclude='*fish_variables' ~/dotfiles/ ~/.config/
+    echo "Local .config directory updated with dotfiles."
+
+end
 
 # TODO replace with topgrade
 # function update -d "update apt, flatpak, fish"
@@ -50,6 +67,7 @@ end
 bind \cs '__ethp_commandline_toggle_sudo'
 
 
+export EDITOR=nvim
 export PATH="$PATH:/opt/nvim-linux64/bin"
 export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 
