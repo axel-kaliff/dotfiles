@@ -4,21 +4,28 @@ install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
   @echo 'CLI tools installed 🚀🤖'
 
+
+
+
 directory-setup:
-        @echo "Ensuring default directories..."
-        @if [ -f default-dirs.txt ]; then \
-                cat default-dirs.txt | while read $dir; do \
-                if [ ! -d "$dir" ]; then \
-                        echo "Creating directory: $dir"; \
-                        mkdir -p "$dir"; \
-                    else \
-                        echo "Directory already exists: $dir"; \
-                    fi; \
-                done; \
-        else \
-                echo "Error: default-dirs.txt not found."; \
-                exit 1; \
-        fi
+    @echo "Ensuring default directories..."
+    @if [ -f default-dirs.txt ]; then \
+        while read -r dir; do \
+            dir="${dir/\$HOME/$HOME}"; \
+            if [ ! -d "$dir" ]; then \
+                echo "Creating directory: $dir"; \
+                mkdir -p "$dir"; \
+            else \
+                echo "Directory already exists: $dir"; \
+            fi; \
+        done < default-dirs.txt; \
+    else \
+        echo "Error: default-dirs.txt not found."; \
+        exit 1; \
+    fi
+
+
+
 
 install-brew:
   @echo "Checking if Homebrew is installed... 🍻"
