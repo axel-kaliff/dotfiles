@@ -1,3 +1,2 @@
-texlive-scheme-basic
 gnome-shell-extension-pop-shell
 xhost

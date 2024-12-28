@@ -4,6 +4,18 @@ install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
   @echo 'CLI tools installed 🚀🤖'
 
+
+directory-setup:
+        @for dir in $HOME/Apps $HOME/.fonts; do \
+            if [ ! -d "$dir" ]; then \
+                echo "Creating directory: $dir"; \
+                mkdir -p "$dir"; \
+            else \
+                echo "Directory already exists: $dir"; \
+            fi; \
+        done
+
+
 install-brew:
   @echo "Checking if Homebrew is installed... 🍻"
   @if ! command -v brew &> /dev/null; then \
@@ -146,3 +158,24 @@ setup-git-config:
 setup-atuin:
         @echo "Setting up atuin sync..."
         @atuin login -u akaliff
+
+build-ghostty: directory-setup
+        @for pkg in gtk4-devel zig libadwaita-devel; do \
+            echo "Installing $pkg..."; \
+            sudo dnf install -y $pkg || echo "$pkg is already installed."; \
+        done
+        
+        @if [ ! -d "$HOME/Apps/ghostty" ]; then \
+            echo "Cloning ghostty repository..."; \
+            git clone git@github.com:ghostty-org/ghostty.git $HOME/Apps/ghostty; \
+        else \
+            echo "Directory $HOME/Apps/ghostty already exists. Skipping cloning."; \
+        fi
+
+        @echo Building Ghostty
+        @cd $HOME/Apps/ghostty && \
+        zig build -p $HOME/.local -Doptimize=ReleaseFast
+
+
+# whishlist:
+# function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
