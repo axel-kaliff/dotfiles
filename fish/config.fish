@@ -68,6 +68,9 @@ bind \cs '__ethp_commandline_toggle_sudo'
 
 
 export EDITOR=nvim
+
+export PATH="$PATH:$HOME/.local/bin"
+
 export PATH="$PATH:/opt/nvim-linux64/bin"
 export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 
