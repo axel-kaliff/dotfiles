@@ -124,6 +124,13 @@ require('lazy').setup({
     },
   },
 
+  require('lualine').setup {
+  options = {
+    -- ... your lualine config
+    theme = "nordfox"
+  }
+}
+
 
   -- dashboard
   {
