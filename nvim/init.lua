@@ -448,13 +448,7 @@ require('mason').setup()
 require('mason-lspconfig').setup()
 
 -- require('nightfox').load('palefox')
-
-
-require('lualine').setup {
-  options = {
-    theme = "nightfox"
-  }
-}
+require('nightfox'.load())
 
 local servers = {
   gopls = {},
