@@ -447,6 +447,8 @@ wk.add({ { "<leader>", group = "VISUAL <leader>", mode = "v" }, { "<leader>h", d
 require('mason').setup()
 require('mason-lspconfig').setup()
 
+require('nightfox'.load('nordfox'))
+
 
 
 local servers = {
