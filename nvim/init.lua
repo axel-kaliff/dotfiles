@@ -196,6 +196,7 @@ require('lazy').setup({
 
   {
     "EdenEast/nightfox.nvim",
+    theme = "nordfox"
   },
 
 
@@ -447,8 +448,7 @@ wk.add({ { "<leader>", group = "VISUAL <leader>", mode = "v" }, { "<leader>h", d
 require('mason').setup()
 require('mason-lspconfig').setup()
 
--- require('nightfox').load('palefox')
-require('nightfox'.load())
+require('nightfox').load()
 
 local servers = {
   gopls = {},
