@@ -48,7 +48,7 @@ disabled = true # leave as TRUE
 
 [character]
 success_symbol = " [󰁔]() "
-error_symbol =   " [ ](fg:#d56767)[ ](fg:#d56767) "
+# error_symbol =   " [ ](fg:#d56767)[ ](fg:#d56767) "
 error_symbol =   " [ ]()[ ]() "
 format = "$symbol"
 disabled = false
