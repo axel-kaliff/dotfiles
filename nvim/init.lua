@@ -124,12 +124,6 @@ require('lazy').setup({
     },
   },
 
-  require('lualine').setup {
-  options = {
-    -- ... your lualine config
-    theme = "nordfox"
-  }
-}
 
 
   -- dashboard
@@ -199,6 +193,11 @@ require('lazy').setup({
     "NoahTheDuke/vim-just",
     ft = { "just" },
   },
+
+  {
+    "EdenEast/nightfox.nvim",
+  },
+
 
   {
     'nvim-lualine/lualine.nvim',
