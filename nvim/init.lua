@@ -196,9 +196,7 @@ require('lazy').setup({
 
   {
     "EdenEast/nightfox.nvim",
-    options = {
-      theme = 'nordfox'
-    },
+    load = 'nordfox'
   },
 
 
