@@ -447,9 +447,14 @@ wk.add({ { "<leader>", group = "VISUAL <leader>", mode = "v" }, { "<leader>h", d
 require('mason').setup()
 require('mason-lspconfig').setup()
 
-require('nightfox').load('palefox')
+-- require('nightfox').load('palefox')
 
 
+require('lualine').setup {
+  options = {
+    theme = "nightfox"
+  }
+}
 
 local servers = {
   gopls = {},
