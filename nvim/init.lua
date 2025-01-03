@@ -448,6 +448,7 @@ require('mason').setup()
 require('mason-lspconfig').setup()
 
 require('nightfox').load("nordfox")
+vim.cmd("colorscheme nordfox")
 
 local servers = {
   gopls = {},
