@@ -5,8 +5,6 @@ install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish
   @echo 'CLI tools installed 🚀🤖'
 
 
-
-
 directory-setup:
     @echo "Ensuring default directories..."
     @if [ -f default-dirs.txt ]; then \
@@ -23,9 +21,6 @@ directory-setup:
         echo "Error: default-dirs.txt not found."; \
         exit 1; \
     fi
-
-
-
 
 install-brew:
   @echo "Checking if Homebrew is installed... 🍻"
@@ -180,12 +175,26 @@ build-ghostty: directory-setup
             echo "Cloning ghostty repository..."; \
             git clone git@github.com:ghostty-org/ghostty.git $HOME/Apps/ghostty; \
         else \
-            echo "Directory $HOME/Apps/ghostty already exists. Skipping cloning."; \
+            echo "Directory $HOME/Apps/ghostty already exists. Pulling instead of cloning."; \
+            git pull; \
         fi
 
         @echo Building Ghostty
         @cd $HOME/Apps/ghostty && \
         zig build -p $HOME/.local -Doptimize=ReleaseFast
+
+set-gnome-shortcuts: build-ghostty
+        # ghostty
+        @gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/']"
+
+        @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ name "Launch Ghostty"
+
+        @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ command "/var/home/akaliff/.local/bin/ghostty"
+
+        @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ binding "<Super>t"
+
+        #TODO set all shortcuts, like close window and window navigation
+
 
 
 # whishlist:
