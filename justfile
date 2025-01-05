@@ -195,6 +195,8 @@ set-gnome-shortcuts: build-ghostty
 
         #TODO set all shortcuts, like close window and window navigation
 
+enable-gnome-extentions: install-dnf-packages
+        @gnome-extensions enable pop-shell@system76.com
 
 
 # whishlist:
