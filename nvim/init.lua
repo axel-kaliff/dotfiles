@@ -276,6 +276,17 @@ require('telescope').setup {
 }
 pcall(require('telescope').load_extension, 'fzf')
 
+
+require('lspconfig').ruff.setup({
+  init_options = {
+    settings = {
+      -- Ruff language server settings go here
+    }
+  }
+})
+
+
+
 local function find_git_root()
   local current_file = vim.api.nvim_buf_get_name(0)
   local current_dir = current_file == '' and vim.fn.getcwd() or vim.fn.fnamemodify(current_file, ':h')
