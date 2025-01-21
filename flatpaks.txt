@@ -1,5 +1,8 @@
+app.zen_browser.zen
 com.bitwarden.desktop
 com.brave.Browser
+com.discordapp.Discord
+com.github.jeromerobert.pdfarranger
 com.github.rafostar.Clapper
 com.github.tchx84.Flatseal
 com.github.unrud.VideoDownloader
@@ -12,12 +15,12 @@ com.slack.Slack
 com.spotify.Client
 com.unity.UnityHub
 com.valvesoftware.Steam
+dev.bragefuglseth.Keypunch
 io.freetubeapp.FreeTube
 io.github.dvlv.boxbuddyrs
 io.github.elevenhsoft.WebApps
 io.github.flattool.Warehouse
 io.github.slgobinath.SafeEyes
-io.github.zen_browser.zen
 io.missioncenter.MissionCenter
 io.podman_desktop.PodmanDesktop
 md.obsidian.Obsidian
@@ -34,12 +37,14 @@ org.gnome.Cheese
 org.gnome.clocks
 org.gnome.Connections
 org.gnome.Contacts
+org.gnome.Decibels
 org.gnome.DejaDup
 org.gnome.font-viewer
 org.gnome.Logs
 org.gnome.Loupe
 org.gnome.Maps
 org.gnome.NautilusPreviewer
+org.gnome.NetworkDisplays
 org.gnome.Papers
 org.gnome.TextEditor
 org.gnome.Weather
@@ -51,5 +56,7 @@ org.mozilla.firefox
 org.mozilla.Thunderbird
 org.onlyoffice.desktopeditors
 org.qbittorrent.qBittorrent
+org.remmina.Remmina
 org.videolan.VLC
+page.tesk.Refine
 us.zoom.Zoom
