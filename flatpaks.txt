@@ -1,12 +1,15 @@
 app.zen_browser.zen
+ch.protonmail.protonmail-bridge
 com.bitwarden.desktop
 com.brave.Browser
 com.discordapp.Discord
 com.github.jeromerobert.pdfarranger
+com.github.mgropp.PdfJumbler
 com.github.rafostar.Clapper
 com.github.tchx84.Flatseal
 com.github.unrud.VideoDownloader
 com.heroicgameslauncher.hgl
+com.jgraph.drawio.desktop
 com.mattjakeman.ExtensionManager
 com.mudeprolinux.whakarere
 com.obsproject.Studio
