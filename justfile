@@ -1,4 +1,4 @@
-install-setup: install-cli-tools install-kitty generate-ssh-key restore-flatpaks startup-script-setup overwrite-local-dotfiles
+install-setup: install-cli-tools install-kitty generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
@@ -60,7 +60,7 @@ backup-flatpaks:
   @sort -u -o {{FLATPAK_LIST}} {{FLATPAK_LIST}}
   @echo "Backup completed."
 
-restore-flatpaks:
+install-flatpaks:
   @echo "Restoring flatpaks from {{FLATPAK_LIST}}..."
   @if [ -f {{FLATPAK_LIST}} ]; then \
           xargs -a {{FLATPAK_LIST}} -r -- flatpak install -y; \
@@ -165,25 +165,11 @@ setup-atuin:
         @echo "Setting up atuin sync..."
         @atuin login -u akaliff
 
-build-ghostty: directory-setup
-        @for pkg in gtk4-devel zig libadwaita-devel; do \
-            echo "Installing $pkg..."; \
-            sudo dnf install -y $pkg || echo "$pkg is already installed."; \
-        done
-        
-        @if [ ! -d "$HOME/Apps/ghostty" ]; then \
-            echo "Cloning ghostty repository..."; \
-            git clone git@github.com:ghostty-org/ghostty.git $HOME/Apps/ghostty; \
-        else \
-            echo "Directory $HOME/Apps/ghostty already exists. Pulling instead of cloning."; \
-            git pull; \
-        fi
+install-ghostty: directory-setup
+        @sudo cp ghostty_repo.txt /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:pgdev:ghostty.repo
+        @rpm-ostree update --install ghostty
 
-        @echo Building Ghostty
-        @cd $HOME/Apps/ghostty && \
-        zig build -p $HOME/.local -Doptimize=ReleaseFast
-
-set-gnome-shortcuts: build-ghostty
+set-gnome-shortcuts: install-ghostty
         # ghostty
         @gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/']"
 
