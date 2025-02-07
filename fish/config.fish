@@ -63,6 +63,17 @@ end
 
 
 
+function new_devcontainer
+    if test (count $argv) -lt 1
+        echo "Usage: new_devcontainer <project_name>"
+        return 1
+    end
+    set project $argv[1]
+    just --justfile "$HOME/dotfiles/devcontainer/justfile" new-devcontainer $project
+end
+
+
+
 # bind \cs '__ethp_commandline_toggle_sudo.fish'
 bind \cs '__ethp_commandline_toggle_sudo'
 
@@ -82,3 +93,7 @@ alias golint="$GOPATH/bin/golangci-lint"
 
 atuin init fish | source
 starship init fish | source
+
+
+
+

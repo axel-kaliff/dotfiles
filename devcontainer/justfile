@@ -1,4 +1,4 @@
-TEMPLATE_DIR := "{{HOME}}/dotfiles/devcontainer/templates"
+TEMPLATE_DIR := "$HOME/dotfiles/devcontainer/templates"
 
 # Usage: just new-devcontainer <project_name>
 new-devcontainer project:
