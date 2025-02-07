@@ -11,7 +11,8 @@
     "ms-python.python",
     "charliermarsh.ruff",
     "ms-toolsai.jupyter",
-    "HenryTsz.nvim"
+    "HenryTsz.nvim",
+    "ms-azuretools.vscode-docker"
   ],
 
   //"runArgs": [
