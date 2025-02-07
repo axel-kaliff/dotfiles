@@ -1,8 +1,0 @@
-{
-  "name": "{{project}} Dev Container",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-  "settings": {},
-  "extensions": []
-}

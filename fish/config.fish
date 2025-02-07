@@ -69,8 +69,10 @@ function new_devcontainer
         return 1
     end
     set project $argv[1]
-    just --justfile "$HOME/dotfiles/devcontainer/justfile" new-devcontainer $project
+    # Pass the current working directory to just via --cwd.
+    just --cwd (pwd) --justfile "$HOME/dotfiles/devcontainer/justfile" new-devcontainer $project
 end
+
 
 
 
