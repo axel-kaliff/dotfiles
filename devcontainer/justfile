@@ -1,12 +1,39 @@
 TEMPLATE_DIR := "$HOME/dotfiles/devcontainer/templates"
 
+# Recipe: new-devcontainer
 # Usage: just new-devcontainer <project_name>
+[no-cd]
 new-devcontainer project:
-	@echo "Creating new devcontainer project: {{project}}"
-	# Create the project folder and its .devcontainer subdirectory
+	# Check if the target project directory already exists.
+	if [ -d "{{project}}" ]; then \
+	  echo "Error: Directory '{{project}}' already exists. Aborting."; \
+	  exit 1; \
+	fi
+
+	@echo "Creating new devcontainer project: {{project}} in $(pwd)"
+
+	# Create the project folder and .devcontainer subdirectory.
 	mkdir -p "{{project}}/.devcontainer"
-	# Copy template files into the new project’s .devcontainer folder.
-	cp "{{TEMPLATE_DIR}}/devcontainer.json" "{{project}}/.devcontainer/devcontainer.json"
+
+	# Process devcontainer.json template using envsubst to replace $PROJECT.
+	PROJECT="{{project}}" envsubst < "{{TEMPLATE_DIR}}/devcontainer.json" > "{{project}}/.devcontainer/devcontainer.json"
+
+	# Copy the Dockerfile template without changes.
 	cp "{{TEMPLATE_DIR}}/Dockerfile" "{{project}}/.devcontainer/Dockerfile"
-	@echo "Project '{{project}}' created successfully."
+
+	@echo "Created .devcontainer in project '{{project}}'."
+
+	cd "{{project}}" && \
+	  git init && \
+	  echo "# {{project}}" > README.md && \
+	  echo "Initialized Git repository and created README.md." && \
+	cd - > /dev/null
+
+	#TODO replace when you've automized devcontainers and debugger in NVIM
+	if command -v code >/dev/null 2>&1; then \
+	  code "{{project}}"; \
+	  echo "Opened project in VS Code."; \
+	fi
+
+	@echo "Devcontainer project '{{project}}' created successfully."
 
