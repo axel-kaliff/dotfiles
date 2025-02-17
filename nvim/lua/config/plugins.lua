@@ -156,6 +156,7 @@ require('lazy').setup({
     main = 'ibl',
     opts = {},
   },
+	-- Neotree
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
@@ -165,6 +166,7 @@ require('lazy').setup({
       "MunifTanjim/nui.nvim",
     }
   },
+
   { 'numToStr/Comment.nvim', opts = {} },
   {
     'nvim-telescope/telescope.nvim',
