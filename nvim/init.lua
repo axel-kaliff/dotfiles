@@ -184,6 +184,8 @@ require('lazy').setup({
     "EdenEast/nightfox.nvim",
   },
 
+  {"meatballs/notebook.nvim"},
+
 
   {
     'nvim-lualine/lualine.nvim',
@@ -299,6 +301,8 @@ require('lspconfig').ruff.setup({
     }
   }
 })
+
+require('notebook').setup()
 
 
 
