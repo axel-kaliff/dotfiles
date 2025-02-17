@@ -4,7 +4,7 @@
 vim.keymap.set('n', '<leader>gl', '<cmd>FloatermNew lazygit<cr>', { desc = '[G]it [L]azy' })
 
 
-vim.keymap.set('n', '<C>n', '<cmd>FloatermNew lazygit<cr>', { desc = '[G]it [L]azy' })
+vim.keymap.set('n', '<C-n>', '<cmd>FloatermNew lazygit<cr>', { desc = '[G]it [L]azy' })
 
 -- Toggle file tree (Neotree)
 vim.keymap.set('n', '<leader>t', '<cmd>Neotree toggle position=left<cr>', { desc = '[F]ile tree [T]oggle' })
