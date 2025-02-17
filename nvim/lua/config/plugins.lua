@@ -170,6 +170,9 @@ require('lazy').setup({
           popup_border_style = 'rounded',
           enable_git_status = true,
           enable_diagnostics = true,
+          source_selector = {
+            winbar = true
+          },
           default_component_configs = {
             indent = {
               indent_size = 2,
