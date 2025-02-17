@@ -14,7 +14,6 @@ require('config.cmp')
 require('config.whichkey')
 require('config.dashboard')
 require('config.debug')
-require('autoformat.debug')
 
 -- Modeline
 -- vim: ts=2 sts=2 sw=2 et
