@@ -82,7 +82,7 @@ require('lspconfig').ruff.setup({
 -- Switch for controlling whether you want autoformatting.
 -- Use :KickstartFormatToggle to toggle autoformatting on or off.
 local format_is_enabled = true
-vim.api.nvim_create_user_command('KickstartFormatToggle', function()
+vim.api.nvim_create_user_command('FormatToggle', function()
   format_is_enabled = not format_is_enabled
   print('Setting autoformatting to: ' .. tostring(format_is_enabled))
 end, {})
