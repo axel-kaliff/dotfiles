@@ -1,3 +1,6 @@
+
+-- lua/config/plugins.lua
+
 -- Bootstrap lazy.nvim if needed
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not vim.loop.fs_stat(lazypath) then
@@ -14,7 +17,7 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Plugin configuration using lazy.nvim
 require('lazy').setup({
-  -- Plugins without extra configuration
+  -- Basic plugins
   { 'echasnovski/mini.nvim', version = false },
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
@@ -117,9 +120,7 @@ require('lazy').setup({
   {
     'nvimdev/dashboard-nvim',
     event = 'VimEnter',
-    dependencies = {
-      { 'nvim-tree/nvim-web-devicons' },
-    },
+    dependencies = { { 'nvim-tree/nvim-web-devicons' } },
     config = function()
       require('dashboard').setup {
         theme = 'hyper',
@@ -185,9 +186,93 @@ require('lazy').setup({
   { 'dense-analysis/ale' },
   { 'averms/black-nvim' },
   { 'voldikss/vim-floaterm' },
-}, {})
 
--- Additional plugin setup (for example, Notebook)
-require('notebook').setup()
-vim.cmd("colorscheme nordfox")
+  ----------------------------------------------------------------------------
+  -- Debugger configuration: nvim-dap and related plugins
+  ----------------------------------------------------------------------------
+  {
+    'mfussenegger/nvim-dap',
+    dependencies = {
+      'rcarriga/nvim-dap-ui',
+      'nvim-neotest/nvim-nio',
+      'williamboman/mason.nvim',
+      'jay-babu/mason-nvim-dap.nvim',
+      'dap-python',
+    },
+    keys = {
+      {
+        '<F5>',
+        function() require('dap').continue() end,
+        desc = 'Debug: Start/Continue',
+      },
+      {
+        '<F1>',
+        function() require('dap').step_into() end,
+        desc = 'Debug: Step Into',
+      },
+      {
+        '<F2>',
+        function() require('dap').step_over() end,
+        desc = 'Debug: Step Over',
+      },
+      {
+        '<F3>',
+        function() require('dap').step_out() end,
+        desc = 'Debug: Step Out',
+      },
+      {
+        '<leader>b',
+        function() require('dap').toggle_breakpoint() end,
+        desc = 'Debug: Toggle Breakpoint',
+      },
+      {
+        '<leader>B',
+        function() require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ') end,
+        desc = 'Debug: Set Breakpoint',
+      },
+      {
+        '<F7>',
+        function() require('dapui').toggle() end,
+        desc = 'Debug: See last session result.',
+      },
+    },
+    config = function()
+      local dap   = require('dap')
+      local dapui = require('dapui')
+
+      require('mason-nvim-dap').setup {
+        automatic_installation = true,
+        handlers = {},
+        ensure_installed = { 'delve' },
+      }
+
+      dapui.setup {
+        icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
+        controls = {
+          icons = {
+            pause     = '⏸',
+            play      = '▶',
+            step_into = '⏎',
+            step_over = '⏭',
+            step_out  = '⏮',
+            step_back = 'b',
+            run_last  = '▶▶',
+            terminate = '⏹',
+            disconnect = '⏏',
+          },
+        },
+      }
+
+      dap.listeners.after.event_initialized['dapui_config'] = dapui.open
+      dap.listeners.before.event_terminated['dapui_config'] = dapui.close
+      dap.listeners.before.event_exited['dapui_config']     = dapui.close
+
+      require('dap-go').setup {
+        delve = {
+          detached = vim.fn.has 'win32' == 0,
+        },
+      }
+    end,
+  },
+}, {})
 
