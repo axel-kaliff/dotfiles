@@ -167,9 +167,13 @@ require('lazy').setup({
     },
 
     -- Bufferline
-    { 'akinsho/bufferline.nvim', version = "*", dependencies = 'nvim-tree/nvim-web-devicons' },
+    {
+      'akinsho/bufferline.nvim',
+      version = "*",
+      dependencies = 'nvim-tree/nvim-web-devicons'
+    },
 
-    { 'numToStr/Comment.nvim',   opts = {} },
+    { 'numToStr/Comment.nvim', opts = {} },
     {
       'nvim-telescope/telescope.nvim',
       branch = '0.1.x',
@@ -274,9 +278,10 @@ require('lazy').setup({
         require('dap-python').setup("/usr/local/bin/python")
       end,
     },
-  },
+  }
+  ,
+
 
   require("bufferline").setup {}
 
-
-  , {})
+  {})
