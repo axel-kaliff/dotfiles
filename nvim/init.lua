@@ -3,6 +3,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Load configuration modules
+require('config.neotree')
 require('config.options')
 require('config.plugins')
 require('config.keymaps')
@@ -13,7 +14,6 @@ require('config.lsp')
 require('config.cmp')
 require('config.whichkey')
 require('config.dashboard')
-require('config.neotree')
 
 -- Modeline
 -- vim: ts=2 sts=2 sw=2 et
