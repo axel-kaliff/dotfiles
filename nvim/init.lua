@@ -467,11 +467,7 @@ require('nightfox').load("nordfox")
 vim.cmd("colorscheme nordfox")
 
 local servers = {
-  -- gopls = {},
-  -- golangci_lint_ls = {},
-  -- pyright = {},
   ruff = {},
-  --
   jedi_language_server = {},
   rust_analyzer = {},
   lua_ls = {
