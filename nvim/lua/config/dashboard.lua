@@ -1,0 +1,3 @@
+-- (Optional) Additional dashboard configuration can be placed here.
+-- Note: In the plugins setup (plugins.lua) you already configure dashboard-nvim.
+
