@@ -133,7 +133,6 @@ require('lazy').setup({
             },
           },
         }
-        vim.cmd("Neotree left")
       end,
     },
 
