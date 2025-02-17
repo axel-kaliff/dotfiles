@@ -133,8 +133,8 @@ require('lazy').setup({
             },
           },
         }
+        vim.cmd("Neotree left")
       end,
-      vim.cmd("Dashboard")
     },
 
     { "NoahTheDuke/vim-just",   ft = { "just" } },
@@ -210,7 +210,6 @@ require('lazy').setup({
             },
           },
         })
-        vim.cmd("Neotree left")
       end,
     },
 
