@@ -5,6 +5,8 @@ vim.keymap.set('n', '<leader>gl', '<cmd>FloatermNew lazygit<cr>', { desc = '[G]i
 
 
 vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
+
+vim.keymap.set('n', '<silent> gb', '<cmd>BufferLinePick<cr>', { desc = 'Buffer Cycle Next' })
 vim.keymap.set('n', '<C-b>d', '<cmd>bdelete<cr>', { desc = 'Buffer Close' })
 
 -- Toggle file tree (Neotree)
