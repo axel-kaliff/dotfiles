@@ -134,6 +134,7 @@ require('lazy').setup({
           },
         }
       end,
+      vim.cmd("Dashboard")
     },
 
     { "NoahTheDuke/vim-just",   ft = { "just" } },
@@ -330,5 +331,3 @@ require('lazy').setup({
   {})
 
 require("bufferline").setup {}
-
-vim.cmd("Dashboard")
