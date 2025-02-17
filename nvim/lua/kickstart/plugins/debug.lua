@@ -22,7 +22,7 @@ return {
     'jay-babu/mason-nvim-dap.nvim',
 
     -- Add your own debuggers here
-    'mfussenegger/nvim-dap-python'
+    'dap-python'
   },
   keys = {
     -- Basic debugging keymaps, feel free to change to your liking!
