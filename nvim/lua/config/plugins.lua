@@ -171,7 +171,13 @@ require('lazy').setup({
           enable_git_status = true,
           enable_diagnostics = true,
           source_selector = {
-            winbar = true
+            winbar = true,
+
+            sources = {
+              { source = "filesystem" },
+              { source = "git_status" },
+            },
+
           },
           default_component_configs = {
             indent = {
