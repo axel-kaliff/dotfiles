@@ -330,3 +330,5 @@ require('lazy').setup({
   {})
 
 require("bufferline").setup {}
+
+vim.cmd("Dashboard")
