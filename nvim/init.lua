@@ -539,6 +539,7 @@ cmp.setup {
 }
 
 require 'kickstart.plugins.debug'
+require 'kickstart.plugins.autoformat'
 
 
 
