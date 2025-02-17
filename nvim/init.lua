@@ -278,20 +278,20 @@ require('telescope').setup {
 }
 pcall(require('telescope').load_extension, 'fzf')
 
-require('lspconfig').pyright.setup {
-  settings = {
-    pyright = {
-      -- Using Ruff's import organizer
-      disableOrganizeImports = true,
-    },
-    python = {
-      analysis = {
-        -- Ignore all files for analysis to exclusively use Ruff for linting
-        ignore = { '*' },
-      },
-    },
-  },
-}
+-- require('lspconfig').pyright.setup {
+--   settings = {
+--     pyright = {
+--       -- Using Ruff's import organizer
+--       disableOrganizeImports = true,
+--     },
+--     python = {
+--       analysis = {
+--         -- Ignore all files for analysis to exclusively use Ruff for linting
+--         ignore = { '*' },
+--       },
+--     },
+--   },
+-- }
 
 
 require('lspconfig').ruff.setup({
@@ -467,9 +467,9 @@ require('nightfox').load("nordfox")
 vim.cmd("colorscheme nordfox")
 
 local servers = {
-  gopls = {},
-  golangci_lint_ls = {},
-  pyright = {},
+  -- gopls = {},
+  -- golangci_lint_ls = {},
+  -- pyright = {},
   jedi_language_server = {},
   rust_analyzer = {},
   lua_ls = {
@@ -538,6 +538,7 @@ cmp.setup {
   },
 }
 
+require 'kickstart.plugins.debug'
 
 
 
