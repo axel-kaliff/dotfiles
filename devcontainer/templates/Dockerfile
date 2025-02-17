@@ -6,9 +6,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     vim \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz && \
+                rm -rf /opt/nvim && \
+                tar -C /opt -xzf nvim-linux-x86_64.tar.gz
 
 # Set a default working directory.
 WORKDIR /workspace
+
+ RUN echo 'export PATH="$PATH:/opt/nvim-linux-x86_64/bin"' >> /root/.bashrc
+
 
 CMD ["bash"]
