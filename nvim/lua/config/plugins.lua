@@ -1,4 +1,3 @@
-
 -- lua/config/plugins.lua
 
 -- Bootstrap lazy.nvim if needed
@@ -137,7 +136,7 @@ require('lazy').setup({
     end,
   },
 
-  { "NoahTheDuke/vim-just", ft = { "just" } },
+  { "NoahTheDuke/vim-just",   ft = { "just" } },
   { "EdenEast/nightfox.nvim" },
   { "meatballs/notebook.nvim" },
   {
@@ -156,7 +155,7 @@ require('lazy').setup({
     main = 'ibl',
     opts = {},
   },
-	-- Neotree
+  -- Neotree
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
@@ -167,7 +166,10 @@ require('lazy').setup({
     }
   },
 
-  { 'numToStr/Comment.nvim', opts = {} },
+  -- Bufferline
+  { 'akinsho/bufferline.nvim', version = "*", dependencies = 'nvim-tree/nvim-web-devicons' },
+
+  { 'numToStr/Comment.nvim',   opts = {} },
   {
     'nvim-telescope/telescope.nvim',
     branch = '0.1.x',
@@ -252,14 +254,14 @@ require('lazy').setup({
         icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
         controls = {
           icons = {
-            pause     = '⏸',
-            play      = '▶',
-            step_into = '⏎',
-            step_over = '⏭',
-            step_out  = '⏮',
-            step_back = 'b',
-            run_last  = '▶▶',
-            terminate = '⏹',
+            pause      = '⏸',
+            play       = '▶',
+            step_into  = '⏎',
+            step_over  = '⏭',
+            step_out   = '⏮',
+            step_back  = 'b',
+            run_last   = '▶▶',
+            terminate  = '⏹',
             disconnect = '⏏',
           },
         },
@@ -270,7 +272,6 @@ require('lazy').setup({
       dap.listeners.before.event_exited['dapui_config']     = dapui.close
 
       require('dap-python').setup("/usr/local/bin/python")
-	end,
+    end,
   },
 }, {})
-
