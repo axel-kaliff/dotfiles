@@ -13,7 +13,6 @@ require('config.lsp')
 require('config.cmp')
 require('config.whichkey')
 require('config.dashboard')
-require('config.debug')
 
 -- Modeline
 -- vim: ts=2 sts=2 sw=2 et
