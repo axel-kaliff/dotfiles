@@ -5,7 +5,7 @@
 vim.keymap.set('n', '<leader>gl', '<cmd>FloatermNew lazygit<cr>', { desc = '[G]it [L]azy' })
 
 -- Toggle file tree (Neotree)
-vim.keymap.set('n', '<leader>t', '<cmd>Neotree toggle position=right<cr>', { desc = '[F]ile tree [T]oggle' })
+vim.keymap.set('n', '<leader>t', '<cmd>Neotree toggle position=left<cr>', { desc = '[F]ile tree [T]oggle' })
 
 -- Telescope keymaps
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
