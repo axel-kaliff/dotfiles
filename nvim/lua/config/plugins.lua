@@ -246,16 +246,20 @@ require('lazy').setup({
       'akinsho/bufferline.nvim',
       version = "*",
       dependencies = 'nvim-tree/nvim-web-devicons',
-      options = {
-        offsets = {
-          {
-            filetype = "NvimTree",
-            text = "File Explorer",
-            highlight = "Directory",
-            separator = true -- use a "true" to enable the default, or set your own character
+      config = function()
+        require("bufferline").setup {
+          options = {
+            offsets = {
+              {
+                filetype = "NvimTree",
+                text = "File Explorer",
+                highlight = "Directory",
+                separator = true -- use a "true" to enable the default, or set your own character
+              }
+            }
           }
         }
-      }
+      end
     },
 
     { 'numToStr/Comment.nvim', opts = {} },
@@ -366,5 +370,3 @@ require('lazy').setup({
   }
   ,
   {})
-
-require("bufferline").setup {}
