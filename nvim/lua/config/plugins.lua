@@ -245,7 +245,17 @@ require('lazy').setup({
     {
       'akinsho/bufferline.nvim',
       version = "*",
-      dependencies = 'nvim-tree/nvim-web-devicons'
+      dependencies = 'nvim-tree/nvim-web-devicons',
+      options = {
+        offsets = {
+          {
+            filetype = "NvimTree",
+            text = "File Explorer",
+            highlight = "Directory",
+            separator = true -- use a "true" to enable the default, or set your own character
+          }
+        }
+      }
     },
 
     { 'numToStr/Comment.nvim', opts = {} },
