@@ -148,14 +148,14 @@ require('lazy').setup({
           component_separators = '|',
           section_separators = '',
         },
-        tabline = {
-          lualine_a = { 'buffers' },
-          lualine_b = {},
-          lualine_c = {},
-          lualine_x = {},
-          lualine_y = {},
-          lualine_z = { 'tabs' }
-        },
+        -- tabline = {
+        --   lualine_a = { 'buffers' },
+        --   lualine_b = {},
+        --   lualine_c = {},
+        --   lualine_x = {},
+        --   lualine_y = {},
+        --   lualine_z = { 'tabs' }
+        -- },
         -- sections = {
         --   -- these are to remove the defaults
         --   lualine_a = {},
@@ -252,12 +252,12 @@ require('lazy').setup({
       end,
     },
 
-    -- Bufferline
-    -- {
-    --   'akinsho/bufferline.nvim',
-    --   version = "*",
-    --   dependencies = 'nvim-tree/nvim-web-devicons'
-    -- },
+    Bufferline
+    {
+      'akinsho/bufferline.nvim',
+      version = "*",
+      dependencies = 'nvim-tree/nvim-web-devicons'
+    },
 
     { 'numToStr/Comment.nvim', opts = {} },
     {
