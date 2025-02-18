@@ -1,4 +1,3 @@
-
 -- Telescope configuration
 require('telescope').setup {
   defaults = {
