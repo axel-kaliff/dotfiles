@@ -196,7 +196,7 @@ require('lazy').setup({
       config = function()
         require('neo-tree').setup({
           close_if_last_window = true,
-          popup_border_style = 'rounded',
+          -- popup_border_style = 'rounded',
           enable_git_status = true,
           enable_diagnostics = true,
           source_selector = {
@@ -205,7 +205,7 @@ require('lazy').setup({
 
           default_component_configs = {
             indent = {
-              indent_size = 2,
+              indent_size = 1,
               padding = 1, -- extra padding on left hand side
               with_markers = true,
               indent_marker = '│',
@@ -226,7 +226,7 @@ require('lazy').setup({
               respect_gitignore = true,
             },
             window = {
-              position = 'right',
+              position = 'left',
               mappings = {
                 f = 'none',
               },

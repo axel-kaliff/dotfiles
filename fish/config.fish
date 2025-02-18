@@ -42,28 +42,8 @@ function udot
 
 end
 
-# TODO replace with topgrade
-# function update -d "update apt, flatpak, fish"
-#
-#     echo 'Updating apt...'
-#
-#     sudo apt-get update -y
-#     sudo apt-get upgrade -y
-#     sudo apt-get autoclean -y
-#
-#     echo 'Updating flatpaks...'
-#     sudo flatpak update -y
-#
-#     echo 'Updating fish...'
-#     fisher update
-#
-#     exit 0
-#
-# end
 
-
-
-function new_devcontainer
+function dn
     if test (count $argv) -lt 1
         echo "Usage: new_devcontainer <project_name>"
         return 1
@@ -73,8 +53,21 @@ function new_devcontainer
     just --justfile "$HOME/dotfiles/devcontainer/justfile" new-devcontainer $project
 end
 
+function du
+    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/vscode/.config/nvim" --workspace-folder .
+end
 
+function di
+    devcontainer exec --workspace-folder . zsh
+end
 
+function de
+    devcontainer exec --workspace-folder . nvim
+end
+
+function dr
+    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/root/.config/nvim" --workspace-folder . --remove-existing-container
+end
 
 # bind \cs '__ethp_commandline_toggle_sudo.fish'
 bind \cs '__ethp_commandline_toggle_sudo'
