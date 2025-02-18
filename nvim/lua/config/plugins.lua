@@ -259,7 +259,7 @@ require('lazy').setup({
             },
           }
         })
-      end
+      end,
     },
 
     { 'numToStr/Comment.nvim', opts = {} },
