@@ -368,4 +368,4 @@ require('lazy').setup({
   ,
   {})
 
--- require("bufferline").setup {}
+require("bufferline").setup {}
