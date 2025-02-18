@@ -241,7 +241,7 @@ require('lazy').setup({
       end,
     },
 
-    Bufferline
+    -- Bufferline
     {
       'akinsho/bufferline.nvim',
       version = "*",
