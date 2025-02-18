@@ -256,7 +256,7 @@ require('lazy').setup({
                 highlight = "Directory",
                 separator = true -- use a "true" to enable the default, or set your own character
               }
-            }
+            },
           }
         })
       end
