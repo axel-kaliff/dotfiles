@@ -221,11 +221,11 @@ require('lazy').setup({
     },
 
     -- Bufferline
-    {
-      'akinsho/bufferline.nvim',
-      version = "*",
-      dependencies = 'nvim-tree/nvim-web-devicons'
-    },
+    -- {
+    --   'akinsho/bufferline.nvim',
+    --   version = "*",
+    --   dependencies = 'nvim-tree/nvim-web-devicons'
+    -- },
 
     { 'numToStr/Comment.nvim', opts = {} },
     {
