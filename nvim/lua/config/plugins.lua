@@ -364,14 +364,14 @@ require("bufferline").setup({
   options = {
     offsets = {
       {
-        filetype = "NvimTree",
+        filetype = "neo-tree",
         text = "File Explorer",
         highlight = "Directory",
         separator = true
       }
     },
-    numbers = function(opts)
-      return string.format('%s·', opts.ordinal)
-    end,
+    -- numbers = function(opts)
+    --   return string.format('%s·', opts.ordinal)
+    -- end,
   }
 })
