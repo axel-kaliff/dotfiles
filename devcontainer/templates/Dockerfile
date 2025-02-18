@@ -19,6 +19,8 @@ RUN curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linu
 # Set a default working directory.
 WORKDIR /workspace
 
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)"
+
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 

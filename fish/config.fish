@@ -58,7 +58,7 @@ function du
 end
 
 function di
-    devcontainer exec --workspace-folder . bash
+    devcontainer exec --workspace-folder . zsh
 end
 
 function de
