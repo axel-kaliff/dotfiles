@@ -204,7 +204,6 @@ require('lazy').setup({
 
             sources = {
               { source = "filesystem" },
-              { source = "git_status" },
             },
 
           },
