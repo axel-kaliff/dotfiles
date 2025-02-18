@@ -247,7 +247,7 @@ require('lazy').setup({
       version = "*",
       dependencies = 'nvim-tree/nvim-web-devicons',
       config = function()
-        require("bufferline").setup {
+        require("bufferline").setup({
           options = {
             offsets = {
               {
@@ -258,7 +258,7 @@ require('lazy').setup({
               }
             }
           }
-        }
+        })
       end
     },
 
