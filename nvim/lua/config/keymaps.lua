@@ -8,7 +8,7 @@ vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cy
 vim.keymap.set('n', '<C-b>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cycle Previous' })
 
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
-vim.keymap.set('n', '<leader>bd', '<cmd>bdelete<cr>', { desc = 'Buffer Close' })
+vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 
 -- Toggle file tree (Neotree)
 vim.keymap.set('n', '<leader>t', '<cmd>Neotree toggle position=left<cr>', { desc = '[F]ile tree [T]oggle' })
