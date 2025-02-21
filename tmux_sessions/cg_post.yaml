@@ -8,3 +8,4 @@ windows:
       - shell_command: # pane no. 1
           - nvim
   - window_name: terminal
+      - cd ~/projects/cg_postprocess/
