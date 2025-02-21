@@ -28,6 +28,11 @@ function vim -d 'vi alias for nvim'
     nvim $argv
 end
 
+function tm -d 'launch tmuxp session from session config $arg'
+    tmuxp load "$HOME/dotfiles/tmux_sessions/$argv.yaml"
+end
+
+
 function udot
     echo "Committing all changes, pulling from remote, and pushing to remote..."
     cd ~/dotfiles/

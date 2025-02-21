@@ -1,0 +1,10 @@
+session_name: cg_post
+windows:
+  - window_name: dev
+    layout: tiled
+    shell_command_before:
+      - cd ~/projects/cg_postprocess/
+    panes:
+      - shell_command: # pane no. 1
+          - nvim
+  - window_name: terminal

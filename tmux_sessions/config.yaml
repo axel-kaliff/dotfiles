@@ -1,0 +1,10 @@
+session_name: config
+windows:
+  - window_name: dev window
+    layout: tiled
+    shell_command_before:
+      - cd ~/dotfiles/ # run as a first command in all panes
+    panes:
+      - shell_command: # pane no. 1
+          - nvim
+      - echo second pane # pane no. 2
