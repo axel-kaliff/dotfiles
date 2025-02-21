@@ -83,8 +83,6 @@ export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 # GO
 export PATH="$PATH:/usr/local/go/bin"
 
-XDG_CONFIG_HOME = "$HOME/.config/"
-
 export GOPATH="$USER/home/go"
 alias golint="$GOPATH/bin/golangci-lint"
 
