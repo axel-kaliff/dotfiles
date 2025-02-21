@@ -184,6 +184,12 @@ set-gnome-shortcuts: install-ghostty
 enable-gnome-extentions: install-dnf-packages
         @gnome-extensions enable pop-shell@system76.com
 
+setup-tmux:
+        @cd $HOME
+        @git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+        @set -g @plugin 'tmux-plugins/tpm'
+        @run -b '~/.tmux/plugins/tpm/tpm'
+
 
 # whishlist:
 # function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
