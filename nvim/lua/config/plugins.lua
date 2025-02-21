@@ -209,9 +209,6 @@ require('lazy').setup({
             },
           },
           filesystem = {
-            follow_current_file {
-              enabled = true
-            },
             use_libuv_file_watcher = true,
             filtered_items = {
               show_hidden = true,
