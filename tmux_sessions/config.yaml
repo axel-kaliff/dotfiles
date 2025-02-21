@@ -1,7 +1,7 @@
 session_name: config
 windows:
   - window_name: dev window
-    layout: tiled
+    layout: main-vertical 
     shell_command_before:
       - cd ~/dotfiles/ # run as a first command in all panes
     panes:
