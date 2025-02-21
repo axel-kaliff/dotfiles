@@ -2,6 +2,7 @@
 
 -- Shortcut for lazygit in a floating terminal
 vim.keymap.set('n', '<leader>gl', '<cmd>FloatermNew lazygit<cr>', { desc = '[G]it [L]azy' })
+vim.keymap.set('n', '<leader>t', '<cmd>FloatermNew<cr>', { desc = '[T]erminal' })
 
 
 vim.keymap.set('n', '<C-m>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
@@ -11,7 +12,7 @@ vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 
 -- Toggle file tree (Neotree)
-vim.keymap.set('n', '<leader>t', '<cmd>Neotree toggle position=left<cr>', { desc = '[F]ile tree [T]oggle' })
+vim.keymap.set('n', '<leader>e', '<cmd>Neotree toggle position=left<cr>', { desc = '[F]ile tree [T]oggle' })
 
 -- Telescope keymaps
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
