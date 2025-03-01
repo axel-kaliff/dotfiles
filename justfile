@@ -187,8 +187,6 @@ enable-gnome-extentions: install-dnf-packages
 setup-tmux:
         @cd $HOME
         @git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-        @set -g @plugin 'tmux-plugins/tpm'
-        @run -b '~/.tmux/plugins/tpm/tpm'
 
 
 # whishlist:
