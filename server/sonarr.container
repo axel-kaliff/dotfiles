@@ -1,0 +1,17 @@
+[Service]
+Restart=always
+
+[Container]
+ContainerName=sonarr
+Image=docker.io/linuxserver/sonarr:latest
+Label="io.containers.autoupdate=registry"
+Environment=TZ=Europe/Stockholm
+Environment=VERSION=docker
+Volume=sonarr-config.volume:/config:Z
+Volume=tv.volume:/tv:z
+Volume=movies.volume:/movies:z
+PublishPort=8989:8989
+
+[Install]
+WantedBy=default.target
+

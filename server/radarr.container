@@ -1,0 +1,17 @@
+[Service]
+Restart=always
+
+[Container]
+ContainerName=radarr
+Image=lscr.io/linuxserver/radarr:latest
+Label="io.containers.autoupdate=registry"
+Environment=TZ=Europe/Stockholm
+Environment=VERSION=docker
+Volume=radarr-config.volume:/config:Z
+Volume=tv.volume:/tv:z
+Volume=movies.volume:/movies:z
+PublishPort=7878:7878
+
+[Install]
+WantedBy=default.target
+
