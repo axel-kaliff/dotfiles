@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
-# install nvim
+# install developer tools
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 RUN curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz && \
                 rm -rf /opt/nvim && \
                 tar -C /opt -xzf nvim-linux-x86_64.tar.gz
