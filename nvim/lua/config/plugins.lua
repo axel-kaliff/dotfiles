@@ -313,7 +313,7 @@ require('lazy').setup({
           {
             type = 'python',
             request = 'launch',
-            name = "Launch file",
+            name = "Launch file memes",
             program = "${file}",
             pythonPath = function()
               return '/usr/bin/python'
