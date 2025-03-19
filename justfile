@@ -1,26 +1,8 @@
-install-setup: install-cli-tools install-kitty generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles
+install-setup: install-cli-tools generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
   @echo 'CLI tools installed 🚀🤖'
-
-
-directory-setup:
-    @echo "Ensuring default directories..."
-    @if [ -f default-dirs.txt ]; then \
-        while read -r dir; do \
-            dir="${dir/\$HOME/$HOME}"; \
-            if [ ! -d "$dir" ]; then \
-                echo "Creating directory: $dir"; \
-                mkdir -p "$dir"; \
-            else \
-                echo "Directory already exists: $dir"; \
-            fi; \
-        done < default-dirs.txt; \
-    else \
-        echo "Error: default-dirs.txt not found."; \
-        exit 1; \
-    fi
 
 install-brew:
   @echo "Checking if Homebrew is installed... 🍻"
@@ -108,21 +90,6 @@ install-dnf-packages:
 		exit 1; \
 	fi
 
-install-kitty:
-  @echo "Installing Kitty 😻😻😻"
-  @if ! command -v kitty &> /dev/null; then \
-          curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin; \
-          ln -sf ~/.local/kitty.app/bin/kitty ~/.local/kitty.app/bin/kitten ~/.local/bin/; \
-          cp ~/.local/kitty.app/share/applications/kitty.desktop ~/.local/share/applications/; \
-          cp ~/.local/kitty.app/share/applications/kitty-open.desktop ~/.local/share/applications/; \
-          sed -i "s|Icon=kitty|Icon=$(readlink -f ~)/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" ~/.local/share/applications/kitty*.desktop; \
-          sed -i "s|Exec=kitty|Exec=$(readlink -f ~)/.local/kitty.app/bin/kitty|g" ~/.local/share/applications/kitty*.desktop; \
-          echo 'kitty.desktop' > ~/.config/xdg-terminals.list; \
-  else \
-          echo "Kitty already installed 🙀🙀🙀"; \
-  fi
-
-
 startup-script-setup:
         @echo "Setting up system startup script..."
         @mkdir -p ~/.config/systemd/user
@@ -165,7 +132,7 @@ setup-atuin:
         @echo "Setting up atuin sync..."
         @atuin login -u akaliff
 
-install-ghostty: directory-setup
+install-ghostty:
         @sudo cp ghostty_repo.txt /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:pgdev:ghostty.repo
         @rpm-ostree update --install ghostty
 
@@ -179,11 +146,6 @@ set-gnome-shortcuts: install-ghostty
 
         @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ binding "<Super>t"
 
-        #TODO set all shortcuts, like close window and window navigation
-
-enable-gnome-extentions: install-dnf-packages
-        @gnome-extensions enable pop-shell@system76.com
-
 setup-tmux:
         @cd $HOME
         @git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
@@ -192,3 +154,5 @@ setup-tmux:
 # whishlist:
 # function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
 # instead of defining default dirs in justfile, have a txt file that you read from
+
+# TODO mullvad
