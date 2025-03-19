@@ -309,17 +309,23 @@ require('lazy').setup({
       config = function()
         local dap = require('dap')
 
-        dap.configurations.python = {
-          {
-            type = 'python',
-            request = 'launch',
-            name = "Launch file memes",
-            program = "${file}",
-            pythonPath = function()
-              return '/usr/bin/python'
-            end,
-          },
-        }
+        -- dap.adapters.python = {
+        --   type = 'executable';
+        --   command = os.getenv('HOME') .. '/.virtualenvs/tools/bin/python';
+        --   args = { '-m', 'debugpy.adapter' };
+        -- }
+
+        -- dap.configurations.python = {
+        --   {
+        --     type = 'python',
+        --     request = 'launch',
+        --     name = "Launch file",
+        --     program = "${file}",
+        --     pythonPath = function()
+        --       return '/workspaces/'
+        --     end,
+        --   },
+        -- }
 
 
         local dapui = require('dapui')
