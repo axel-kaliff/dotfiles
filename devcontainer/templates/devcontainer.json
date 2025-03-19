@@ -15,6 +15,11 @@
     "ms-azuretools.vscode-docker"
   ],
 
+  "features": {
+    "ghcr.io/devcontainers/features/nvidia-cuda:1.2.0": {}
+  },
+
+
   //"runArgs": [
   //    "--gpus",
   //    "all"
@@ -28,5 +33,5 @@
   //  "DISPLAY": "${localEnv:DISPLAY}"
   //}
 
-  "postCreateCommand": "bash .devcontainer/install-tools.sh",
+  "postCreateCommand": "bash .devcontainer/install-tools.sh"
 }
