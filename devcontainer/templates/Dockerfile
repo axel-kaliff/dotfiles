@@ -1,6 +1,5 @@
 FROM python:3.12
 
-# Install common development tools.
 RUN apt-get update && apt-get install -y \
     build-essential \
     wget \
