@@ -337,7 +337,7 @@ require('lazy').setup({
         dap.listeners.before.event_terminated['dapui_config'] = dapui.close
         dap.listeners.before.event_exited['dapui_config']     = dapui.close
 
-        require('dap-python').setup("/usr/local/bin/python")
+        require('dap-python').setup("uv")
       end,
     },
   }
