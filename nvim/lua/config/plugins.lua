@@ -307,7 +307,21 @@ require('lazy').setup({
         },
       },
       config = function()
-        local dap   = require('dap')
+        local dap = require('dap')
+
+        dap.configurations.python = {
+          {
+            type = 'python',
+            request = 'launch',
+            name = "Launch file",
+            program = "${file}",
+            pythonPath = function()
+              return '/usr/bin/python'
+            end,
+          },
+        }
+
+
         local dapui = require('dapui')
 
         require('mason-nvim-dap').setup {
