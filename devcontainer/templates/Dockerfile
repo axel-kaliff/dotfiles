@@ -6,6 +6,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     vim \
+    fzf \
+    fd \
+    eza \
+    ripgrep \
+    ugrep \
     ffmpeg \
     libsm6 \
     libxext6 \
