@@ -5,10 +5,12 @@ com.brave.Browser
 com.discordapp.Discord
 com.github.jeromerobert.pdfarranger
 com.github.mgropp.PdfJumbler
+com.github.PintaProject.Pinta
 com.github.rafostar.Clapper
 com.github.tchx84.Flatseal
 com.github.unrud.VideoDownloader
 com.heroicgameslauncher.hgl
+com.jeffser.Alpaca
 com.jgraph.drawio.desktop
 com.mattjakeman.ExtensionManager
 com.mudeprolinux.whakarere
@@ -19,6 +21,8 @@ com.spotify.Client
 com.unity.UnityHub
 com.valvesoftware.Steam
 dev.bragefuglseth.Keypunch
+dev.deedles.Trayscale
+dev.zed.Zed
 io.freetubeapp.FreeTube
 io.github.dvlv.boxbuddyrs
 io.github.elevenhsoft.WebApps
@@ -29,9 +33,12 @@ io.podman_desktop.PodmanDesktop
 md.obsidian.Obsidian
 net.codelogistics.webapps
 net.lutris.Lutris
+net.mkiol.SpeechNote
 net.mullvad.MullvadBrowser
 nl.hjdskes.gcolor3
+org.blender.Blender
 org.fedoraproject.MediaWriter
+org.fkoehler.KTailctl
 org.gnome.baobab
 org.gnome.Calculator
 org.gnome.Calendar
