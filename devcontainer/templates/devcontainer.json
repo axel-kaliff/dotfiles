@@ -28,4 +28,5 @@
   //  "DISPLAY": "${localEnv:DISPLAY}"
   //}
 
+  "postCreateCommand": "bash .devcontainer/install-tools.sh",
 }
