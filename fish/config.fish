@@ -76,7 +76,7 @@ function de
 end
 
 function dr
-    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/main/nvim" --workspace-folder . --remove-existing-container
+    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/main/.config/nvim" --workspace-folder . --remove-existing-container
 end
 
 # bind \cs '__ethp_commandline_toggle_sudo.fish'
