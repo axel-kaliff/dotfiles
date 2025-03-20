@@ -1,6 +1,10 @@
 {
   "name": "$PROJECT Dev Container",
 
+//  "dockerComposeFile": "docker-compose.yml",
+//  "service": "devcontainer",
+//  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+
   "build": {
     "dockerfile": "Dockerfile"
   },
@@ -16,22 +20,24 @@
   ],
 
   "features": {
-    "ghcr.io/devcontainers/features/nvidia-cuda:1.2.0": {}
+    "ghcr.io/devcontainers-extra/features/fish-apt-get:1": {},
+    //"ghcr.io/devcontainers/features/nvidia-cuda:1.2.0": {}
   },
 
 
-  //"runArgs": [
-  //    "--gpus",
-  //    "all"
-  //],
+  "runArgs": [
+    "--network=host",
+    //      "--gpus",
+    //      "all"
+  ],
 
   //"mounts": [
   //  "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
   //],
 
-  //"containerEnv": {
-  //  "DISPLAY": "${localEnv:DISPLAY}"
-  //}
-
-  "postCreateCommand": "bash .devcontainer/install-tools.sh"
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}"
+  }
 }
+
+
