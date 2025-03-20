@@ -1,30 +1,5 @@
 FROM python:3.12
 
-RUN apt-add-repository ppa:fish-shell/release-4
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    wget \
-    curl \
-    git \
-    vim \
-    fzf \
-    fd \
-    eza \
-    ripgrep \
-    ugrep \
-    ffmpeg \
-    libsm6 \
-    libxext6 \
-    fish \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /workspace
-
-CMD ["bash"]
-
-FROM python:3.12
-
 # Install common development tools.
 RUN apt-get update && apt-get install -y -q --allow-unauthenticated \
     build-essential \
@@ -48,11 +23,13 @@ RUN apt-get update && apt-get install -y -q --allow-unauthenticated \
     ripgrep \
     fzf \
     ugrep \
-    neovim \
     tmux \
-    fd \
-    eza \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz && \
+                rm -rf /opt/nvim && \
+                tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+RUN rm nvim-linux-x86_64.tar.gz
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -73,15 +50,19 @@ RUN sh /starship-installer.sh --yes && rm /starship-installer.sh
 
 
 RUN useradd -ms /bin/bash main
+RUN mkdir /home/main/.config
+RUN mkdir /home/main/.config/fish/
+RUN chmod -R ugoa=rwx /home/main/.config
 USER main
 
 # Set a default working directory.
 WORKDIR /workspace
 
 
+RUN echo 'export PATH="$PATH:/opt/nvim-linux-x86_64/bin"' >> ~/.bashrc
 RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc
 RUN echo 'eval "$(uv generate-shell-completion zsh)"' >> ~/.zshrc
 RUN echo 'eval "$(starship init bash)"' >> ~/.bashrc
 RUN echo 'eval "$(starship init zsh)"' >> ~/.zshrc
 
-RUN mkdir /home/main/.config
+RUN echo 'starship init fish | source' >> ~/.config/fish/config.fish
