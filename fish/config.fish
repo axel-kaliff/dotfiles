@@ -76,7 +76,7 @@ function de
 end
 
 function dr
-    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/root/.config/nvim" --workspace-folder . --remove-existing-container
+    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/akaliff/.config/nvim" --workspace-folder . --remove-existing-container
 end
 
 # bind \cs '__ethp_commandline_toggle_sudo.fish'
@@ -98,7 +98,3 @@ alias golint="$GOPATH/bin/golangci-lint"
 
 atuin init fish | source
 starship init fish | source
-
-
-
-
