@@ -8,6 +8,11 @@ function g
     lazygit
 end
 
+function tm
+    tmuxinator $argv
+end
+
+
 function cat 
     bat $argv
 end
