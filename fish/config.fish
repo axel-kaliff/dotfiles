@@ -33,9 +33,9 @@ function vim -d 'vi alias for nvim'
     nvim $argv
 end
 
-function tm -d 'launch tmuxp session from session config $arg'
-    tmuxp load "$HOME/dotfiles/tmux_sessions/$argv.yaml"
-end
+# function tm -d 'launch tmuxp session from session config $arg'
+#     tmuxp load "$HOME/dotfiles/tmux_sessions/$argv.yaml"
+# end
 
 
 function udot
