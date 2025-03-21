@@ -64,7 +64,7 @@ function dn
 end
 
 function du
-    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/vscode/.config/nvim" --workspace-folder .
+    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/root/.config/nvim" --workspace-folder .
 end
 
 function di
@@ -76,7 +76,7 @@ function de
 end
 
 function dr
-    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/main/.config/nvim" --workspace-folder . --remove-existing-container
+    devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/root/.config/nvim" --workspace-folder . --remove-existing-container
 end
 
 # bind \cs '__ethp_commandline_toggle_sudo.fish'
