@@ -29,11 +29,5 @@ new-devcontainer project:
 	  echo "Initialized Git repository and created README.md." && \
 	cd - > /dev/null
 
-	#TODO replace when you've automized devcontainers and debugger in NVIM
-	if command -v code >/dev/null 2>&1; then \
-	  code "{{project}}"; \
-	  echo "Opened project in VS Code."; \
-	fi
-
 	@echo "Devcontainer project '{{project}}' created successfully."
 
