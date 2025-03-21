@@ -9,15 +9,37 @@
     "dockerfile": "Dockerfile"
   },
 
-  "settings": {},
+  "appPort": [ 3000, 5091,"6080:6080"],
 
-  "extensions": [
-    "ms-python.python",
-    "charliermarsh.ruff",
-    "ms-toolsai.jupyter",
-    "HenryTsz.nvim",
-    "ms-azuretools.vscode-docker"
-  ],
+  "forwardPorts": [6080],
+  "portsAttributes": {
+    "6080": {
+      "label": "desktop"
+    }
+  },
+
+
+  "features": {
+    "ghcr.io/devcontainers-extra/features/fish-apt-get:1": {},
+    "ghcr.io/devcontainers/features/desktop-lite:1": {
+     "password": "noPassword",
+     "webPort" : "6080",
+     "vncPort" : "5091"
+   }
+  },
+
+  "customizations": {
+    "vscode": {
+    "extensions": [
+      "ms-python.python",
+      "charliermarsh.ruff",
+      "ms-toolsai.jupyter",
+      "HenryTsz.nvim",
+      "ms-azuretools.vscode-docker"
+    ]
+
+    }
+  },
 
   "features": {
     "ghcr.io/devcontainers-extra/features/fish-apt-get:1": {},
@@ -26,7 +48,7 @@
 
 
   "runArgs": [
-    "--network=host",
+    // "--network=host",
     //      "--gpus",
     //      "all"
   ],

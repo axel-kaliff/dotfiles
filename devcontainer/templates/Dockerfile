@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y -q --allow-unauthenticated \
     fzf \
     ugrep \
     tmux \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz && \
@@ -49,15 +50,16 @@ RUN sh /starship-installer.sh --yes && rm /starship-installer.sh
 # RUN chmod -R ugoa=rwx /home/linuxbrew
 
 
-RUN useradd -ms /bin/bash main
-RUN mkdir /home/main/.config
-RUN mkdir /home/main/.config/fish/
-RUN chmod -R ugoa=rwx /home/main/.config
-USER main
+# RUN useradd -ms /bin/bash main
+# RUN mkdir /home/main/.config
+# RUN mkdir /home/main/.config/fish/
+# RUN chmod -R ugoa=rwx /home/main/.config
+# USER main
 
 # Set a default working directory.
 WORKDIR /workspace
 
+RUN apt-get update && apt-get install -y -q --allow-unauthenticated sudo
 
 RUN echo 'export PATH="$PATH:/opt/nvim-linux-x86_64/bin"' >> ~/.bashrc
 RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc
