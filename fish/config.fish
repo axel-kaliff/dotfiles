@@ -76,7 +76,7 @@ function de
 end
 
 function dp
-    devcontainer exec --workspace-folder . source .venv/bin/activate
+    devcontainer exec --workspace-folder source .venv/bin/activate
 end
 
 function dr
