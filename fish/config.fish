@@ -75,8 +75,8 @@ function de
     devcontainer exec --workspace-folder . nvim
 end
 
-function dp
-    devcontainer exec --workspace-folder source .venv/bin/activate
+function uva
+    source .venv/bin/activate
 end
 
 function dr
