@@ -105,6 +105,8 @@ export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:/opt/nvim-linux64/bin"
 export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 
+export XDG_CONFIG_HOME=".config/tmuxinator"
+
 # GO
 export PATH="$PATH:/usr/local/go/bin"
 
