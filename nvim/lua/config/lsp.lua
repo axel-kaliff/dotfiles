@@ -38,10 +38,10 @@ require('nightfox').load("nordfox")
 vim.cmd("colorscheme nordfox")
 
 local servers = {
-  ruff                = {},
+  ruff                 = {},
   jedi_language_server = {},
-  rust_analyzer       = {},
-  lua_ls              = {
+  rust_analyzer        = {},
+  lua_ls               = {
     Lua = {
       workspace = { checkThirdParty = false },
       telemetry = { enable = false },
@@ -134,4 +134,3 @@ vim.api.nvim_create_autocmd('LspAttach', {
     })
   end,
 })
-
