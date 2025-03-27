@@ -1,5 +1,4 @@
 app.zen_browser.zen
-ch.protonmail.protonmail-bridge
 com.bitwarden.desktop
 com.brave.Browser
 com.discordapp.Discord
