@@ -43,7 +43,7 @@ end
 function udot
     echo "Committing all changes, pulling from remote, and pushing to remote..."
     cd ~/dotfiles/
-    rsync -av ~/.config/tmuxinator ~/dotfiles/tmuxinator
+    rsync -a ~/.config/tmuxinator ~/dotfiles/
     git add .
     git commit -m "Update dotfiles"
     git pull
