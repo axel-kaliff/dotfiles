@@ -1,4 +1,4 @@
-install-setup: install-cli-tools generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles set-gnome-shortcuts
+install-setup: install-cli-tools generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles set-gnome-shortcuts install-mullvad
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages ensure-fish setup-atuin setup-git-config
@@ -131,6 +131,7 @@ setup-git-config:
 setup-atuin:
         @echo "Setting up atuin sync..."
         @atuin login -u akaliff
+        @atuin sync
 
 install-ghostty:
         @sudo cp ghostty_repo.txt /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:pgdev:ghostty.repo
@@ -152,7 +153,7 @@ setup-tmux:
 
 install-mullvad:
         wget --trust-server-names https://mullvad.net/download/app/rpm/latest
-        sudo dnf install ./MullvadVPN*.rpm
+        sudo rpm-ostree install ./MullvadVPN*.rpm
         rm MullvadVPN*.rpm
 # whishlist:
 # function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
