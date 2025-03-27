@@ -45,6 +45,6 @@ root: ~/
 # attach: false
 
 windows:
-  - editor: nvim
-  - files: y
   - term: .
+  - files: y
+  - editor: nvim
