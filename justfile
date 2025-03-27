@@ -153,6 +153,7 @@ setup-tmux:
 install-mullvad:
         wget --trust-server-names https://mullvad.net/download/app/rpm/latest
         sudo dnf install ./MullvadVPN*.rpm
+        rm MullvadVPN*.rpm
 # whishlist:
 # function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
 # instead of defining default dirs in justfile, have a txt file that you read from
