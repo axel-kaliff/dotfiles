@@ -142,7 +142,7 @@ set-gnome-shortcuts:
 
         @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ name "Launch Ghostty"
 
-        @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ command "/var/home/akaliff/.local/bin/ghostty"
+        @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ command "/usr/bin/ghostty"
 
         @gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/ binding "<Super>t"
 
@@ -157,4 +157,7 @@ install-mullvad:
 # function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
 # instead of defining default dirs in justfile, have a txt file that you read from
 
-# TODO mullvad
+
+# TODO ::
+# mullvad
+# ghostty installer should check if it's installed
