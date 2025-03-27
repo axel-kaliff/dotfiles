@@ -3,7 +3,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Load configuration modules
-require('config.neotree')
+-- require('config.neotree')
 require('config.options')
 require('config.plugins')
 require('config.keymaps')
