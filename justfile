@@ -1,7 +1,7 @@
-install-setup: install-cli-tools generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles
+install-setup: install-cli-tools generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles set-gnome-shortcuts
   @echo 'Installation finished 🍾🥳'
 
-install-cli-tools: install-brew install-brew-packages install-rustup ensure-fish 
+install-cli-tools: install-brew install-brew-packages ensure-fish setup-atuin setup-git-config
   @echo 'CLI tools installed 🚀🤖'
 
 install-brew:
@@ -136,7 +136,7 @@ install-ghostty:
         @sudo cp ghostty_repo.txt /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:pgdev:ghostty.repo
         @rpm-ostree update --install ghostty
 
-set-gnome-shortcuts: install-ghostty
+set-gnome-shortcuts:
         # ghostty
         @gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10/']"
 
@@ -150,7 +150,9 @@ setup-tmux:
         @cd $HOME
         @git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
-
+install-mullvad:
+        wget --trust-server-names https://mullvad.net/download/app/rpm/latest
+        sudo dnf install ./MullvadVPN*.rpm
 # whishlist:
 # function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
 # instead of defining default dirs in justfile, have a txt file that you read from
