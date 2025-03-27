@@ -52,3 +52,5 @@ windows:
       # synchronize: after
       panes:
         - vim
+  - files: y
+  - term: .
