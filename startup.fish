@@ -1,9 +1,10 @@
 #!/usr/bin/env fish
 
+echo "Hello world"
 # TODO add this to atuin
-udot
+# udot
 
 # Step 2: Start flatpaks
-flatpak run md.obsidian.Obsidian &
-flatpak run io.github.slgobinath.SafeEyes &
+# flatpak run md.obsidian.Obsidian &
+# flatpak run io.github.slgobinath.SafeEyes &
 

@@ -161,5 +161,6 @@ install-mullvad:
 
 
 # TODO ::
-# mullvad
 # ghostty installer should check if it's installed
+# tmux not installing plugins
+
