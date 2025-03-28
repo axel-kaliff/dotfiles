@@ -1,5 +1,4 @@
 app.zen_browser.zen
-ch.protonmail.protonmail-bridge
 com.bitwarden.desktop
 com.brave.Browser
 com.discordapp.Discord
@@ -9,17 +8,14 @@ com.github.PintaProject.Pinta
 com.github.rafostar.Clapper
 com.github.tchx84.Flatseal
 com.github.unrud.VideoDownloader
-com.heroicgameslauncher.hgl
 com.jeffser.Alpaca
 com.jgraph.drawio.desktop
 com.mattjakeman.ExtensionManager
-com.mudeprolinux.whakarere
 com.obsproject.Studio
 com.sindresorhus.Caprine
 com.slack.Slack
 com.spotify.Client
 com.unity.UnityHub
-com.valvesoftware.Steam
 dev.bragefuglseth.Keypunch
 dev.deedles.Trayscale
 dev.zed.Zed
@@ -33,7 +29,6 @@ io.podman_desktop.PodmanDesktop
 md.obsidian.Obsidian
 net.codelogistics.webapps
 net.lutris.Lutris
-net.mkiol.SpeechNote
 net.mullvad.MullvadBrowser
 nl.hjdskes.gcolor3
 org.blender.Blender

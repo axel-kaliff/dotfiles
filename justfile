@@ -1,4 +1,4 @@
-install-setup: install-cli-tools generate-ssh-key install-flatpaks startup-script-setup overwrite-local-dotfiles set-gnome-shortcuts install-mullvad
+install-setup: install-cli-tools generate-ssh-key install-flatpaks overwrite-local-dotfiles set-gnome-shortcuts install-mullvad
   @echo 'Installation finished 🍾🥳'
 
 install-cli-tools: install-brew install-brew-packages ensure-fish setup-atuin setup-git-config
@@ -90,18 +90,6 @@ install-dnf-packages:
 		exit 1; \
 	fi
 
-startup-script-setup:
-        @echo "Setting up system startup script..."
-        @mkdir -p ~/.config/systemd/user
-
-        @printf "[Unit]\\nDescription=Run dotfiles and start applications at startup\\n\\n[Service]\\nExecStart=/usr/bin/fish ~/dotfiles/startup.fish\\nRestart=on-failure\\n\\n[Install]\\nWantedBy=default.target\\n" > ~/.config/systemd/user/on_startup.service
-
-        @chmod 644 ~/.config/systemd/user/on_startup.service
-        @systemctl --user daemon-reload
-        @systemctl --user enable ~/.config/systemd/user/on_startup.service
-        @systemctl --user start on_startup.service
-
-
 install-docker:
         @echo "Checking if Docker is installed... 🐳"
         @if ! command -v docker &> /dev/null; then \
@@ -155,11 +143,7 @@ install-mullvad:
         wget --trust-server-names https://mullvad.net/download/app/rpm/latest
         sudo rpm-ostree install ./MullvadVPN*.rpm
         rm MullvadVPN*.rpm
-# whishlist:
-# function to create dirs and install dnf packages so the checking stuff doesn't have to be repeated
-# instead of defining default dirs in justfile, have a txt file that you read from
 
-
-# TODO ::
-# mullvad
+# TODO
 # ghostty installer should check if it's installed
+
