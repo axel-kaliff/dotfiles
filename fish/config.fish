@@ -74,6 +74,11 @@ function di
     devcontainer exec --workspace-folder . fish
 end
 
+function dy
+    devcontainer exec --workspace-folder . fish yazi
+end
+
+
 function de
     devcontainer exec --workspace-folder . nvim
 end
