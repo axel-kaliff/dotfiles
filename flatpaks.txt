@@ -48,7 +48,6 @@ org.gnome.Weather
 org.inkscape.Inkscape
 org.kde.dolphin
 org.kde.okular
-org.mozilla.firefox
 org.mozilla.Thunderbird
 org.onlyoffice.desktopeditors
 org.qbittorrent.qBittorrent
