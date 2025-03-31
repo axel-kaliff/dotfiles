@@ -2,23 +2,17 @@ app.zen_browser.zen
 com.bitwarden.desktop
 com.brave.Browser
 com.discordapp.Discord
-com.github.jeromerobert.pdfarranger
-com.github.mgropp.PdfJumbler
-com.github.PintaProject.Pinta
 com.github.rafostar.Clapper
 com.github.tchx84.Flatseal
 com.github.unrud.VideoDownloader
-com.jeffser.Alpaca
 com.jgraph.drawio.desktop
 com.mattjakeman.ExtensionManager
 com.obsproject.Studio
 com.sindresorhus.Caprine
 com.slack.Slack
 com.spotify.Client
-com.unity.UnityHub
 dev.bragefuglseth.Keypunch
 dev.deedles.Trayscale
-dev.zed.Zed
 io.freetubeapp.FreeTube
 io.github.dvlv.boxbuddyrs
 io.github.elevenhsoft.WebApps
@@ -33,7 +27,6 @@ net.mullvad.MullvadBrowser
 nl.hjdskes.gcolor3
 org.blender.Blender
 org.fedoraproject.MediaWriter
-org.fkoehler.KTailctl
 org.gnome.baobab
 org.gnome.Calculator
 org.gnome.Calendar
@@ -43,7 +36,6 @@ org.gnome.clocks
 org.gnome.Connections
 org.gnome.Contacts
 org.gnome.Decibels
-org.gnome.DejaDup
 org.gnome.font-viewer
 org.gnome.Logs
 org.gnome.Loupe
@@ -53,7 +45,6 @@ org.gnome.NetworkDisplays
 org.gnome.Papers
 org.gnome.TextEditor
 org.gnome.Weather
-org.gnome.World.PikaBackup
 org.inkscape.Inkscape
 org.kde.dolphin
 org.kde.okular
@@ -61,7 +52,6 @@ org.mozilla.firefox
 org.mozilla.Thunderbird
 org.onlyoffice.desktopeditors
 org.qbittorrent.qBittorrent
-org.remmina.Remmina
 org.videolan.VLC
 page.tesk.Refine
 us.zoom.Zoom
