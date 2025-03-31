@@ -45,6 +45,7 @@ root: ~/projects/cssite
 # attach: false
 
 windows:
-  - editor: du ; de
-  - files: dy
-  - term: di
+  - editor: nvim
+  - files: y
+  - term: 
+  - server: hugo server -D

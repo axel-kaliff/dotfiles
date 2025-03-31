@@ -115,5 +115,5 @@ export PATH="$PATH:/usr/local/go/bin"
 export GOPATH="$USER/home/go"
 alias golint="$GOPATH/bin/golangci-lint"
 
-atuin init fish | source
-starship init fish | source
+/home/linuxbrew/.linuxbrew/bin/atuin init fish | source
+/usr/bin/starship init fish | source
