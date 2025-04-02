@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/sil.yml
 
 name: sil
-root: ~/projects/SIL/
+root: ~/projects/SIL/containers/
 
 # Optional tmux socket
 # socket_name: foo
@@ -45,5 +45,5 @@ on_project_start: dr
 # attach: false
 
 windows:
-  - editor: du ; de
-  - server: du ; di
+  - editor: 
+  - server:
