@@ -1,28 +1,28 @@
 -- Treesitter configuration
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
-    ensure_installed = {
-      'c', 'python', 'cpp', 'go', 'lua', 'rust',
+    ensure_installed      = {
+      'c', 'python', 'cpp', 'lua', 'rust',
       'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash'
     },
-    auto_install = false,
-    sync_install = false,
-    highlight    = { enable = true },
-    indent       = { enable = true },
+    auto_install          = false,
+    sync_install          = false,
+    highlight             = { enable = true },
+    indent                = { enable = true },
     incremental_selection = {
-      enable      = true,
-      keymaps     = {
+      enable  = true,
+      keymaps = {
         init_selection    = '<c-space>',
         node_incremental  = '<c-space>',
         scope_incremental = '<c-s>',
         node_decremental  = '<M-space>',
       },
     },
-    textobjects = {
+    textobjects           = {
       select = {
-        enable     = true,
-        lookahead  = true,
-        keymaps    = {
+        enable    = true,
+        lookahead = true,
+        keymaps   = {
           ['aa'] = '@parameter.outer',
           ['ia'] = '@parameter.inner',
           ['af'] = '@function.outer',
@@ -35,19 +35,19 @@ vim.defer_fn(function()
         enable = true,
         set_jumps = true,
         goto_next_start = {
-          [']m']  = '@function.outer',
+          [']m'] = '@function.outer',
           [']]'] = '@class.outer',
         },
         goto_next_end = {
-          [']M']  = '@function.outer',
+          [']M'] = '@function.outer',
           [']['] = '@class.outer',
         },
         goto_previous_start = {
-          ['[m']  = '@function.outer',
+          ['[m'] = '@function.outer',
           ['[['] = '@class.outer',
         },
         goto_previous_end = {
-          ['[M']  = '@function.outer',
+          ['[M'] = '@function.outer',
           ['[]'] = '@class.outer',
         },
       },
@@ -59,4 +59,3 @@ vim.defer_fn(function()
     },
   }
 end, 0)
-
