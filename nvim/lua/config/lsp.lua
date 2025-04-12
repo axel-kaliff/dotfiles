@@ -48,8 +48,6 @@ local servers = {
   },
 }
 
-require('neodev').setup()
-
 ---------------------------------------------------------------------------
 -- Autoformat Toggle & Formatting on Save (Kickstart functionality)
 ---------------------------------------------------------------------------
