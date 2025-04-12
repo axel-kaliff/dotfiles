@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/cssite.yml
 
 name: cssite
-root: ~/projects/cssite
+root: ~/projects/case-study-site/
 
 # Optional tmux socket
 # socket_name: foo

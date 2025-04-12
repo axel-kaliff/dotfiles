@@ -110,7 +110,8 @@ export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 export XDG_CONFIG_HOME="$HOME/.config/"
 
 # GO
-export GOPATH="/home/linuxbrew/.linuxbrew/bin/go"
+export GOPATH=$HOME/go
+export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 /home/linuxbrew/.linuxbrew/bin/atuin init fish | source
 /usr/bin/starship init fish | source

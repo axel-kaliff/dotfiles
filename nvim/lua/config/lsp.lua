@@ -38,6 +38,7 @@ require('nightfox').load("nordfox")
 vim.cmd("colorscheme nordfox")
 
 local servers = {
+  pyright              = {},
   ruff                 = {},
   jedi_language_server = {},
   rust_analyzer        = {},
@@ -67,15 +68,6 @@ mason_lspconfig.setup_handlers {
     }
   end,
 }
-
--- Specific configuration for Ruff (if needed)
-require('lspconfig').ruff.setup({
-  init_options = {
-    settings = {
-      -- Ruff language server settings can be added here
-    }
-  }
-})
 
 ---------------------------------------------------------------------------
 -- Autoformat Toggle & Formatting on Save (Kickstart functionality)

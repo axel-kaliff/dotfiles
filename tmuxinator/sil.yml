@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/sil.yml
 
 name: sil
-root: ~/projects/SIL/containers/
+root: ~/projects/SIL/sil2
 
 # Optional tmux socket
 # socket_name: foo
