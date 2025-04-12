@@ -23,16 +23,15 @@ require('lazy').setup({
     'tpope/vim-sleuth',
 
     -- LSP and related plugins
-    {
-      'neovim/nvim-lspconfig',
-      dependencies = {
-        { 'williamboman/mason.nvim', config = true },
-        'williamboman/mason-lspconfig.nvim',
-        { 'j-hui/fidget.nvim',       opts = {} },
-        'folke/neodev.nvim',
-        'saghen/blink.cmp',
-      },
-    },
+    -- {
+    --   'neovim/nvim-lspconfig',
+    --   dependencies = {
+    --     { 'williamboman/mason.nvim', config = true },
+    --     'williamboman/mason-lspconfig.nvim',
+    --     { 'j-hui/fidget.nvim',       opts = {} },
+    --     'folke/neodev.nvim',
+    --   },
+    -- },
 
     -- Autocompletion plugins
     {

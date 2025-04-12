@@ -49,24 +49,7 @@ local servers = {
   },
 }
 
-local capabilities = require('blink.cmp').get_lsp_capabilities()
-local lspconfig = require('lspconfig')
-lspconfig['lua_ls'].setup({ capabilities = capabilities })
-
 require('neodev').setup()
-
-local mason_lspconfig = require('mason-lspconfig')
-mason_lspconfig.setup { ensure_installed = vim.tbl_keys(servers) }
-mason_lspconfig.setup_handlers {
-  function(server_name)
-    require('lspconfig')[server_name].setup {
-      capabilities = capabilities,
-      on_attach    = on_attach,
-      settings     = servers[server_name],
-      filetypes    = (servers[server_name] or {}).filetypes,
-    }
-  end,
-}
 
 ---------------------------------------------------------------------------
 -- Autoformat Toggle & Formatting on Save (Kickstart functionality)
@@ -126,12 +109,4 @@ vim.api.nvim_create_autocmd('LspAttach', {
       end,
     })
   end,
-})
-
-require('lspconfig').ruff.setup({
-  init_options = {
-    settings = {
-      -- Ruff language server settings go here
-    }
-  }
 })
