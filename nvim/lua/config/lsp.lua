@@ -31,7 +31,6 @@ end
 
 -- Mason and LSP setup
 require('mason').setup()
-require('mason-lspconfig').setup()
 
 -- Load colorscheme (using nightfox in this example)
 require('nightfox').load("nordfox")
