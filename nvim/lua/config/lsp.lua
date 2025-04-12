@@ -39,7 +39,6 @@ vim.cmd("colorscheme nordfox")
 
 local servers = {
   pyright              = {},
-  ruff                 = {},
   jedi_language_server = {},
   rust_analyzer        = {},
   lua_ls               = {
@@ -127,4 +126,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
       end,
     })
   end,
+})
+
+require('lspconfig').ruff.setup({
+  init_options = {
+    settings = {
+      -- Ruff language server settings go here
+    }
+  }
 })
