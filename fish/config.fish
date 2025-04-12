@@ -100,8 +100,8 @@ function y
 end
 
 # GO
-export GOPATH=$HOME/go
-export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+export GOPATH="$HOME/go"
+export PATH="$PATH:$GOPATH/bin"
 
 
 export EDITOR=nvim
@@ -113,5 +113,5 @@ export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 
 export XDG_CONFIG_HOME="$HOME/.config/"
 
-/home/linuxbrew/.linuxbrew/bin/atuin init fish | source
-/usr/bin/starship init fish | source
+atuin init fish | source
+starship init fish | source

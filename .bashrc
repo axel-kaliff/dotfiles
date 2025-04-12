@@ -5,8 +5,8 @@ if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-export GOPATH=$HOME/go
-export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+export GOPATH="$HOME/go"
+export PATH="$PATH:/usr/local/go/bin:$GOPATH/bin"
 
 
 # User specific environment
