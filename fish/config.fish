@@ -113,5 +113,5 @@ export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 
 export XDG_CONFIG_HOME="$HOME/.config/"
 
-atuin init fish | source
-starship init fish | source
+/home/linuxbrew/.linuxbrew/bin/atuin init fish | source
+/home/linuxbrew/.linuxbrew/bin/starship init fish | source
