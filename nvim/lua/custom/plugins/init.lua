@@ -205,5 +205,7 @@ return {
     },
 
 
+    { "EdenEast/nightfox.nvim" },
 
 }
+
