@@ -164,6 +164,12 @@ vim.opt.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
+vim.keymap.set('n', '<C-m>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
+vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cycle Previous' })
+
+vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
+vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
+
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -886,8 +892,8 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'nightfox'
       require('nightfox').load 'nordfox'
+      vim.cmd.colorscheme 'nordfox'
       vim.cmd 'colorscheme nordfox'
     end,
   },
