@@ -207,5 +207,20 @@ return {
 
     { "EdenEast/nightfox.nvim" },
 
+	require("bufferline").setup({
+	  options = {
+	    offsets = {
+	      {
+		filetype = "neo-tree",
+		text = "File Explorer",
+		highlight = "Directory",
+		separator = true
+	      }
+	    },
+	    -- numbers = function(opts)
+	    --   return string.format('%s·', opts.ordinal)
+	    -- end,
+	  }
+	})
 }
 
