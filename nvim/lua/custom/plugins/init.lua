@@ -25,5 +25,58 @@ return {
     },
 
 
+    -- Neotree
+    {
+      "nvim-neo-tree/neo-tree.nvim",
+      branch = "v3.x",
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+        "nvim-tree/nvim-web-devicons",
+        "MunifTanjim/nui.nvim",
+      },
+      config = function()
+        require('neo-tree').setup({
+          close_if_last_window = true,
+          -- popup_border_style = 'rounded',
+          enable_git_status = true,
+          enable_diagnostics = true,
+          source_selector = {
+            winbar = false,
+          },
+
+          default_component_configs = {
+            indent = {
+              indent_size = 1,
+              padding = 1, -- extra padding on left hand side
+              with_markers = true,
+              indent_marker = '│',
+              last_indent_marker = '└',
+              highlight = 'NeoTreeIndentMarker',
+            },
+            icon = {
+              folder_closed = '',
+              folder_open = '',
+              default = '',
+            },
+          },
+          filesystem = {
+            use_libuv_file_watcher = true,
+            filtered_items = {
+              show_hidden = true,
+              respect_gitignore = true,
+            },
+            window = {
+              position = 'left',
+              mappings = {
+                f = 'none',
+              },
+            },
+          },
+        })
+      end,
+    },
+
+
+
 
 }
