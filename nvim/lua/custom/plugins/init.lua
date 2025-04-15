@@ -92,9 +92,6 @@ return {
 		separator = true
 	      }
 	    },
-	    -- numbers = function(opts)
-	    --   return string.format('%s·', opts.ordinal)
-	    -- end,
 	  }
 	})
       end,
