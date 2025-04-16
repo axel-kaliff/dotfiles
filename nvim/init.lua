@@ -672,6 +672,14 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
+        ruff {
+          init_options = {
+            settings = {
+              -- Ruff language server settings go here
+            },
+          },
+        },
+
         pyright = {
           settings = {
             pyright = {
