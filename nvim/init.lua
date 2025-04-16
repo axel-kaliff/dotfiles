@@ -672,7 +672,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        ruff {
+        ruff = {
           init_options = {
             settings = {
               -- Ruff language server settings go here
