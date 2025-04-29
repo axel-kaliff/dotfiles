@@ -1,5 +1,8 @@
-install-setup: install-cli-tools generate-ssh-key install-flatpaks overwrite-local-dotfiles set-gnome-shortcuts install-mullvad
+install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles setup-tmux
   @echo 'Installation finished 🍾🥳'
+
+setup-workstation: install-cli-applications install-flatpaks
+  @echo 'Flatpaks installed <3'
 
 install-cli-tools: install-brew install-brew-packages ensure-fish setup-atuin setup-git-config
   @echo 'CLI tools installed 🚀🤖'
@@ -18,21 +21,10 @@ install-brew-packages:
   @echo 'Installing brew packages 🍻'
   @brew bundle
   @brew update
-  @broot install
 
 overwrite-local-dotfiles:
         @echo "Overwriting local conflicting dotfiles..."
-        @rsync -av --exclude='.git' --exclude='broot/' --exclude='*fish_variables' ~/dotfiles/ ~/.config/
-
-install-rustup:
-	@echo "Checking if rustup is installed... 🦀"
-	@if ! command -v rustup &> /dev/null; then \
-		echo "Rustup not found. Installing rustup 🦀"; \
-		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
-		echo "Rustup installation completed 🦀"; \
-	else \
-		echo "Rustup is already installed 🦀"; \
-	fi
+        @rsync -av --exclude='.git'  --exclude='*fish_variables' ~/dotfiles/ ~/.config/
 
 FLATPAK_LIST := "flatpaks.txt"
 
@@ -139,10 +131,6 @@ setup-tmux:
         @cd $HOME
         @git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
-install-mullvad:
-        wget --trust-server-names https://mullvad.net/download/app/rpm/latest
-        sudo rpm-ostree install ./MullvadVPN*.rpm
-        rm MullvadVPN*.rpm
 
 # TODO
 # ghostty installer should check if it's installed

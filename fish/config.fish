@@ -1,6 +1,6 @@
 if status is-interactive
     if not set -q TMUX
-        tmuxinator main
+        /home/linuxbrew/.linuxbrew/bin/tmuxinator main
     end
 end
 
