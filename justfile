@@ -1,4 +1,8 @@
-install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles setup-tmux
+# Run all recipes in a login bash shell so it picks up your updated PATH
+set shell := ["bash", "-lc"]
+
+
+install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles setup-tmux link-fish
   @echo 'Installation finished 🍾🥳'
 
 setup-workstation: install-cli-applications install-flatpaks
@@ -16,6 +20,21 @@ install-brew:
   else \
           echo "Homebrew is already installed 🍻"; \
   fi
+
+link-fish:
+    @# Source your shell startup files (no-ops if they don’t exist)
+    @. ~/.profile 2>/dev/null || true
+    @. ~/.bashrc  2>/dev/null || true
+    @# Now find fish at run-time
+    @fish_path="$(command -v fish)" || { \
+      echo "✗ fish binary not found in PATH"; \
+      exit 1; \
+    }
+    @# Ensure ~/links exists
+    @mkdir -p "$HOME/links"
+    @# Create or update the symlink
+    @ln -sf "$fish_path" "$HOME/links/fish"
+    @echo "✓ Linked $fish_path → $HOME/links/fish"
 
 install-brew-packages:
   @echo 'Installing brew packages 🍻'
