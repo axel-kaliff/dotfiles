@@ -166,8 +166,8 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
-vim.keymap.set('n', '<C-j>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
-vim.keymap.set('n', '<C-r>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cycle Previous' })
+vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
+vim.keymap.set('n', '<C-m>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cycle Previous' })
 
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
@@ -194,7 +194,7 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 -- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
--- Keybindsr
+-- Keybinds
 -- to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
