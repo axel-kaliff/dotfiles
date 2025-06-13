@@ -166,8 +166,8 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
-vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
-vim.keymap.set('n', '<C-m>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cycle Previous' })
+vim.keymap.set('n', '<C-m>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Buffer Cycle Next' })
+vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cycle Previous' })
 
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
