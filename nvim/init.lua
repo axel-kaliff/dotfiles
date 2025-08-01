@@ -178,7 +178,28 @@ vim.keymap.set('n', '<leader>e', '<cmd>Neotree toggle position=left<cr>', { desc
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+-- vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+-- SESSION MANAGEMENT
+-- load the session for the current directory
+vim.keymap.set('n', '<leader>qs', function()
+  require('persistence').load()
+end)
+
+-- select a session to load
+vim.keymap.set('n', '<leader>qS', function()
+  require('persistence').select()
+end)
+
+-- load the last session
+vim.keymap.set('n', '<leader>ql', function()
+  require('persistence').load { last = true }
+end)
+
+-- stop Persistence => session won't be saved on exit
+vim.keymap.set('n', '<leader>qd', function()
+  require('persistence').stop()
+end)
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which

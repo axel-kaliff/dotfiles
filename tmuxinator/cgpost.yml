@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/cgpost.yml
 
 name: cgpost
-root: ~/projects/cg_postprocess/
+root: ~/Work/projects/cg_postprocess/
 
 # Optional tmux socket
 # socket_name: foo

@@ -115,11 +115,11 @@ return {
 
   { 'EdenEast/nightfox.nvim' },
 
-  -- require('lspconfig').ruff.setup {
-  --   init_options = {
-  --     settings = {
-  --       -- Ruff language server settings go here
-  --     },
-  --   },
-  -- },
+  {
+    'folke/persistence.nvim',
+    event = 'BufReadPre', -- this will only start session saving when an actual file was opened
+    opts = {
+      -- add any custom options here
+    },
+  },
 }
