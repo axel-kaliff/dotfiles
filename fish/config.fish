@@ -70,10 +70,13 @@ function du
     devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/devuser/.config/nvim" --workspace-folder .
 end
 
-function di
-    devcontainer exec --workspace-folder . fish
+function db
+    devcontainer exec --workspace-folder . bash
 end
 
+function df
+    devcontainer exec --workspace-folder . fish
+end
 
 function de
     devcontainer exec --workspace-folder . nvim
