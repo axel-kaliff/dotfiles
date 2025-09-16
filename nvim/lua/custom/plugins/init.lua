@@ -79,7 +79,6 @@ return {
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
       require('bufferline').setup {
-
         options = {
           offsets = {
             {
@@ -91,6 +90,14 @@ return {
           },
         },
       }
+    end,
+  },
+
+  -- tmux nvim navigation
+  {
+    'aserowy/tmux.nvim',
+    config = function()
+      require('tmux').setup {}
     end,
   },
 
