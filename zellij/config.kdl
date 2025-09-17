@@ -1,6 +1,26 @@
 
 keybinds clear-defaults=true {
 
+// unbind "Ctrl ["
+//
+//     // Define the keybind for all modes that you might want to exit from.
+//     // This makes Ctrl+[ behave like the Escape key.
+//     pane {
+//         bind "Ctrl [" { SwitchToMode "Normal"; }
+//     }
+//     tab {
+//         bind "Ctrl [" { SwitchToMode "Normal"; }
+//     }
+//     resize {
+//         bind "Ctrl [" { SwitchToMode "Normal"; }
+//     }
+//     scroll {
+//         bind "Ctrl [" { SwitchToMode "Normal"; }
+//     }
+//     session {
+//         bind "Ctrl [" { SwitchToMode "Normal"; }
+// }
+
 normal {
 	bind "Enter" {
             // Passthru `Enter`.
@@ -250,6 +270,7 @@ shared {
     }
     shared_except "normal" "locked" "entersearch" "renametab" "renamepane" {
         bind "esc" { SwitchToMode "normal"; }
+        bind "Ctrl [" { SwitchToMode "normal"; }
     }
     shared_among "pane" "tmux" {
         bind "x" { CloseFocus; SwitchToMode "normal"; }
@@ -275,16 +296,19 @@ shared {
     entersearch {
         bind "Ctrl c" { SwitchToMode "scroll"; }
         bind "esc" { SwitchToMode "scroll"; }
+        bind "Ctrl [" { SwitchToMode "scroll"; }
         bind "enter" { SwitchToMode "search"; }
     }
     renametab {
         bind "esc" { UndoRenameTab; SwitchToMode "tab"; }
+        bind "Ctrl [" { UndoRenameTab; SwitchToMode "tab"; }
     }
     shared_among "renametab" "renamepane" {
         bind "Ctrl c" { SwitchToMode "normal"; }
     }
     renamepane {
         bind "esc" { UndoRenamePane; SwitchToMode "pane"; }
+        bind "Ctrl [" { UndoRenamePane; SwitchToMode "pane"; }
     }
     shared_among "session" "tmux" {
         bind "d" { Detach; }
