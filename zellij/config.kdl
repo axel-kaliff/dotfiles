@@ -14,21 +14,6 @@ normal {
             MessagePlugin "autolock" {};
         }
 
-        bind "Ctrl h" {
-            MoveFocusOrTab "Left";
-        }
-        bind "Ctrl l" {
-            MoveFocusOrTab "Right";
-        }
-        bind "Ctrl j" {
-            MoveFocus "Down";
-        }
-        bind "Ctrl k" {
-            MoveFocus "Up";
-        }
-
-	}
-
 
     locked {
         bind "Ctrl g" { SwitchToMode "normal"; }
