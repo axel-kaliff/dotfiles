@@ -30,6 +30,9 @@ shared {
             // Enable the autolock plugin.
             MessagePlugin "autolock" {payload "enable";};
         }
+
+	bind "Ctrl 1" { GoToTab 1; }
+	bind "Ctrl 2" { GoToTab 2; }
     }
 
     shared_except "locked" {
