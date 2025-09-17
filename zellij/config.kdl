@@ -44,7 +44,6 @@ shared {
             SwitchToMode "Locked";
         }
 
-	unbind "Ctrl h"
         bind "Ctrl h" {
             MoveFocusOrTab "Left";
         }
@@ -220,7 +219,7 @@ shared {
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "move" {
-	// bind "Ctrl h" { SwitchToMode "move"; }
+	bind "Ctrl m" { SwitchToMode "move"; }
     }
     shared_except "locked" "session" {
         bind "Ctrl o" { SwitchToMode "session"; }
