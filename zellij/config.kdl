@@ -14,20 +14,6 @@ normal {
             MessagePlugin "autolock" {};
         }
 
-	unbind "Ctrl 1" "Ctrl 2" "Ctrl 3" "Ctrl 4" "Ctrl 5" "Ctrl 6" "Ctrl 7" "Ctrl 8" "Ctrl 9"
-
-        // Bind Ctrl + <number> to go to the corresponding tab
-        bind "Ctrl 1" { GoToTab 1; }
-        bind "Ctrl 2" { GoToTab 2; }
-        bind "Ctrl 3" { GoToTab 3; }
-        bind "Ctrl 4" { GoToTab 4; }
-        bind "Ctrl 5" { GoToTab 5; }
-        bind "Ctrl 6" { GoToTab 6; }
-        bind "Ctrl 7" { GoToTab 7; }
-        bind "Ctrl 8" { GoToTab 8; }
-        bind "Ctrl 9" { GoToTab 9; }
-
-
 	}
 
 
@@ -58,6 +44,7 @@ shared {
             SwitchToMode "Locked";
         }
 
+	unbind "Ctrl h"
         bind "Ctrl h" {
             MoveFocusOrTab "Left";
         }
@@ -233,7 +220,7 @@ shared {
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "move" {
-        bind "Ctrl h" { SwitchToMode "move"; }
+	// bind "Ctrl h" { SwitchToMode "move"; }
     }
     shared_except "locked" "session" {
         bind "Ctrl o" { SwitchToMode "session"; }
