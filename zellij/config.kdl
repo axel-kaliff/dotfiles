@@ -14,9 +14,6 @@ normal {
             MessagePlugin "autolock" {};
         }
 
-	unbind "Ctrl 1" "Ctrl 2" "Ctrl 3" "Ctrl 4" "Ctrl 5" "Ctrl 6" "Ctrl 7" "Ctrl 8" "Ctrl 9"
-	bind "Ctrl 1" { GoToTab 1; }
-	bind "Ctrl 2" { GoToTab 2; }
 
     locked {
         bind "Ctrl g" { SwitchToMode "normal"; }
