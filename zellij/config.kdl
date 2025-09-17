@@ -34,11 +34,13 @@ shared {
     shared_except "locked" {
         // Put keybindings here if they conflict with Vim or others.
 	bind "Ctrl q" {
-            Run "clear"
+            WriteChars "clear\n"
         }
 
 	bind "Ctrl e" {
-            Run "nvim"
+		NewTab {
+		    Run "nvim"
+		}
         }
 
         bind "Alt z" {
