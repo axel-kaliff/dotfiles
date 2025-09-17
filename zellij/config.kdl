@@ -15,6 +15,10 @@ normal {
         }
 
 
+
+	}
+
+
     locked {
         bind "Ctrl g" { SwitchToMode "normal"; }
 	bind "Alt z" {
@@ -30,8 +34,6 @@ shared {
             // Enable the autolock plugin.
             MessagePlugin "autolock" {payload "enable";};
         }
-
-
     }
 
     shared_except "locked" {
