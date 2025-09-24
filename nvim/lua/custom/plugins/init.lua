@@ -1,7 +1,3 @@
--- You can add your own plugins here or in other files in this directory!
---  I promise not to create any merge conflicts in this directory :)
---
--- See the kickstart.nvim README for more information
 return {
 
   {
@@ -33,6 +29,7 @@ return {
       'nvim-tree/nvim-web-devicons',
       'MunifTanjim/nui.nvim',
     },
+    lazy = false,
     config = function()
       require('neo-tree').setup {
         close_if_last_window = true,
@@ -82,7 +79,6 @@ return {
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
       require('bufferline').setup {
-
         options = {
           offsets = {
             {
@@ -94,6 +90,27 @@ return {
           },
         },
       }
+    end,
+  },
+
+  -- tmux nvim navigation
+  -- {
+  --   'aserowy/tmux.nvim',
+  --   config = function()
+  --     require('tmux').setup {}
+  --   end,
+  -- },
+
+  {
+    'https://github.com/swaits/zellij-nav.nvim',
+    config = function()
+      require('zellij-nav').setup()
+
+      local map = vim.keymap.set
+      map('n', '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { desc = 'navigate left or tab' })
+      map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
+      map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
+      map('n', '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { desc = 'navigate right or tab' })
     end,
   },
 
@@ -115,11 +132,11 @@ return {
 
   { 'EdenEast/nightfox.nvim' },
 
-  -- require('lspconfig').ruff.setup {
-  --   init_options = {
-  --     settings = {
-  --       -- Ruff language server settings go here
-  --     },
-  --   },
-  -- },
+  {
+    'folke/persistence.nvim',
+    event = 'BufReadPre', -- this will only start session saving when an actual file was opened
+    opts = {
+      -- add any custom options here
+    },
+  },
 }

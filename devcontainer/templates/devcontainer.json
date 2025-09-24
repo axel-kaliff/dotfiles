@@ -1,40 +1,21 @@
 {
   "name": "$PROJECT Dev Container",
 
-//  "dockerComposeFile": "docker-compose.yml",
-//  "service": "devcontainer",
-//  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
-
   "build": {
     "dockerfile": "Dockerfile"
   },
 
-  "appPort": [ 3000, 5091,"6080:6080"],
-
-  "forwardPorts": [6080],
-  "portsAttributes": {
-    "6080": {
-      "label": "desktop"
-    }
-  },
-
-
   "features": {
     "ghcr.io/devcontainers-extra/features/fish-apt-get:1": {},
-    "ghcr.io/devcontainers/features/desktop-lite:1": {
-     "password": "noPassword",
-     "webPort" : "6080",
-     "vncPort" : "5091"
-   }
-  },
+},
 
   "customizations": {
     "vscode": {
     "extensions": [
       "ms-python.python",
+      "ms-python.debugpy",
       "charliermarsh.ruff",
       "ms-toolsai.jupyter",
-      "HenryTsz.nvim",
       "ms-azuretools.vscode-docker"
     ]
 
@@ -43,19 +24,21 @@
 
   "features": {
     "ghcr.io/devcontainers-extra/features/fish-apt-get:1": {},
-    //"ghcr.io/devcontainers/features/nvidia-cuda:1.2.0": {}
   },
 
-
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
+  ],
   "runArgs": [
-    // "--network=host",
+    "--env=DISPLAY=${localEnv:DISPLAY}",
+    "--network=host",
     //      "--gpus",
     //      "all"
+
   ],
 
-  //"mounts": [
-  //  "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
-  //],
+
+  //"postCreateCommand": "pip install -r requirements.txt",
 
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}"

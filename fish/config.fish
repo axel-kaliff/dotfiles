@@ -1,8 +1,8 @@
-if status is-interactive
-    if not set -q TMUX
-        /home/linuxbrew/.linuxbrew/bin/tmuxinator main
-    end
-end
+# if status is-interactive
+#     if not set -q TMUX
+#         /home/linuxbrew/.linuxbrew/bin/tmuxinator main
+#     end
+# end
 
 set fish_greeting
 
@@ -70,10 +70,13 @@ function du
     devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/devuser/.config/nvim" --workspace-folder .
 end
 
-function di
-    devcontainer exec --workspace-folder . fish
+function db
+    devcontainer exec --workspace-folder . bash
 end
 
+function df
+    devcontainer exec --workspace-folder . fish
+end
 
 function de
     devcontainer exec --workspace-folder . nvim

@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/sil.yml
 
 name: sil
-root: ~/projects/SIL/sil2
+root: ~/Work/projects/SIL/sil3/
 
 # Optional tmux socket
 # socket_name: foo
@@ -45,5 +45,6 @@ on_project_start: dr
 # attach: false
 
 windows:
-  - editor: 
-  - server:
+  - server: 
+  - client: 
+  - editor: code . ; nvim
