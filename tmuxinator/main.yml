@@ -47,3 +47,4 @@ root: ~/
 windows:
   - term:
   - files: y
+  - editor: nvim
