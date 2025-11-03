@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/cgpost.yml
 
 name: cgpost
-root: ~/Work/projects/cg_postprocess/
+root: ~/projects/cg_postprocess/
 
 # Optional tmux socket
 # socket_name: foo
@@ -15,7 +15,7 @@ root: ~/Work/projects/cg_postprocess/
 # on_project_start: du
 
 # Run on project start, the first time
-# on_project_first_start: du
+on_project_first_start: du
 
 # Run on project start, after the first time
 # on_project_restart: command
@@ -51,5 +51,5 @@ windows:
       # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
       # synchronize: after
       panes:
-        - source .venv/bin/activate.fish ; nvim
-  - term: code . ; clear
+        - du ; de
+  - logs: di

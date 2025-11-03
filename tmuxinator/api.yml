@@ -1,7 +1,7 @@
 # /var/home/akaliff/.config/tmuxinator/api.yml
 
 name: api
-root: ~/Work/projects/cloudgripper-api/
+root: ~/projects/cloudgripper-api
 
 # Optional tmux socket
 # socket_name: foo
@@ -47,9 +47,12 @@ on_project_start: du
 windows:
   - editor:
       layout: main-vertical
+      # Synchronize all panes of this window, can be enabled before or after the pane commands run.
+      # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
+      # synchronize: after
       panes:
         - du ; de
   - runner:
       layout: main-vertical
       panes:
-        - di
+        - du ; di
