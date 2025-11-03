@@ -139,4 +139,6 @@ return {
       -- add any custom options here
     },
   },
+
+  { 'smithbm2316/centerpad.nvim' },
 }
