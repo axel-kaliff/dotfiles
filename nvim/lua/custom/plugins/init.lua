@@ -100,7 +100,7 @@ return {
         auto_start = true,
         ignore_sources = {
           git = true,
-          patterns = { '/%leftpad/', '/%rightpad/' },
+          patterns = { 'leftpad', 'rightpad' },
           symlink = true,
           ignore_cwd_only = true,
         },
