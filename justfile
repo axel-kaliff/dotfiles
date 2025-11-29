@@ -2,14 +2,17 @@
 set shell := ["bash", "-lc"]
 
 
-install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles setup-tmux link-fish
+install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles
   @echo 'Installation finished 🍾🥳'
 
 setup-workstation: install-cli-applications install-flatpaks
   @echo 'Flatpaks installed <3'
 
-install-cli-tools: install-brew install-brew-packages ensure-fish setup-atuin setup-git-config
+install-cli-tools: install-brew install-brew-packages ensure-fish setup-git-config
   @echo 'CLI tools installed 🚀🤖'
+
+first-install: setup-atuin setup-tmux
+  @echo 'First install complete 🚀🤖'
 
 install-brew:
   @echo "Checking if Homebrew is installed... 🍻"

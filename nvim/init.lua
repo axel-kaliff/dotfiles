@@ -1,5 +1,5 @@
 --[[
-
+--
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
@@ -19,6 +19,7 @@
 ========                                                     ========
 =====================================================================
 =====================================================================
+
 
 What is Kickstart?
 
@@ -207,7 +208,8 @@ end)
 --
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+vim.keymap.set('n', '<C-s>', ':w<CR>', { desc = 'Write buffer to file' })
+vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>:startinsert<CR>', { desc = 'Write buffer to file' })
 
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
@@ -219,6 +221,7 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 -- to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
+vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 --  See `:help wincmd` for a list of all window commands
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
