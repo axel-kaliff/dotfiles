@@ -92,6 +92,18 @@ return {
     end,
   },
 
+  {
+    'sQVe/bufignore.nvim',
+    config = function()
+      require('bufignore').setup {
+        ignore_patterns = {
+          'leftpad',
+          'rightpad',
+        },
+      }
+    end,
+  },
+
   -- Bufferline
   {
     'akinsho/bufferline.nvim',
