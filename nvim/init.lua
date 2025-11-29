@@ -1060,18 +1060,6 @@ require('lazy').setup({
   },
 })
 
--- Add this to your Neovim config (init.lua or a separate file)
-vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
-  pattern = { 'leftpad', 'rightpad' },
-  callback = function()
-    local bufname = vim.fn.bufname()
-    if bufname == 'leftpad' or bufname == 'rightpad' then
-      -- Jump to the previous valid buffer
-      vim.cmd 'bprevious'
-    end
-  end,
-})
-
 -- Prevent padding buffers from taking over when closing a buffer
 vim.api.nvim_create_autocmd('BufDelete', {
   callback = function()
