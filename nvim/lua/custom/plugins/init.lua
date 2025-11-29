@@ -160,14 +160,5 @@ return {
     },
   },
 
-  {
-    'smithbm2316/centerpad.nvim',
-
-    config = function()
-      require('centerpad').setup()
-
-      local map = vim.keymap.set
-      map('n', '<leader>cc', '<cmd>Neotree float toggle<cr>', { desc = 'Toggle Centerpad' })
-    end,
-  },
+  { 'smithbm2316/centerpad.nvim' },
 }
