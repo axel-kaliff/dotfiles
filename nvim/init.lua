@@ -175,7 +175,7 @@ vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 
 vim.keymap.set('n', '<leader>e', '<cmd>Neotree float toggle<cr>', { desc = '[F]ile tree [T]oggle' })
 
-vim.keymap.set('n', '<leader>cc', '<cmd>Neotree float toggle<cr>', { desc = 'Toggle Centerpad' })
+vim.keymap.set('n', '<leader>cc', '<cmd>Centerpad<cr>', { desc = 'Toggle Centerpad' })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
