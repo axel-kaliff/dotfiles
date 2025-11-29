@@ -117,6 +117,14 @@ return {
     config = function()
       require('bufferline').setup {
         options = {
+          custom_filter = function(buf_number)
+            local buf_name = vim.fn.bufname(buf_number)
+            -- Filter out leftpad and rightpad buffers
+            if buf_name:match 'leftpad' or buf_name:match 'rightpad' then
+              return false
+            end
+            return true
+          end,
           offsets = {
             {
               filetype = 'neo-tree',
