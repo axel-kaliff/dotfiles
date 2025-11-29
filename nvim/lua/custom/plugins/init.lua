@@ -35,7 +35,7 @@ return {
         close_if_last_window = true,
         -- popup_border_style = 'rounded',
         enable_git_status = true,
-        enable_diagnostics = true,
+        enable_diagnostics = false,
         source_selector = {
           winbar = false,
         },
