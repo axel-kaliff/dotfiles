@@ -92,23 +92,6 @@ return {
     end,
   },
 
-  {
-    'sQVe/bufignore.nvim',
-    config = function()
-      require('bufignore').setup {
-
-        auto_start = true,
-        ignore_sources = {
-          git = true,
-          patterns = { '*leftpad$', '*rightpad$' },
-          symlink = true,
-          ignore_cwd_only = true,
-        },
-        pre_unlist = nil,
-      }
-    end,
-  },
-
   -- Bufferline
   {
     'akinsho/bufferline.nvim',
@@ -117,14 +100,6 @@ return {
     config = function()
       require('bufferline').setup {
         options = {
-          custom_filter = function(buf_number)
-            local buf_name = vim.fn.bufname(buf_number)
-            -- Filter out leftpad and rightpad buffers
-            if buf_name:match 'leftpad' or buf_name:match 'rightpad' then
-              return false
-            end
-            return true
-          end,
           offsets = {
             {
               filetype = 'neo-tree',
