@@ -99,10 +99,10 @@ return {
 
         auto_start = true,
         ignore_sources = {
-          -- git = true,
+          git = true,
           patterns = { '/%leftpad/', '/%rightpad/' },
-          -- symlink = true,
-          -- ignore_cwd_only = true,
+          symlink = true,
+          ignore_cwd_only = true,
         },
         pre_unlist = nil,
       }
