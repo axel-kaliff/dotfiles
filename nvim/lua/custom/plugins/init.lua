@@ -96,10 +96,15 @@ return {
     'sQVe/bufignore.nvim',
     config = function()
       require('bufignore').setup {
-        ignore_patterns = {
-          'leftpad',
-          'rightpad',
+
+        auto_start = true,
+        ignore_sources = {
+          -- git = true,
+          patterns = { '/%leftpad/', '/%rightpad/' },
+          -- symlink = true,
+          -- ignore_cwd_only = true,
         },
+        pre_unlist = nil,
       }
     end,
   },
