@@ -161,4 +161,14 @@ return {
   },
 
   { 'smithbm2316/centerpad.nvim' },
+
+  {
+    'sQVe/bufignore.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      -- Input configuration here.
+      -- Refer to the configuration section below for options.
+      patterns = { '*leftpad*', '*rightpad*' },
+    },
+  },
 }
