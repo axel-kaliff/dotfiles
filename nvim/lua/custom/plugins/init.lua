@@ -62,7 +62,7 @@ return {
             respect_gitignore = true,
           },
           window = {
-            position = 'left',
+            position = 'float',
             mappings = {
               f = 'none',
             },
