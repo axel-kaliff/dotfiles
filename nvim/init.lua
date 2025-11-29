@@ -173,7 +173,7 @@ vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cy
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 
-vim.keymap.set('n', '<leader>e', '<cmd>Neotree toggle position=float<cr>', { desc = '[F]ile tree [T]oggle' })
+vim.keymap.set('n', '<leader>e', '<cmd>Neotree float toggle<cr>', { desc = '[F]ile tree [T]oggle' })
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
