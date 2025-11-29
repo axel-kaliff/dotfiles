@@ -130,7 +130,7 @@ return {
       map('n', '<c-h>', '<cmd>Centerpad<cr><cmd>ZellijNavigateLeftTab<cr><cmd>Centerpad<cr>', { desc = 'navigate left or tab' })
       map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
       map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
-      map('n', '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { desc = 'navigate right or tab' })
+      map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
     end,
   },
 
@@ -160,5 +160,14 @@ return {
     },
   },
 
-  { 'smithbm2316/centerpad.nvim' },
+  {
+    'smithbm2316/centerpad.nvim',
+
+    config = function()
+      require('centerpad').setup()
+
+      local map = vim.keymap.set
+      map('n', '<leader>cc', '<cmd>Neotree float toggle<cr>', { desc = 'Toggle Centerpad' })
+    end,
+  },
 }
