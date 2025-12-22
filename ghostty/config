@@ -1,4 +1,3 @@
-# command = /home/linuxbrew/.linuxbrew/bin/fish --login --interactive
 command = fish
 
 
