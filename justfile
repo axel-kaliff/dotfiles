@@ -2,11 +2,8 @@
 set shell := ["bash", "-lc"]
 
 
-install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles
+install-cli-applications: install-cli-tools generate-ssh-key overwrite-local-dotfiles enable-tailscale-systray
   @echo 'Installation finished 🍾🥳'
-
-setup-workstation: install-cli-applications install-flatpaks
-  @echo 'Flatpaks installed <3'
 
 install-cli-tools: install-brew install-brew-packages ensure-fish setup-git-config
   @echo 'CLI tools installed 🚀🤖'
@@ -23,6 +20,12 @@ install-brew:
   else \
           echo "Homebrew is already installed 🍻"; \
   fi
+
+enable-tailscale-systray:
+	@tailscale status
+	@sudo tailscale set --operator=$USER
+	@tailscale configure systray --enable-startup=systemd
+	@systemctl --user enable --now tailscale-systray
 
 link-fish:
     @# Source your shell startup files (no-ops if they don’t exist)
@@ -48,23 +51,6 @@ overwrite-local-dotfiles:
         @echo "Overwriting local conflicting dotfiles..."
         @rsync -av --exclude='.git'  --exclude='*fish_variables' ~/dotfiles/ ~/.config/
 
-FLATPAK_LIST := "flatpaks.txt"
-
-backup-flatpaks:
-  @echo "Backing up installed flatpaks to {{FLATPAK_LIST}}..."
-  @flatpak list --app --columns=application | grep -v '^org\.freedesktop\.Platform' >> {{FLATPAK_LIST}}
-  @sort -u -o {{FLATPAK_LIST}} {{FLATPAK_LIST}}
-  @echo "Backup completed."
-
-install-flatpaks:
-  @echo "Restoring flatpaks from {{FLATPAK_LIST}}..."
-  @if [ -f {{FLATPAK_LIST}} ]; then \
-          xargs -a {{FLATPAK_LIST}} -r -- flatpak install -y; \
-          echo "Restore completed."; \
-  else \
-          echo "Error: File {{FLATPAK_LIST}} not found."; \
-          exit 1; \
-  fi
 
 ensure-fish:
   @echo "Checking if Fish shell is installed... 🐟🐠🐡"
