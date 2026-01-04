@@ -148,11 +148,31 @@ return {
       require('zellij-nav').setup()
 
       local map = vim.keymap.set
-      map('n', '<c-h>', '<cmd>Centerpad<cr><cmd>ZellijNavigateLeftTab<cr><cmd>Centerpad<cr>', { desc = 'navigate left or tab' })
+      -- map('n', '<c-h>', '<cmd>Centerpad<cr><cmd>ZellijNavigateLeftTab<cr><cmd>Centerpad<cr>', { desc = 'navigate left or tab' })
       map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
       map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
       -- this breaks navigation when centerpad is not on
-      map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
+      -- map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
+
+      map('n', '<c-h>', function()
+        if is_centerpad_active() then
+          vim.cmd 'Centerpad'
+          vim.cmd 'ZellijNavigateLeftTab'
+          vim.cmd 'Centerpad'
+        else
+          vim.cmd 'ZellijNavigateLeftTab'
+        end
+      end, { desc = 'navigate left or tab' })
+
+      map('n', '<c-l>', function()
+        if is_centerpad_active() then
+          vim.cmd 'Centerpad'
+          vim.cmd 'ZellijNavigateRightTab'
+          vim.cmd 'Centerpad'
+        else
+          vim.cmd 'ZellijNavigateRightTab'
+        end
+      end, { desc = 'navigate right or tab' })
     end,
   },
 
