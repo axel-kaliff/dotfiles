@@ -150,24 +150,27 @@ return {
       map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
       -- this breaks navigation when centerpad is not on
       -- map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
-
+      --
+      --
       map('n', '<c-h>', function()
-        if is_centerpad_active() then
+        local was_active = is_centerpad_active()
+        if was_active then
           vim.cmd 'Centerpad'
-          vim.cmd 'ZellijNavigateLeftTab'
+        end
+        vim.cmd 'ZellijNavigateLeftTab'
+        if was_active then
           vim.cmd 'Centerpad'
-        else
-          vim.cmd 'ZellijNavigateLeftTab'
         end
       end, { desc = 'navigate left or tab' })
 
       map('n', '<c-l>', function()
-        if is_centerpad_active() then
+        local was_active = is_centerpad_active()
+        if was_active then
           vim.cmd 'Centerpad'
-          vim.cmd 'ZellijNavigateRightTab'
+        end
+        vim.cmd 'ZellijNavigateRightTab'
+        if was_active then
           vim.cmd 'Centerpad'
-        else
-          vim.cmd 'ZellijNavigateRightTab'
         end
       end, { desc = 'navigate right or tab' })
     end,
