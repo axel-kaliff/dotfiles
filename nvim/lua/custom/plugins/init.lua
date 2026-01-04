@@ -1,13 +1,10 @@
 local function is_centerpad_active()
-  -- Attempt to call the Centerpad command and return true if successful
-  local success, _ = pcall(vim.cmd, 'Centerpad')
-  -- If successful, we toggled it off, so it was active
-  if success then
-    -- Toggle it back on since we just turned it off
-    vim.cmd 'Centerpad'
-    return true
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    local buf_name = vim.api.nvim_buf_get_name(buf)
+    if buf_name == 'leftpad' or buf_name == 'rightpad' then
+      return true
+    end
   end
-  -- If it failed, centerpad wasn't active
   return false
 end
 
