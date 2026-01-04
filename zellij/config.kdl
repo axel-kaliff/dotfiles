@@ -53,16 +53,16 @@ shared {
 
     shared_except "locked" {
         // Put keybindings here if they conflict with Vim or others.
-	bind "Ctrl q" {
+	bind "Ctrl Shift q" {
             WriteChars "clear\n"
         }
 	
-	bind "Ctrl e" {
+	bind "Ctrl Shift e" {
 		WriteChars "source .venv/bin/activate.fish\n"
             	WriteChars "nvim\n"
         }
 
-	bind "Ctrl f" {
+	bind "Ctrl Shift f" {
             WriteChars "y\n"
         }
 
