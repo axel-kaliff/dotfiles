@@ -58,11 +58,11 @@ shared {
         }
 	
 	bind "Ctrl u" {
-		WriteChars "source .venv/bin/activate.fish"
+		WriteChars "source .venv/bin/activate.fish\n"
 	}
 
 	bind "Ctrl e" {
-		WriteChars "source .venv/bin/activate.fish"
+		WriteChars "source .venv/bin/activate.fish\n"
             	WriteChars "nvim\n"
         }
 
