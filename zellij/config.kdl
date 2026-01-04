@@ -57,10 +57,6 @@ shared {
             WriteChars "clear\n"
         }
 	
-	bind "Ctrl up" {
-		WriteChars "source .venv/bin/activate.fish\n"
-	}
-
 	bind "Ctrl e" {
 		WriteChars "source .venv/bin/activate.fish\n"
             	WriteChars "nvim\n"
