@@ -1,7 +1,7 @@
 local function is_centerpad_active()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     local buf_name = vim.api.nvim_buf_get_name(buf)
-    if buf_name == 'leftpad' or buf_name == 'rightpad' then
+    if string.find(buf_name, 'leftpad') or string.find(buf_name, 'rightpad') then
       return true
     end
   end
