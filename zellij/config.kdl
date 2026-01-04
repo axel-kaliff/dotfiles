@@ -57,7 +57,7 @@ shared {
             WriteChars "clear\n"
         }
 	
-	bind "Ctrl u" {
+	bind "Ctrl up" {
 		WriteChars "source .venv/bin/activate.fish\n"
 	}
 
