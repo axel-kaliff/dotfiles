@@ -1,3 +1,16 @@
+local function is_centerpad_active()
+  -- Attempt to call the Centerpad command and return true if successful
+  local success, _ = pcall(vim.cmd, 'Centerpad')
+  -- If successful, we toggled it off, so it was active
+  if success then
+    -- Toggle it back on since we just turned it off
+    vim.cmd 'Centerpad'
+    return true
+  end
+  -- If it failed, centerpad wasn't active
+  return false
+end
+
 return {
 
   {
@@ -138,6 +151,7 @@ return {
       map('n', '<c-h>', '<cmd>Centerpad<cr><cmd>ZellijNavigateLeftTab<cr><cmd>Centerpad<cr>', { desc = 'navigate left or tab' })
       map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
       map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
+      -- this breaks navigation when centerpad is not on
       map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
     end,
   },
