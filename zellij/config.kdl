@@ -56,9 +56,18 @@ shared {
 	bind "Ctrl q" {
             WriteChars "clear\n"
         }
+	
+	bind "Ctrl u" {
+		WriteChars "source .venv/bin/activate.fish"
+	}
 
 	bind "Ctrl e" {
-            WriteChars "nvim\n"
+		WriteChars "source .venv/bin/activate.fish"
+            	WriteChars "nvim\n"
+        }
+
+	bind "Ctrl f" {
+            WriteChars "y\n"
         }
 
         bind "Alt z" {

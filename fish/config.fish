@@ -35,11 +35,6 @@ function vim -d 'vi alias for nvim'
     nvim $argv
 end
 
-# function tm -d 'launch tmuxp session from session config $arg'
-#     tmuxp load "$HOME/dotfiles/tmux_sessions/$argv.yaml"
-# end
-
-
 function udot
     echo "Committing all changes, pulling from remote, and pushing to remote..."
     cd ~/dotfiles/
@@ -102,20 +97,11 @@ function y
 	rm -f -- "$tmp"
 end
 
-# GO
-export GOPATH="$HOME/go"
-export PATH="$PATH:$GOPATH/bin"
-
-
 export EDITOR=nvim
-
-export PATH="$PATH:$HOME/.local/bin"
-
-export PATH="$PATH:/opt/nvim-linux64/bin"
-export PATH="$HOME/tools/node-v14.15.4-linux-x64/bin:$PATH"
 
 export XDG_CONFIG_HOME="$HOME/.config/"
 
+export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin/"
 
 atuin init fish | source
