@@ -1,4 +1,5 @@
 brew "gcc"
+brew "fish"
 brew "bat"
 brew "devcontainer"
 brew "direnv"
