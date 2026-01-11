@@ -1,9 +1,3 @@
-if status is-interactive
-     # if not set -q TMUX
-	/home/linuxbrew/.linuxbrew/bin/zellij -l welcome
-     # end
-end
-
 set fish_greeting
 
 function g 
