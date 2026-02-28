@@ -91,13 +91,34 @@ function y
 	rm -f -- "$tmp"
 end
 
-export EDITOR=nvim
-export VISUAL=nvim
+set -gx EDITOR nvim
+set -gx VISUAL nvim
 
-export XDG_CONFIG_HOME="$HOME/.config/"
+set -gx XDG_CONFIG_HOME "$HOME/.config/"
 
-export PATH="$PATH:$HOME/.local/bin"
-export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin/"
+set -gx PATH $PATH "$HOME/.local/bin"
+set -gx PATH $PATH "/home/linuxbrew/.linuxbrew/bin/"
+
+# fzf configuration (uses fd for faster searches)
+set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
+set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
+set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --exclude .git'
+
+# ripgrep config
+set -gx RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/config"
+
+# bat theme
+set -gx BAT_THEME "Nord"
+
+# zoxide (replaces z)
+zoxide init fish | source
+
+# direnv
+direnv hook fish | source
 
 atuin init fish | source
 starship init fish | source
+
+# WORK 
+if [ -f '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc' ]; . '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc'; end
+

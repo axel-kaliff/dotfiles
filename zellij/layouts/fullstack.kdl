@@ -1,0 +1,22 @@
+layout {
+    tab name="editor" {
+        pane split_direction="vertical" {
+            pane size="60%" {
+                command "nvim"
+            }
+            pane split_direction="horizontal" {
+                pane name="frontend"
+                pane name="backend"
+            }
+        }
+    }
+    tab name="logs" {
+        pane split_direction="horizontal" {
+            pane name="log-1"
+            pane name="log-2"
+        }
+    }
+    pane size=1 borderless=true {
+        plugin location="compact-bar"
+    }
+}

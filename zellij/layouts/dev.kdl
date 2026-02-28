@@ -1,0 +1,16 @@
+layout {
+    pane split_direction="vertical" {
+        pane size="70%" {
+            command "nvim"
+        }
+        pane split_direction="horizontal" {
+            pane size="70%" name="terminal"
+            pane size="30%" {
+                command "lazygit"
+            }
+        }
+    }
+    pane size=1 borderless=true {
+        plugin location="compact-bar"
+    }
+}

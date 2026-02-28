@@ -60,6 +60,12 @@ setup-git-config:
   else \
     echo "Git global username and email are already configured."; \
   fi
+  @echo "Configuring delta as git pager..."
+  @git config --global core.pager delta
+  @git config --global interactive.diffFilter "delta --color-only"
+  @git config --global delta.navigate true
+  @git config --global delta.side-by-side true
+  @git config --global delta.line-numbers true
 
 setup-atuin:
         @echo "Setting up atuin sync..."
