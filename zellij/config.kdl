@@ -363,7 +363,7 @@ autolock location="file:~/.config/zellij/plugins/zellij-autolock.wasm" {
         // Enabled at start?
         is_enabled true
         // Lock when any open these programs open.
-        triggers "nvim|vim|git|fzf|zoxide|atuin|ssh"
+        triggers "nvim|vim|git|fzf|zoxide|atuin"
         // Reaction to input occurs after this many seconds. (default=0.3)
         // (An existing scheduled reaction prevents additional reactions.)
         reaction_seconds "0.3"
@@ -494,7 +494,7 @@ copy_on_select true
  
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
-// scrollback_editor "/usr/bin/vim"
+scrollback_editor "nvim"
  
 // A fixed name to always give the Zellij session.
 // Consider also setting `attach_to_session true,`
