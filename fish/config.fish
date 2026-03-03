@@ -1,6 +1,11 @@
 set fish_greeting
 
-function g 
+# Auto-start zellij — attach to "main" session (configured in zellij/config.kdl)
+if status is-interactive; and not set -q ZELLIJ
+    exec zellij
+end
+
+function g
     lazygit
 end
 
