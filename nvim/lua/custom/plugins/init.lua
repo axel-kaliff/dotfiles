@@ -182,6 +182,53 @@ return {
         },
       }
       vim.keymap.set('n', '-', '<cmd>Oil<cr>', { desc = 'Open parent directory' })
+
+      -- Patch Oil SSH realpath to use POSIX-compatible syntax.
+      -- Oil uses [[ which fails when the remote /bin/sh is dash.
+      local SSHFS = require('oil.adapters.ssh.sshfs')
+      SSHFS.realpath = function(self, path, callback)
+        local cmd = string.format(
+          'if ! readlink -f "%s" 2>/dev/null; then case "%s" in /*) echo "%s";; *) echo "$PWD/%s";; esac; fi',
+          path,
+          path,
+          path,
+          path
+        )
+        self.conn:run(cmd, function(err, lines)
+          if err then
+            return callback(err)
+          end
+          assert(lines)
+          local abspath = table.concat(lines, '')
+          if vim.endswith(abspath, '.') then
+            abspath = abspath:sub(1, #abspath - 1)
+          end
+          local shellescape = function(s)
+            return "'" .. s:gsub("'", "'\\''") .. "'"
+          end
+          self.conn:run(
+            string.format('LC_ALL=C ls -land --color=never %s', shellescape(abspath)),
+            function(ls_err, ls_lines)
+              local type
+              if ls_err then
+                type = 'directory'
+              else
+                assert(ls_lines)
+                local line = ls_lines[1]
+                local typechar = line:sub(1, 1)
+                local typemap = { l = 'link', d = 'directory', ['-'] = 'file' }
+                type = typemap[typechar] or 'file'
+              end
+              if type == 'directory' then
+                if not vim.endswith(abspath, '/') then
+                  abspath = abspath .. '/'
+                end
+              end
+              callback(nil, abspath)
+            end
+          )
+        end)
+      end
     end,
   },
 
