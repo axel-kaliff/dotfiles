@@ -1,0 +1,14 @@
+\.git
+\.gitignore
+\.stignore
+\.stfolder
+\.claude
+Brewfile
+Brewfile\.lock\.json
+justfile
+README\.md
+devcontainer
+server
+Code
+gsconnect
+bash

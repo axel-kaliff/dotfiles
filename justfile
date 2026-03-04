@@ -43,13 +43,13 @@ setup-brew:
 
 stow-dotfiles:
   @echo "Stowing dotfiles to ~/.config..."
-  @stow -d ~/dotfiles -t ~/.config --restow nvim fish zellij ghostty atuin lazygit ripgrep yazi tealdeer tmux tmuxinator starship
+  @stow -d ~ -t ~/.config --restow dotfiles
   @echo "Stowing bash config to ~..."
   @stow -d ~/dotfiles -t ~ --restow bash
   @echo "Dotfiles stowed."
 
 unstow-dotfiles:
-  @stow -d ~/dotfiles -t ~/.config -D nvim fish zellij ghostty atuin lazygit ripgrep yazi tealdeer tmux tmuxinator starship
+  @stow -d ~ -t ~/.config -D dotfiles
   @stow -d ~/dotfiles -t ~ -D bash
 
 setup-git-config:

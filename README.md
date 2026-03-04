@@ -8,17 +8,17 @@ Personal dotfiles for a terminal-first workflow on Fedora (Silverblue). Managed 
 # Full bootstrap (Homebrew, Stow, dotfiles, git, fish, fonts, Atuin, Tailscale)
 just bootstrap
 
-# Stow dotfiles to ~/.config/ (idempotent, safe to re-run)
+# Symlink dotfiles to ~/.config/ via stow (idempotent, safe to re-run)
 just stow-dotfiles
 
 # Remove all symlinks
 just unstow-dotfiles
 
-# Apply git config (username, email, delta pager)
-just setup-git-config
-
 # Check what's installed
 just doctor
+
+# Apply git config (username, email, delta pager)
+just setup-git-config
 ```
 
 ## Stack
@@ -288,7 +288,7 @@ Linting runs on save/enter/insert-leave via nvim-lint:
 
 ## Dotfile Management
 
-Dotfiles are symlinked using GNU Stow. Each subdirectory is a "package" that maps directly into the target.
+Dotfiles are symlinked using GNU Stow. The entire `dotfiles/` directory is stowed as a single package into `~/.config/`, with a `.stow-local-ignore` excluding non-config files (Brewfile, justfile, etc.).
 
 ```bash
 # Sync everything
@@ -298,10 +298,7 @@ just stow-dotfiles
 udot
 ```
 
-Most packages target `~/.config/`:
-`nvim`, `fish`, `zellij`, `ghostty`, `atuin`, `lazygit`, `ripgrep`, `yazi`, `tealdeer`, `tmux`, `tmuxinator`, `starship`
-
-The `bash` package targets `~` (for `~/.bashrc`).
+The `bash` package is stowed separately to `~` (for `~/.bashrc`).
 
 ---
 
@@ -332,7 +329,7 @@ dotfiles/
 │       ├── custom/plugins/   # oil, flash, trouble, neo-tree, grug-far, zen-mode
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs
 ├── ripgrep/        # ripgrep config (smart-case, hidden files)
-├── starship/       # Shell prompt config (starship.toml)
+├── starship.toml   # Shell prompt config
 ├── tmux/           # Tmux config (backup multiplexer)
 ├── tmuxinator/     # Tmux session templates
 ├── yazi/           # File manager config
