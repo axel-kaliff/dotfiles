@@ -2,19 +2,19 @@ layout {
     tab name="remote-1" {
         pane {
             command "ssh"
-            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux new-session -A -s sics-0 -t main"
+            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux has-session -t sics-0 2>/dev/null || tmux new-session -d -s sics-0 -t main; tmux select-window -t sics-0:0; exec tmux attach -t sics-0"
         }
     }
     tab name="remote-2" {
         pane {
             command "ssh"
-            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux new-session -A -s sics-1 -t main"
+            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux has-session -t sics-1 2>/dev/null || tmux new-session -d -s sics-1 -t main; until tmux select-window -t sics-1:1 2>/dev/null; do tmux new-window -t sics-1; done; exec tmux attach -t sics-1"
         }
     }
     tab name="remote-3" {
         pane {
             command "ssh"
-            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux new-session -A -s sics-2 -t main"
+            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux has-session -t sics-2 2>/dev/null || tmux new-session -d -s sics-2 -t main; until tmux select-window -t sics-2:2 2>/dev/null; do tmux new-window -t sics-2; done; exec tmux attach -t sics-2"
         }
     }
     default_tab_template {
