@@ -101,5 +101,5 @@ atuin init fish | source
 starship init fish | source
 
 # WORK 
-if [ -f '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc' ]; . '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc'; end
+if [ -f '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc' ]; . '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc' 2>/dev/null; end
 
