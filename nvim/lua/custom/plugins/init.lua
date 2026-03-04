@@ -12,7 +12,7 @@ return {
           shortcut = {
             { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
             { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
-            { desc = ' Tree', group = 'Neotree', action = 'Neotree toggle left', key = 'e' },
+            { desc = ' Tree', group = 'Oil', action = 'Oil --float', key = 'e' },
             { desc = '󰩈 Exit', group = 'ErrorMsg', action = 'q', key = 'q' },
           },
         },
@@ -20,77 +20,6 @@ return {
     end,
   },
 
-  -- Neotree
-  {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons',
-      'MunifTanjim/nui.nvim',
-    },
-    lazy = false,
-    config = function()
-      require('neo-tree').setup {
-        close_if_last_window = true,
-        popup_border_style = 'rounded',
-        enable_git_status = true,
-        enable_diagnostics = false,
-        source_selector = {
-          winbar = false,
-        },
-
-        default_component_configs = {
-          indent = {
-            indent_size = 1,
-            padding = 1, -- extra padding on left hand side
-            with_markers = true,
-            indent_marker = '│',
-            last_indent_marker = '└',
-            highlight = 'NeoTreeIndentMarker',
-          },
-          icon = {
-            folder_closed = '',
-            folder_open = '',
-            default = '',
-          },
-        },
-        filesystem = {
-          use_libuv_file_watcher = true,
-          filtered_items = {
-            show_hidden = true,
-            respect_gitignore = true,
-          },
-          window = {
-            position = 'float',
-            mappings = {
-              f = 'none',
-            },
-          },
-        },
-      }
-    end,
-  },
-
-  {
-    's1n7ax/nvim-window-picker',
-    version = '2.*',
-    config = function()
-      require('window-picker').setup {
-        filter_rules = {
-          include_current_win = false,
-          autoselect_one = true,
-          -- filter using buffer options
-          bo = {
-            -- if the file type is one of following, the window will be ignored
-            filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
-            -- if the buffer type is one of following, the window will be ignored
-            buftype = { 'terminal', 'quickfix' },
-          },
-        },
-      }
-    end,
-  },
 
   -- Bufferline
   {
@@ -98,18 +27,7 @@ return {
     version = '*',
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
-      require('bufferline').setup {
-        options = {
-          offsets = {
-            {
-              filetype = 'neo-tree',
-              text = 'File Explorer',
-              highlight = 'Directory',
-              separator = true,
-            },
-          },
-        },
-      }
+      require('bufferline').setup {}
     end,
   },
 
@@ -176,9 +94,41 @@ return {
     'stevearc/oil.nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
+      local detail = false
       require('oil').setup {
+        delete_to_trash = true,
+        skip_confirm_for_simple_edits = true,
+        watch_for_changes = true,
         view_options = {
           show_hidden = true,
+        },
+        float = {
+          padding = 2,
+          max_width = 120,
+          max_height = 40,
+        },
+        keymaps = {
+          -- Disable defaults that conflict with zellij-nav
+          ['<C-h>'] = false,
+          ['<C-l>'] = false,
+          ['gd'] = {
+            desc = 'Toggle file detail view',
+            callback = function()
+              detail = not detail
+              if detail then
+                require('oil').set_columns { 'icon', 'permissions', 'size', 'mtime' }
+              else
+                require('oil').set_columns { 'icon' }
+              end
+            end,
+          },
+          ['<leader>y'] = {
+            desc = 'Yank filepath to clipboard',
+            callback = function()
+              require('oil.actions').copy_entry_path.callback()
+              vim.fn.setreg('+', vim.fn.getreg(vim.v.register))
+            end,
+          },
         },
       }
       vim.keymap.set('n', '-', '<cmd>Oil<cr>', { desc = 'Open parent directory' })

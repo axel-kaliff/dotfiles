@@ -242,12 +242,55 @@ Built-in (Neovim 0.11+, no plugin needed):
 | `Space b` | Toggle breakpoint |
 | `Space B` | Conditional breakpoint |
 
-### File Explorer
+### File Explorer (Oil)
 
 | Shortcut | Action |
 |----------|--------|
-| `Space e` | Toggle Neo-tree (floating, project tree + git status) |
-| `-` | Open oil.nvim (quick file operations in parent dir) |
+| `Space e` | Open Oil in floating window |
+| `-` | Open Oil (parent directory as editable buffer) |
+
+#### Oil Keymaps (inside Oil buffer)
+
+| Shortcut | Action |
+|----------|--------|
+| `Enter` | Open file or directory |
+| `-` | Go to parent directory |
+| `g.` | Toggle hidden files |
+| `gd` | Toggle detail view (permissions, size, mtime) |
+| `gs` | Change sort order |
+| `<C-p>` | Preview file in split |
+| `<C-s>` | Open in vertical split |
+| `<C-t>` | Open in new tab |
+| `<C-c>` | Close Oil |
+| `g\` | Toggle trash view |
+| `gx` | Open with external program |
+| `Space y` | Yank filepath to clipboard |
+
+#### Oil File Operations
+
+Oil treats directories as editable buffers. To perform file operations, edit the buffer text then save:
+
+| Operation | How |
+|-----------|-----|
+| **Create file** | Type a new filename on a blank line, `:w` |
+| **Create directory** | Type a new name ending with `/`, `:w` |
+| **Rename** | Edit the filename text directly, `:w` |
+| **Delete** | Delete the line (`dd`), `:w` |
+| **Move** | Cut a line (`dd`), navigate to target dir, paste (`p`), `:w` |
+| **Copy** | Yank a line (`yy`), navigate to target dir, paste (`p`), `:w` |
+
+Deleted files go to trash (use `g\` to view/restore). Simple edits (renames, creates) skip the confirmation dialog.
+
+#### Oil SSH (Remote Editing)
+
+Oil can browse and edit remote filesystems over SSH using your local nvim config:
+
+```vim
+:Oil oil-ssh://hostname/~/path/
+:Oil oil-ssh://user@hostname//absolute/path/
+```
+
+All file operations (create, rename, delete, move) work over SSH.
 
 ### Focus & Zen
 
@@ -326,7 +369,7 @@ dotfiles/
 ├── nvim/           # Neovim config (Kickstart-based)
 │   ├── init.lua    # Main config (keymaps, LSP, plugins)
 │   └── lua/
-│       ├── custom/plugins/   # oil, flash, trouble, neo-tree, grug-far, zen-mode
+│       ├── custom/plugins/   # oil, flash, trouble, grug-far, zen-mode
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs
 ├── ripgrep/        # ripgrep config (smart-case, hidden files)
 ├── starship.toml   # Shell prompt config

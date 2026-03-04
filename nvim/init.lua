@@ -173,7 +173,7 @@ vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cy
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 
-vim.keymap.set('n', '<leader>e', '<cmd>Neotree float toggle<cr>', { desc = '[F]ile tree [T]oggle' })
+vim.keymap.set('n', '<leader>e', '<cmd>Oil --float<cr>', { desc = 'File explorer (Oil)' })
 
 vim.keymap.set('n', '<leader>cc', '<cmd>Centerpad<cr>', { desc = 'Toggle Centerpad' })
 
@@ -221,15 +221,8 @@ vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>:startinsert<CR>', { desc = 'Write buff
 -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds
--- to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- CTRL+<hjkl> navigation is handled by zellij-nav.nvim plugin
+-- (navigates both neovim splits and zellij panes)
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
