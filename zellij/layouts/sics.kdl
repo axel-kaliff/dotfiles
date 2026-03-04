@@ -1,0 +1,23 @@
+layout {
+    tab name="remote-1" {
+        pane {
+            command "ssh"
+            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux new-session -A -s sics-0 -t main"
+        }
+    }
+    tab name="remote-2" {
+        pane {
+            command "ssh"
+            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux new-session -A -s sics-1 -t main"
+        }
+    }
+    tab name="remote-3" {
+        pane {
+            command "ssh"
+            args "r2d2" "-t" "tmux has-session -t main 2>/dev/null || tmux new-session -d -s main; tmux new-session -A -s sics-2 -t main"
+        }
+    }
+    pane size=1 borderless=true {
+        plugin location="compact-bar"
+    }
+}
