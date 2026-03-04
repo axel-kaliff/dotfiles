@@ -1,7 +1,7 @@
 # Run all recipes in a login bash shell so it picks up your updated PATH
 set shell := ["bash", "-lc"]
 
-bootstrap: setup-brew overwrite-local-dotfiles setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray
+bootstrap: setup-brew stow-dotfiles setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray
   @echo 'Bootstrap complete!'
 
 update:
@@ -41,9 +41,16 @@ setup-brew:
   @brew bundle
   @brew update
 
-overwrite-local-dotfiles:
-  @echo "Overwriting local conflicting dotfiles..."
-  @rsync -av --exclude='.git' --exclude='*fish_variables' ~/dotfiles/ ~/.config/
+stow-dotfiles:
+  @echo "Stowing dotfiles to ~/.config..."
+  @stow -d ~/dotfiles -t ~/.config --restow nvim fish zellij ghostty atuin lazygit ripgrep yazi tealdeer tmux tmuxinator starship
+  @echo "Stowing bash config to ~..."
+  @stow -d ~/dotfiles -t ~ --restow bash
+  @echo "Dotfiles stowed."
+
+unstow-dotfiles:
+  @stow -d ~/dotfiles -t ~/.config -D nvim fish zellij ghostty atuin lazygit ripgrep yazi tealdeer tmux tmuxinator starship
+  @stow -d ~/dotfiles -t ~ -D bash
 
 setup-git-config:
   @echo "Setting Git global username and email..."

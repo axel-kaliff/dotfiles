@@ -1,13 +1,3 @@
-local function is_centerpad_active()
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    local buf_name = vim.api.nvim_buf_get_name(buf)
-    if string.find(buf_name, 'leftpad') or string.find(buf_name, 'rightpad') then
-      return true
-    end
-  end
-  return false
-end
-
 return {
 
   {
@@ -30,8 +20,8 @@ return {
           week_header = { enable = true },
           shortcut = {
             { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
-            { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
-            { desc = ' Tree', group = 'Neotree', action = 'Neotree toggle left', key = 'e' },
+            { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
+            { desc = ' Tree', group = 'Neotree', action = 'Neotree toggle left', key = 'e' },
             { desc = '󰩈 Exit', group = 'ErrorMsg', action = 'q', key = 'q' },
           },
         },
@@ -69,9 +59,9 @@ return {
             highlight = 'NeoTreeIndentMarker',
           },
           icon = {
-            folder_closed = '',
-            folder_open = '',
-            default = '',
+            folder_closed = '',
+            folder_open = '',
+            default = '',
           },
         },
         filesystem = {
@@ -102,9 +92,9 @@ return {
           -- filter using buffer options
           bo = {
             -- if the file type is one of following, the window will be ignored
-            filetype = { 'neo-tree', 'neo-tree-popup', 'notify', 'leftpad', 'rightpad' },
+            filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
             -- if the buffer type is one of following, the window will be ignored
-            buftype = { 'terminal', 'quickfix', 'leftpad', 'rightpad' },
+            buftype = { 'terminal', 'quickfix' },
           },
         },
       }
@@ -119,14 +109,6 @@ return {
     config = function()
       require('bufferline').setup {
         options = {
-          custom_filter = function(buf_number)
-            local buf_name = vim.fn.bufname(buf_number)
-            -- Filter out leftpad and rightpad buffers
-            if buf_name:match 'leftpad' or buf_name:match 'rightpad' then
-              return false
-            end
-            return true
-          end,
           offsets = {
             {
               filetype = 'neo-tree',
@@ -140,52 +122,18 @@ return {
     end,
   },
 
-  -- tmux nvim navigation
-  -- {
-  --   'aserowy/tmux.nvim',
-  --   config = function()
-  --     require('tmux').setup {}
-  --   end,
-  -- },
-
   {
     'https://github.com/swaits/zellij-nav.nvim',
     config = function()
       require('zellij-nav').setup()
 
       local map = vim.keymap.set
-      -- map('n', '<c-h>', '<cmd>Centerpad<cr><cmd>ZellijNavigateLeftTab<cr><cmd>Centerpad<cr>', { desc = 'navigate left or tab' })
+      map('n', '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { desc = 'navigate left or tab' })
       map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
       map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
-      -- this breaks navigation when centerpad is not on
-      -- map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
-      --
-      --
-      map('n', '<c-h>', function()
-        local was_active = is_centerpad_active()
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-        vim.cmd 'ZellijNavigateLeftTab'
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-      end, { desc = 'navigate left or tab' })
-
-      map('n', '<c-l>', function()
-        local was_active = is_centerpad_active()
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-        vim.cmd 'ZellijNavigateRightTab'
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-      end, { desc = 'navigate right or tab' })
+      map('n', '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { desc = 'navigate right or tab' })
     end,
   },
-
-  { 'numToStr/Comment.nvim', opts = {} },
 
   {
     'folke/flash.nvim',
@@ -233,8 +181,6 @@ return {
     },
   },
 
-  { 'smithbm2316/centerpad.nvim' },
-
   {
     'stevearc/oil.nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
@@ -249,12 +195,20 @@ return {
   },
 
   {
-    'sQVe/bufignore.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
+    'MagicDuck/grug-far.nvim',
+    opts = {},
+    keys = {
+      { '<leader>sr', function() require('grug-far').open() end, desc = 'Search and Replace (grug-far)' },
+    },
+  },
+
+  {
+    'folke/zen-mode.nvim',
     opts = {
-      -- Input configuration here.
-      -- Refer to the configuration section below for options.
-      patterns = { '*leftpad*', '*rightpad*' },
+      window = { width = 90 },
+    },
+    keys = {
+      { '<leader>cc', '<cmd>ZenMode<cr>', desc = 'Toggle Zen Mode' },
     },
   },
 }

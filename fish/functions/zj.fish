@@ -1,6 +1,8 @@
 function zj -d 'Zellij session helper'
     if test (count $argv) -eq 0
-        zellij list-sessions
+        # No args: use current directory basename as session name
+        set -l session_name (basename (pwd))
+        zellij attach -c $session_name
     else
         switch $argv[1]
             case ls
@@ -9,8 +11,9 @@ function zj -d 'Zellij session helper'
                 zellij kill-session $argv[2..]
             case attach a
                 zellij attach -c $argv[2]
+            case layout
+                zellij attach -c $argv[2] options --layout $argv[3]
             case '*'
-                # zj <name> → attach or create session with that name
                 zellij attach -c $argv[1]
         end
     end

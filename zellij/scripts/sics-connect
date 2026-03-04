@@ -4,7 +4,7 @@ exec ssh r2d2 -t "
   tmux has-session -t main 2>/dev/null || tmux new-session -d -s main
   tmux has-session -t sics-$TAB 2>/dev/null || tmux new-session -d -s sics-$TAB -t main
   for i in \$(seq 1 $TAB); do
-    tmux has-window -t main:\$i 2>/dev/null || tmux new-window -d -t main
+    tmux has-window -t main:\$i 2>/dev/null || tmux new-window -d -t main:\$i
   done
   exec tmux attach -t sics-$TAB \\; select-window -t $TAB
 "

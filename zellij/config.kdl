@@ -58,8 +58,7 @@ shared {
         }
 	
 	bind "Alt e" {
-		WriteChars "source .venv/bin/activate.fish\n"
-            	WriteChars "nvim\n"
+		WriteChars "test -d .venv && source .venv/bin/activate.fish; nvim\n"
         }
 
 	bind "Alt y" {

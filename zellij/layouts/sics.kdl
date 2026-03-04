@@ -11,10 +11,10 @@ layout {
             args "-c" "~/.config/zellij/scripts/sics-connect 2"
         }
     }
-    tab name="remote-3" {
+    tab name="editor" {
         pane {
             command "bash"
-            args "-c" "~/.config/zellij/scripts/sics-connect 3"
+            args "-c" "nvim '+Oil oil-ssh://r2d2/~/zombiesnack/'"
         }
     }
     default_tab_template {
