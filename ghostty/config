@@ -1,4 +1,4 @@
-theme = nordfox
+command = fish
 title = Ghostty 👻
 confirm-close-surface = false
 
@@ -7,5 +7,3 @@ font-size = 13
 
 window-padding-x = 4
 window-padding-y = 4
-
-# custom-shader = /var/home/akaliff/crt-shader-with-chromatic-aberration-glow-scanlines-dot-matrix/crt-shader-with-chromatic-aberration-glow-scanlines-dot-matrix.glsl
