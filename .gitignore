@@ -49,3 +49,4 @@ glow
 Code/Cache/Cache_Data
 Code/logs/20240930T161800/window1/exthost/ms-vscode-remote.remote-containers/shutdownMonitor-2024-09-30T14-18-01.217Z.log
 fish/fish_variables
+gsconnect/*.pem

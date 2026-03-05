@@ -48,7 +48,6 @@ These expand inline so you see the real command before running it, and history r
 | `v` / `vi` / `vim` | `nvim` |
 | `cat` | `bat` |
 | `ls` | `eza` |
-| `tm` | `tmuxinator` |
 
 ### Functions
 
@@ -142,16 +141,14 @@ Start zellij with a layout: `zellij --layout dev`
 | `dev` | Editor (70%) + terminal + lazygit sidebar |
 | `fullstack` | Editor + frontend/backend panes + logs tab |
 | `monitor` | 4-pane grid for monitoring |
-| `sics` | Remote development on r2d2 (2 tmux tabs + remote neovim editor) |
+| `sics` | Remote development on r2d2 (2 remote shells + remote neovim editor) |
 
 #### sics layout (remote development)
 
 The `sics` layout connects to the `r2d2` remote for development:
 
 - **remote-1 / remote-2**: SSH into r2d2 and attach to shared tmux sessions
-- **editor**: Opens neovim locally and connects to r2d2 via [remote-nvim.nvim](https://github.com/amitds1997/remote-nvim.nvim)
-
-remote-nvim.nvim automatically copies your local neovim config to the remote, installs neovim if needed, and launches a headless server on r2d2. Telescope, ripgrep, LSP, and all plugins run natively on the remote machine.
+- **editor**: Rsyncs neovim config to r2d2, then opens nvim over SSH
 
 ```bash
 # Start the sics session
@@ -390,8 +387,6 @@ dotfiles/
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
 ├── ripgrep/        # ripgrep config (smart-case, hidden files)
 ├── starship.toml   # Shell prompt config
-├── tmux/           # Tmux config (backup multiplexer)
-├── tmuxinator/     # Tmux session templates
 ├── yazi/           # File manager config
 ├── zellij/         # Zellij config + layouts
 │   ├── config.kdl

@@ -1,26 +1,6 @@
 
 keybinds clear-defaults=true {
 
-// unbind "Ctrl ["
-//
-//     // Define the keybind for all modes that you might want to exit from.
-//     // This makes Ctrl+[ behave like the Escape key.
-//     pane {
-//         bind "Ctrl [" { SwitchToMode "Normal"; }
-//     }
-//     tab {
-//         bind "Ctrl [" { SwitchToMode "Normal"; }
-//     }
-//     resize {
-//         bind "Ctrl [" { SwitchToMode "Normal"; }
-//     }
-//     scroll {
-//         bind "Ctrl [" { SwitchToMode "Normal"; }
-//     }
-//     session {
-//         bind "Ctrl [" { SwitchToMode "Normal"; }
-// }
-
 normal {
 	bind "Enter" {
             // Passthru `Enter`.
@@ -416,12 +396,12 @@ default_shell "fish"
 // The folder in which Zellij will look for layouts
 // (Requires restart)
 // 
-layout_dir "/var/home/akaliff/.config/zellij/layouts"
+layout_dir "~/.config/zellij/layouts"
  
 // The folder in which Zellij will look for themes
 // (Requires restart)
 // 
-theme_dir "/var/home/akaliff/.config/zellij/themes"
+theme_dir "~/.config/zellij/themes"
  
 // Toggle enabling the mouse mode.
 // On certain configurations, or terminals this could

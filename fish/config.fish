@@ -12,13 +12,13 @@ abbr -a ls eza
 abbr -a v nvim
 abbr -a vi nvim
 abbr -a vim nvim
-abbr -a tm tmuxinator
-
 function udot
-    echo "Syncing dotfiles..."
     cd ~/dotfiles/
     git add -A
-    git commit -m "Update dotfiles"
+    git diff --cached --stat
+    read -P "Commit message [Update dotfiles]: " msg
+    test -z "$msg" && set msg "Update dotfiles"
+    git commit -m "$msg"
     git pull --rebase
     git push
     echo "Git synced."
