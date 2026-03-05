@@ -10,7 +10,54 @@ layout {
             }
         }
     }
-    pane size=1 borderless=true {
-        plugin location="compact-bar"
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="file:~/.config/zellij/plugins/zjstatus.wasm" {
+                color_bg     "#192330"
+                color_fg     "#cdcecf"
+                color_dim    "#71839b"
+                color_black  "#393b44"
+                color_red    "#c94f6d"
+                color_green  "#81b29a"
+                color_yellow "#dbc074"
+                color_blue   "#719cd6"
+                color_mag    "#9d79d6"
+                color_cyan   "#63cdcf"
+                color_white  "#dfdfe0"
+                color_orange "#f4a261"
+
+                format_left   "{mode} {tabs}"
+                format_center ""
+                format_right  "#[fg=$dim]{session} #[fg=$dim] {datetime}"
+                format_space  "#[bg=$bg]"
+
+                hide_frame_for_single_pane "true"
+
+                mode_normal        "#[bg=$green,fg=$bg,bold] NORMAL "
+                mode_locked        "#[bg=$red,fg=$bg,bold] LOCKED "
+                mode_pane          "#[bg=$blue,fg=$bg,bold] PANE "
+                mode_tab           "#[bg=$orange,fg=$bg,bold] TAB "
+                mode_resize        "#[bg=$yellow,fg=$bg,bold] RESIZE "
+                mode_scroll        "#[bg=$cyan,fg=$bg,bold] SCROLL "
+                mode_search        "#[bg=$cyan,fg=$bg,bold] SEARCH "
+                mode_session       "#[bg=$mag,fg=$bg,bold] SESSION "
+                mode_move          "#[bg=$orange,fg=$bg,bold] MOVE "
+                mode_tmux          "#[bg=$mag,fg=$bg,bold] TMUX "
+                mode_default_to_mode "normal"
+
+                tab_normal              "#[fg=$dim] {name} "
+                tab_normal_fullscreen   "#[fg=$dim] {name} [] "
+                tab_normal_sync         "#[fg=$dim] {name} <> "
+                tab_active              "#[fg=$yellow,bold] {name} "
+                tab_active_fullscreen   "#[fg=$yellow,bold] {name} [] "
+                tab_active_sync         "#[fg=$yellow,bold] {name} <> "
+                tab_separator           "#[fg=$black] | "
+
+                datetime          "#[fg=$dim]{format}"
+                datetime_format   "%a %d %b %H:%M"
+                datetime_timezone "Europe/Stockholm"
+            }
+        }
     }
 }
