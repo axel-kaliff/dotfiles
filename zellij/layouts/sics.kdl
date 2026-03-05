@@ -14,7 +14,7 @@ layout {
     tab name="editor" {
         pane {
             command "bash"
-            args "-c" "nvim '+Oil oil-ssh://r2d2/~/zombiesnack/'"
+            args "-c" "nvim '+RemoteStart ssh r2d2'"
         }
     }
     default_tab_template {

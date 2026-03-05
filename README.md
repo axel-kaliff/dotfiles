@@ -142,6 +142,23 @@ Start zellij with a layout: `zellij --layout dev`
 | `dev` | Editor (70%) + terminal + lazygit sidebar |
 | `fullstack` | Editor + frontend/backend panes + logs tab |
 | `monitor` | 4-pane grid for monitoring |
+| `sics` | Remote development on r2d2 (2 tmux tabs + remote neovim editor) |
+
+#### sics layout (remote development)
+
+The `sics` layout connects to the `r2d2` remote for development:
+
+- **remote-1 / remote-2**: SSH into r2d2 and attach to shared tmux sessions
+- **editor**: Opens neovim locally and connects to r2d2 via [remote-nvim.nvim](https://github.com/amitds1997/remote-nvim.nvim)
+
+remote-nvim.nvim automatically copies your local neovim config to the remote, installs neovim if needed, and launches a headless server on r2d2. Telescope, ripgrep, LSP, and all plugins run natively on the remote machine.
+
+```bash
+# Start the sics session
+zj layout sics sics
+```
+
+On first connect, the editor tab will take longer as it sets up the remote environment. Subsequent connections use the cached config.
 
 ---
 
@@ -370,7 +387,7 @@ dotfiles/
 │   ├── init.lua    # Main config (keymaps, LSP, plugins)
 │   └── lua/
 │       ├── custom/plugins/   # oil, flash, trouble, grug-far, zen-mode
-│       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs
+│       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
 ├── ripgrep/        # ripgrep config (smart-case, hidden files)
 ├── starship.toml   # Shell prompt config
 ├── tmux/           # Tmux config (backup multiplexer)
@@ -378,7 +395,7 @@ dotfiles/
 ├── yazi/           # File manager config
 ├── zellij/         # Zellij config + layouts
 │   ├── config.kdl
-│   └── layouts/    # dev, fullstack, monitor
+│   └── layouts/    # dev, fullstack, monitor, sics
 ├── Brewfile        # Homebrew packages
 └── justfile        # Setup/install recipes
 ```
