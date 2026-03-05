@@ -1,0 +1,7 @@
+#!/bin/bash
+# Sync neovim config to r2d2 then open nvim remotely
+rsync -az --delete \
+  ~/.config/nvim/ \
+  r2d2:~/.config/nvim/
+
+exec ssh r2d2 -t "cd /var/home/akaliff/zombie-agent && nvim"
