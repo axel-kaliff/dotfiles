@@ -1,13 +1,3 @@
-local function is_centerpad_active()
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    local buf_name = vim.api.nvim_buf_get_name(buf)
-    if string.find(buf_name, 'leftpad') or string.find(buf_name, 'rightpad') then
-      return true
-    end
-  end
-  return false
-end
-
 return {
 
   {
@@ -21,8 +11,8 @@ return {
           week_header = { enable = true },
           shortcut = {
             { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
-            { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
-            { desc = ' Tree', group = 'Neotree', action = 'Neotree toggle left', key = 'e' },
+            { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
+            { desc = ' Tree', group = 'Oil', action = 'Oil --float', key = 'e' },
             { desc = '󰩈 Exit', group = 'ErrorMsg', action = 'q', key = 'q' },
           },
         },
@@ -30,77 +20,6 @@ return {
     end,
   },
 
-  -- Neotree
-  {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons',
-      'MunifTanjim/nui.nvim',
-    },
-    lazy = false,
-    config = function()
-      require('neo-tree').setup {
-        close_if_last_window = true,
-        popup_border_style = 'rounded',
-        enable_git_status = true,
-        enable_diagnostics = false,
-        source_selector = {
-          winbar = false,
-        },
-
-        default_component_configs = {
-          indent = {
-            indent_size = 1,
-            padding = 1, -- extra padding on left hand side
-            with_markers = true,
-            indent_marker = '│',
-            last_indent_marker = '└',
-            highlight = 'NeoTreeIndentMarker',
-          },
-          icon = {
-            folder_closed = '',
-            folder_open = '',
-            default = '',
-          },
-        },
-        filesystem = {
-          use_libuv_file_watcher = true,
-          filtered_items = {
-            show_hidden = true,
-            respect_gitignore = true,
-          },
-          window = {
-            position = 'float',
-            mappings = {
-              f = 'none',
-            },
-          },
-        },
-      }
-    end,
-  },
-
-  {
-    's1n7ax/nvim-window-picker',
-    version = '2.*',
-    config = function()
-      require('window-picker').setup {
-        filter_rules = {
-          include_current_win = false,
-          autoselect_one = true,
-          -- filter using buffer options
-          bo = {
-            -- if the file type is one of following, the window will be ignored
-            filetype = { 'neo-tree', 'neo-tree-popup', 'notify', 'leftpad', 'rightpad' },
-            -- if the buffer type is one of following, the window will be ignored
-            buftype = { 'terminal', 'quickfix', 'leftpad', 'rightpad' },
-          },
-        },
-      }
-    end,
-  },
 
   -- Bufferline
   {
@@ -108,36 +27,9 @@ return {
     version = '*',
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
-      require('bufferline').setup {
-        options = {
-          custom_filter = function(buf_number)
-            local buf_name = vim.fn.bufname(buf_number)
-            -- Filter out leftpad and rightpad buffers
-            if buf_name:match 'leftpad' or buf_name:match 'rightpad' then
-              return false
-            end
-            return true
-          end,
-          offsets = {
-            {
-              filetype = 'neo-tree',
-              text = 'File Explorer',
-              highlight = 'Directory',
-              separator = true,
-            },
-          },
-        },
-      }
+      require('bufferline').setup {}
     end,
   },
-
-  -- tmux nvim navigation
-  -- {
-  --   'aserowy/tmux.nvim',
-  --   config = function()
-  --     require('tmux').setup {}
-  --   end,
-  -- },
 
   {
     'https://github.com/swaits/zellij-nav.nvim',
@@ -145,41 +37,24 @@ return {
       require('zellij-nav').setup()
 
       local map = vim.keymap.set
-      -- map('n', '<c-h>', '<cmd>Centerpad<cr><cmd>ZellijNavigateLeftTab<cr><cmd>Centerpad<cr>', { desc = 'navigate left or tab' })
+      map('n', '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { desc = 'navigate left or tab' })
       map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
       map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
-      -- this breaks navigation when centerpad is not on
-      -- map('n', '<c-l>', '<cmd>Centerpad<cr><cmd>ZellijNavigateRightTab<cr><cmd>Centerpad<cr>', { desc = 'navigate right or tab' })
-      --
-      --
-      map('n', '<c-h>', function()
-        local was_active = is_centerpad_active()
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-        vim.cmd 'ZellijNavigateLeftTab'
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-      end, { desc = 'navigate left or tab' })
-
-      map('n', '<c-l>', function()
-        local was_active = is_centerpad_active()
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-        vim.cmd 'ZellijNavigateRightTab'
-        if was_active then
-          vim.cmd 'Centerpad'
-        end
-      end, { desc = 'navigate right or tab' })
+      map('n', '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { desc = 'navigate right or tab' })
     end,
   },
 
-  { 'numToStr/Comment.nvim', opts = {} },
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    opts = {},
+    keys = {
+      { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash' },
+      { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter' },
+    },
+  },
   {
     'nvim-telescope/telescope.nvim',
-    branch = '0.1.x',
     dependencies = {
       'nvim-lua/plenary.nvim',
       {
@@ -195,6 +70,19 @@ return {
   { 'EdenEast/nightfox.nvim' },
 
   {
+    'folke/trouble.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    opts = {},
+    cmd = 'Trouble',
+    keys = {
+      { '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', desc = 'Diagnostics (Trouble)' },
+      { '<leader>xX', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', desc = 'Buffer Diagnostics (Trouble)' },
+      { '<leader>xL', '<cmd>Trouble loclist toggle<cr>', desc = 'Location List (Trouble)' },
+      { '<leader>xQ', '<cmd>Trouble qflist toggle<cr>', desc = 'Quickfix List (Trouble)' },
+    },
+  },
+
+  {
     'folke/persistence.nvim',
     event = 'BufReadPre', -- this will only start session saving when an actual file was opened
     opts = {
@@ -202,15 +90,113 @@ return {
     },
   },
 
-  { 'smithbm2316/centerpad.nvim' },
+  {
+    'stevearc/oil.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      local detail = false
+      require('oil').setup {
+        delete_to_trash = true,
+        skip_confirm_for_simple_edits = true,
+        watch_for_changes = true,
+        view_options = {
+          show_hidden = true,
+        },
+        float = {
+          padding = 2,
+          max_width = 120,
+          max_height = 40,
+        },
+        keymaps = {
+          -- Disable defaults that conflict with zellij-nav
+          ['<C-h>'] = false,
+          ['<C-l>'] = false,
+          ['gd'] = {
+            desc = 'Toggle file detail view',
+            callback = function()
+              detail = not detail
+              if detail then
+                require('oil').set_columns { 'icon', 'permissions', 'size', 'mtime' }
+              else
+                require('oil').set_columns { 'icon' }
+              end
+            end,
+          },
+          ['<leader>y'] = {
+            desc = 'Yank filepath to clipboard',
+            callback = function()
+              require('oil.actions').copy_entry_path.callback()
+              vim.fn.setreg('+', vim.fn.getreg(vim.v.register))
+            end,
+          },
+        },
+      }
+      vim.keymap.set('n', '-', '<cmd>Oil<cr>', { desc = 'Open parent directory' })
+
+      -- Patch Oil SSH realpath to use POSIX-compatible syntax.
+      -- Oil uses [[ which fails when the remote /bin/sh is dash.
+      local SSHFS = require('oil.adapters.ssh.sshfs')
+      SSHFS.realpath = function(self, path, callback)
+        local cmd = string.format(
+          'if ! readlink -f "%s" 2>/dev/null; then case "%s" in /*) echo "%s";; *) echo "$PWD/%s";; esac; fi',
+          path,
+          path,
+          path,
+          path
+        )
+        self.conn:run(cmd, function(err, lines)
+          if err then
+            return callback(err)
+          end
+          assert(lines)
+          local abspath = table.concat(lines, '')
+          if vim.endswith(abspath, '.') then
+            abspath = abspath:sub(1, #abspath - 1)
+          end
+          local shellescape = function(s)
+            return "'" .. s:gsub("'", "'\\''") .. "'"
+          end
+          self.conn:run(
+            string.format('LC_ALL=C ls -land --color=never %s', shellescape(abspath)),
+            function(ls_err, ls_lines)
+              local type
+              if ls_err then
+                type = 'directory'
+              else
+                assert(ls_lines)
+                local line = ls_lines[1]
+                local typechar = line:sub(1, 1)
+                local typemap = { l = 'link', d = 'directory', ['-'] = 'file' }
+                type = typemap[typechar] or 'file'
+              end
+              if type == 'directory' then
+                if not vim.endswith(abspath, '/') then
+                  abspath = abspath .. '/'
+                end
+              end
+              callback(nil, abspath)
+            end
+          )
+        end)
+      end
+    end,
+  },
 
   {
-    'sQVe/bufignore.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
+    'MagicDuck/grug-far.nvim',
+    opts = {},
+    keys = {
+      { '<leader>sr', function() require('grug-far').open() end, desc = 'Search and Replace (grug-far)' },
+    },
+  },
+
+  {
+    'folke/zen-mode.nvim',
     opts = {
-      -- Input configuration here.
-      -- Refer to the configuration section below for options.
-      patterns = { '*leftpad*', '*rightpad*' },
+      window = { width = 90 },
+    },
+    keys = {
+      { '<leader>cc', '<cmd>ZenMode<cr>', desc = 'Toggle Zen Mode' },
     },
   },
 }

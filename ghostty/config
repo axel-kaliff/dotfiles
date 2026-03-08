@@ -1,10 +1,10 @@
 command = fish
-
-
-#theme = Mariana
-#theme = Relaxed
-theme = nordfox
 title = Ghostty 👻
 confirm-close-surface = false
 
-# custom-shader = /var/home/akaliff/crt-shader-with-chromatic-aberration-glow-scanlines-dot-matrix/crt-shader-with-chromatic-aberration-glow-scanlines-dot-matrix.glsl
+font-family = JetBrainsMono Nerd Font
+font-size = 13
+
+window-padding-x = 4
+window-padding-y = 4
+
