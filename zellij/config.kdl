@@ -319,9 +319,10 @@ load_plugins {
 	autolock
 }
 
+auto_accept_permissions true
 theme "nightfox"
 default_shell "fish"
-layout_dir "~/.config/zellij/layouts"
+layout_dir "/var/home/akaliff/.config/zellij/layouts"
 pane_frames false
 copy_command "wl-copy"
 copy_on_select true

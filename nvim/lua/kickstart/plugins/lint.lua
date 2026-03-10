@@ -10,7 +10,7 @@ return {
         sh = { 'shellcheck' },
         bash = { 'shellcheck' },
         fish = { 'shellcheck' },
-        markdown = { 'markdownlint' },
+        -- markdown = { 'markdownlint' },
         lua = { 'luacheck' },
       }
 

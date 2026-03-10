@@ -4,4 +4,4 @@ rsync -az --delete \
   ~/.config/nvim/ \
   r2d2:~/.config/nvim/
 
-exec ssh r2d2 -t "cd /home/akaliff/zombie-agent && nvim"
+exec ssh r2d2 -t "source ~/.zshrc && cd /home/akaliff/zombie-agent && nvim"
