@@ -320,7 +320,7 @@ load_plugins {
 }
 
 auto_accept_permissions true
-theme "nightfox"
+theme "everforest-dark"
 default_shell "fish"
 layout_dir "/var/home/akaliff/.config/zellij/layouts"
 pane_frames false

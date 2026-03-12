@@ -173,7 +173,7 @@ vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cy
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 
-vim.keymap.set('n', '<leader>e', '<cmd>Oil --float<cr>', { desc = 'File explorer (Oil)' })
+vim.keymap.set('n', '<leader>e', '<cmd>Oil<cr>', { desc = 'File explorer (Oil)' })
 
 vim.keymap.set('n', '<leader>cc', '<cmd>Centerpad<cr>', { desc = 'Toggle Centerpad' })
 
@@ -998,13 +998,21 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    build = ':TSUpdate',
     config = function()
       local filetypes = {
         'bash', 'c', 'diff', 'dockerfile', 'fish', 'go', 'html', 'javascript',
         'json', 'kdl', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'python',
         'query', 'rust', 'toml', 'typescript', 'vim', 'vimdoc', 'yaml',
       }
-      require('nvim-treesitter').install(filetypes)
+      -- Only install parsers that are missing to avoid "Press ENTER" prompts on every startup
+      local to_install = vim.tbl_filter(function(ft)
+        local ok = pcall(vim.treesitter.language.inspect, ft)
+        return not ok
+      end, filetypes)
+      if #to_install > 0 then
+        require('nvim-treesitter').install(to_install)
+      end
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
         callback = function()

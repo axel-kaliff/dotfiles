@@ -12,7 +12,7 @@ return {
           shortcut = {
             { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
             { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
-            { desc = ' Tree', group = 'Oil', action = 'Oil --float', key = 'e' },
+            { desc = ' Tree', group = 'Oil', action = 'Oil', key = 'e' },
             { desc = '󰩈 Exit', group = 'ErrorMsg', action = 'q', key = 'q' },
           },
         },
@@ -36,11 +36,19 @@ return {
     config = function()
       require('zellij-nav').setup()
 
+      -- Wrap navigation to skip command-line window (q:) where wincmd is invalid
+      local function zellij_nav(cmd)
+        return function()
+          if vim.fn.getcmdwintype() ~= '' then return end
+          vim.cmd(cmd)
+        end
+      end
+
       local map = vim.keymap.set
-      map('n', '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { desc = 'navigate left or tab' })
-      map('n', '<c-j>', '<cmd>ZellijNavigateDown<cr>', { desc = 'navigate down' })
-      map('n', '<c-k>', '<cmd>ZellijNavigateUp<cr>', { desc = 'navigate up' })
-      map('n', '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { desc = 'navigate right or tab' })
+      map('n', '<c-h>', zellij_nav('ZellijNavigateLeftTab'), { desc = 'navigate left or tab' })
+      map('n', '<c-j>', zellij_nav('ZellijNavigateDown'), { desc = 'navigate down' })
+      map('n', '<c-k>', zellij_nav('ZellijNavigateUp'), { desc = 'navigate up' })
+      map('n', '<c-l>', zellij_nav('ZellijNavigateRightTab'), { desc = 'navigate right or tab' })
     end,
   },
 
@@ -92,25 +100,30 @@ return {
 
   {
     'stevearc/oil.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+      'refractalize/oil-git-status.nvim',
+    },
     config = function()
       local detail = false
       require('oil').setup {
         delete_to_trash = true,
         skip_confirm_for_simple_edits = true,
         watch_for_changes = true,
+        lsp_file_methods = {
+          autosave_changes = true,
+        },
+        win_options = {
+          signcolumn = 'yes:2',
+        },
         view_options = {
           show_hidden = true,
-        },
-        float = {
-          padding = 2,
-          max_width = 120,
-          max_height = 40,
         },
         keymaps = {
           -- Disable defaults that conflict with zellij-nav
           ['<C-h>'] = false,
           ['<C-l>'] = false,
+          ['q'] = 'actions.close',
           ['gd'] = {
             desc = 'Toggle file detail view',
             callback = function()
@@ -131,6 +144,7 @@ return {
           },
         },
       }
+      require('oil-git-status').setup()
       vim.keymap.set('n', '-', '<cmd>Oil<cr>', { desc = 'Open parent directory' })
 
       -- Patch Oil SSH realpath to use POSIX-compatible syntax.
