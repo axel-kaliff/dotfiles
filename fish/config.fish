@@ -1,30 +1,49 @@
 set fish_greeting
 
-# Auto-start zellij — attach to "main" session (configured in zellij/config.kdl)
-if status is-interactive; and not set -q ZELLIJ
-    exec zellij
+function g 
+    lazygit
 end
 
-# Abbreviations (expand inline, show real command in history)
-abbr -a g lazygit
-abbr -a cat bat
-abbr -a ls eza
-abbr -a v nvim
-abbr -a vi nvim
-abbr -a vim nvim
-function udot
-    cd ~/dotfiles/
-    git add -A
-    git diff --cached --stat
-    read -P "Commit message [Update dotfiles]: " msg
-    test -z "$msg" && set msg "Update dotfiles"
-    git commit -m "$msg"
-    git pull --rebase
-    git push
-    echo "Git synced."
-    just stow-dotfiles
-    echo "Dotfiles stowed."
+function tm
+    tmuxinator $argv
 end
+
+
+function cat 
+    bat $argv
+end
+
+function ls
+    eza $argv
+end
+
+function vi -d 'vi alias for nvim'
+    nvim $argv
+end
+
+function v -d 'vi alias for nvim'
+    nvim $argv
+end
+
+function vim -d 'vi alias for nvim'
+    nvim $argv
+end
+
+function udot
+    echo "Committing all changes, pulling from remote, and pushing to remote..."
+    cd ~/dotfiles/
+    rsync -a ~/.config/tmuxinator ~/dotfiles/
+    git add .
+    git commit -m "Update dotfiles"
+    git pull
+    git push
+    echo "Git repository updated."
+    echo "Copying dotfiles to the local .config directory..."
+    just overwrite-local-dotfiles
+    echo "Local .config directory updated with dotfiles."
+
+end
+
 
 function dn
     if test (count $argv) -lt 1
@@ -36,7 +55,7 @@ function dn
     just --justfile "$HOME/dotfiles/devcontainer/justfile" new-devcontainer $project
 end
 
-function dc
+function du
     devcontainer up --mount "type=bind,source=$HOME/.config/nvim,target=/home/devuser/.config/nvim" --workspace-folder .
 end
 
@@ -72,34 +91,13 @@ function y
 	rm -f -- "$tmp"
 end
 
-set -gx EDITOR nvim
-set -gx VISUAL nvim
+export EDITOR=nvim
+export VISUAL=nvim
 
-set -gx XDG_CONFIG_HOME "$HOME/.config/"
+export XDG_CONFIG_HOME="$HOME/.config/"
 
-fish_add_path "$HOME/.local/bin"
-fish_add_path "/home/linuxbrew/.linuxbrew/bin"
-
-# fzf configuration (uses fd for faster searches)
-set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
-set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
-set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --exclude .git'
-
-# ripgrep config
-set -gx RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/config"
-
-# bat theme
-set -gx BAT_THEME "Nord"
-
-# zoxide (replaces z)
-zoxide init fish | source
-
-# direnv
-direnv hook fish | source
+export PATH="$PATH:$HOME/.local/bin"
+export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin/"
 
 atuin init fish | source
 starship init fish | source
-
-# WORK 
-if [ -f '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc' ]; . '/var/home/akaliff/tarballs/google-cloud-sdk/path.fish.inc' 2>/dev/null; end
-

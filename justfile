@@ -43,9 +43,9 @@ setup-brew:
 
 stow-dotfiles:
   @echo "Stowing dotfiles to ~/.config..."
-  @stow -d ~ -t ~/.config --restow dotfiles
+  @stow -d ~ -t ~/.config --restow --adopt dotfiles
   @echo "Stowing bash config to ~..."
-  @stow -d ~/dotfiles -t ~ --restow bash
+  @stow -d ~/dotfiles -t ~ --restow --adopt bash
   @echo "Dotfiles stowed."
 
 unstow-dotfiles:
