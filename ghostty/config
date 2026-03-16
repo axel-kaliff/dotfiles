@@ -3,7 +3,7 @@ command = fish
 
 #theme = Mariana
 #theme = Relaxed
-theme = nordfox
+theme = Nordfox
 title = Ghostty 👻
 confirm-close-surface = false
 
