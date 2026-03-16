@@ -99,5 +99,8 @@ export XDG_CONFIG_HOME="$HOME/.config/"
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin/"
 
+zoxide init fish | source
+direnv hook fish | source
+fzf --fish | source
 atuin init fish | source
 starship init fish | source
