@@ -144,51 +144,93 @@ These are auto-used by neovim's config — no manual invocation needed:
 
 ## Fish Shell
 
-### Abbreviations
+### Transparent Replacements
 
-These expand inline so you see the real command before running it, and history records the expanded form.
+These replace standard commands — just use them as normal, the better version runs automatically:
 
-| Abbreviation | Expands to |
-|--------------|------------|
-| `g` | `lazygit` |
-| `v` / `vi` / `vim` | `nvim` |
-| `cat` | `bat` |
-| `ls` | `eza` |
+| You type | Runs | Improvement |
+|----------|------|-------------|
+| `cat file` | `bat` | Syntax highlighting, line numbers |
+| `ls` | `eza --icons` | Icons, colors |
+| `ll` | `eza -la --icons --git` | Long list with git status |
+| `lt` | `eza --tree --icons` | Tree view (2 levels) |
+| `diff a b` | `delta` | Side-by-side with syntax highlighting |
+| `ps` | `procs` | Color-coded, searchable |
+| `du` | `dust` | Visual disk usage tree |
+| `top` | `btm` | Modern system monitor TUI |
+| `curl url` | `xh` | Pretty HTTP output, simpler syntax |
+| `dig host` | `doggo` | Modern DNS with DoH/DoT support |
+| `sed 'x' 'y'` | `sd` | Intuitive regex, no escape hell |
+| `find pattern` | `fd` | Simple, fast, respects .gitignore |
+| `rm file` | `trash` | Moves to trash instead of deleting |
+| `v` / `vi` / `vim` | `nvim` | Neovim |
 
-### Functions
+### Shortcuts
 
 | Command | Action |
 |---------|--------|
-| `y` | Open yazi (cd on exit) |
-| `uva` | Activate `.venv/bin/activate` |
-| `udot` | Commit + push dotfiles, then `just stow-dotfiles` |
+| `g` | lazygit |
+| `ld` | lazydocker |
+| `y` | yazi file manager (cd on exit) |
+| `Ctrl+S` | Toggle sudo prefix on current command |
+
+### Smart Functions
+
+| Command | Action |
+|---------|--------|
+| `ai` | Chat with local LLM (ollama) |
+| `ai "question"` | One-shot question to local LLM |
+| `pair` | Start aider AI pair programmer |
+| `api GET url` | HTTP request with auto-formatted JSON output |
+| `jqi file.json` | Interactive JSON explorer (jnv) |
+| `md README.md` | Render markdown in terminal |
+| `watch -e rs cargo test` | Re-run command on file changes |
+| `bench 'cmd1' 'cmd2'` | Benchmark and compare commands |
+| `stats` | Show lines of code + disk usage for current project |
+| `encrypt file` | Encrypt file with age (password prompt) |
+| `decrypt file.age` | Decrypt age-encrypted file |
+| `backup ~/dir` | Backup with restic |
+| `dive-last` | Inspect most recent container image layers |
+| `box` | List distroboxes |
+| `box ubuntu` | Enter or create an Ubuntu distrobox |
+| `use node@20` | Set tool version via mise |
+
+### Devcontainer Functions
+
+| Command | Action |
+|---------|--------|
 | `dn <name>` | Create new devcontainer project |
 | `dc` | devcontainer up (with nvim config mounted) |
 | `db` / `df` / `de` | devcontainer exec bash / fish / nvim |
-| `dr` | devcontainer up (rebuild) |
-| `r2d2` | SSH into r2d2 with tmux (auto-syncs nvim config) |
-| `rvim [host]` | Sync nvim config to remote host and open nvim |
-| `Ctrl+S` | Toggle sudo prefix on current command |
+| `dr` | devcontainer up (rebuild from scratch) |
 
-### Shell Tools
+### Dotfile Management
+
+| Command | Action |
+|---------|--------|
+| `udot` | Commit + push dotfiles, then stow |
+| `uva` | Activate `.venv/bin/activate` |
+
+### Shell Integrations & Keybindings
 
 | Shortcut | Tool | Action |
 |----------|------|--------|
-| `Ctrl+T` | fzf | Fuzzy find files (uses fd) |
-| `Alt+C` | fzf | Fuzzy find and cd into directory |
+| `Ctrl+T` | fzf | Fuzzy find files |
+| `Alt+C` | fzf | Fuzzy cd into directory |
 | `Ctrl+R` | Atuin | Fuzzy search shell history |
 | `z <dir>` | zoxide | Jump to frecent directory |
 | `zi` | zoxide | Interactive directory picker |
 
-### Environment
+### Active Shell Integrations
 
-- `BAT_THEME=Nord` — bat uses Nord color scheme
-- `RIPGREP_CONFIG_PATH` — ripgrep auto-loads config (smart-case, hidden files, excludes .git/node_modules/.venv)
-- `zoxide init fish | source` — enables `z` / `zi` directory jumping
-- `direnv hook fish | source` — auto-loads `.envrc` files per project
-- `fzf --fish | source` — enables `Ctrl+T`, `Alt+C`, `Ctrl+R` keybindings
-- `atuin init fish | source` — shell history with fuzzy search
-- `starship init fish | source` — cross-shell prompt
+These activate automatically in every fish session:
+
+- **zoxide** — `z` / `zi` directory jumping
+- **direnv** — auto-loads `.envrc` per project
+- **fzf** — `Ctrl+T`, `Alt+C`, `Ctrl+R` keybindings
+- **atuin** — shell history sync and search
+- **mise** — auto-activates tool versions per project (`.mise.toml`)
+- **starship** — cross-shell prompt
 
 ---
 
