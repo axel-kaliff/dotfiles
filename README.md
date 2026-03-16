@@ -1,12 +1,17 @@
 # dotfiles
 
-Personal dotfiles for a terminal-first workflow on Fedora (Silverblue). Managed with `just` and symlinked to `~/.config/` via GNU Stow.
+Personal dotfiles for a terminal-first workflow on [Lateralus](https://github.com/axel-kaliff/lateralus) — a custom Bluefin image with COSMIC Desktop, Ghostty, and an Evergreen theme. Managed with `just` and symlinked to `~/.config/` via GNU Stow.
 
 ## Setup
+
+On a fresh Lateralus install, everything is pre-configured. For manual setup or other systems:
 
 ```bash
 # Full bootstrap (Homebrew, Stow, dotfiles, git, fish, fonts, Atuin, Tailscale)
 just bootstrap
+
+# Or use the ujust first-time setup on Lateralus
+ujust setup
 
 # Symlink dotfiles to ~/.config/ via stow (idempotent, safe to re-run)
 just stow-dotfiles
@@ -19,20 +24,121 @@ just doctor
 
 # Apply git config (username, email, delta pager)
 just setup-git-config
+
+# Update everything (brew, flatpak, system)
+ujust update-all
 ```
 
 ## Stack
 
+### Core Tools
+
 | Tool | Purpose |
 |------|---------|
-| **Ghostty** | Terminal emulator (nordfox theme) |
+| **Ghostty** | Terminal emulator (default terminal in COSMIC) |
 | **Zellij** | Terminal multiplexer |
-| **Fish** | Shell |
+| **Fish** | Shell (with zoxide, direnv, fzf, atuin integrations) |
 | **Neovim** | Editor (Kickstart-based config) |
 | **Starship** | Shell prompt |
 | **Atuin** | Shell history (synced, fuzzy search) |
 | **lazygit** | Git TUI |
+| **lazydocker** | Container TUI (same keybindings as lazygit) |
 | **yazi** | Terminal file manager |
+
+### Modern CLI Replacements
+
+| Tool | Replaces | Usage |
+|------|----------|-------|
+| **bat** | `cat` | `cat file.txt` (aliased in fish) |
+| **eza** | `ls` | `ls` (aliased in fish) |
+| **fd** | `find` | `fd pattern` — simple, fast file search |
+| **ripgrep** | `grep` | `rg pattern` — fast recursive search |
+| **sd** | `sed` | `sd 'from' 'to' file` — intuitive find-and-replace |
+| **procs** | `ps` | `procs` — color-coded, searchable process list |
+| **dust** | `du` | `dust` — disk usage with visual tree |
+| **bottom** | `htop` | `btm` — system monitor TUI |
+| **xh** | `curl` | `xh GET api.example.com` — friendly HTTP client |
+| **doggo** | `dig` | `doggo example.com` — modern DNS client (supports DoH/DoT) |
+| **delta** | `diff` | Git pager (auto-configured, side-by-side diffs) |
+| **zoxide** | `cd` | `z dir` — jump to frecent directories |
+| **trash-cli** | `rm` | `trash file` — safe delete to trash |
+
+### Developer Tools
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **mise** | Polyglot version manager | `mise use node@20` — replaces nvm/pyenv/rbenv |
+| **direnv** | Per-project env vars | Auto-loads `.envrc` when entering a directory |
+| **devcontainer** | Dev containers | `dn project` — create devcontainer project |
+| **just** | Command runner | `just recipe` — project-specific task runner |
+| **watchexec** | File watcher | `watchexec -e rs cargo test` — re-run on file changes |
+| **hyperfine** | Benchmarking | `hyperfine 'cmd1' 'cmd2'` — compare command speed |
+| **tokei** | Code stats | `tokei` — lines of code by language |
+| **gum** | Script UX | Build interactive shell scripts with prompts/spinners |
+| **vhs** | Terminal GIFs | `vhs record.tape` — record terminal sessions |
+
+### AI/LLM
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **ollama** | Local LLM runtime | `ollama run llama3` — run models locally |
+| **aider** | AI pair programmer | `aider` — AI coding agent in terminal (works with ollama + cloud APIs) |
+
+### Container & Cloud
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **podman** | Container runtime | `podman run ...` — rootless containers |
+| **podman-compose** | Compose files | `podman-compose up` — docker-compose compatible |
+| **lazydocker** | Container TUI | `lazydocker` — manage containers/images/volumes |
+| **dive** | Image inspector | `dive image:tag` — explore container image layers |
+| **skopeo** | Image management | `skopeo inspect docker://image` — inspect/copy images |
+| **distrobox** | Container distros | `distrobox create -i ubuntu` — run any distro |
+
+### Network & Security
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **tailscale** | VPN mesh | Pre-configured with systray, `tailscale up` to connect |
+| **nmap** | Network scanner | `nmap -sV host` — port/service discovery |
+| **bandwhich** | Bandwidth monitor | `sudo bandwhich` — per-process bandwidth usage |
+| **trippy** | Traceroute TUI | `trip host` — visual traceroute |
+| **age** | File encryption | `age -r recipient file` — modern GPG alternative |
+| **sops** | Secret management | `sops file.yaml` — encrypted secrets in git |
+
+### File Sync & Backup
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **restic** | Encrypted backup | `restic backup ~/Documents` — deduplicated, encrypted |
+| **rclone** | Cloud sync | `rclone sync local/ remote:bucket` — any cloud provider |
+
+### Terminal Productivity
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **glow** | Markdown viewer | `glow README.md` — render markdown in terminal |
+| **slides** | Presentations | `slides deck.md` — terminal presentations from markdown |
+| **fzf** | Fuzzy finder | `Ctrl+T` files, `Alt+C` cd, `Ctrl+R` history |
+| **jq** | JSON processor | `curl api | jq '.data'` — query/transform JSON |
+| **jnv** | JSON explorer | `jnv file.json` — interactive jq filter builder |
+| **tealdeer** | Quick help | `tldr tar` — community-maintained command examples |
+| **topgrade** | Update all | `topgrade` — update brew, flatpak, system in one go |
+
+### Neovim LSP/Lint/Format Dependencies
+
+These are auto-used by neovim's config — no manual invocation needed:
+
+| Tool | Purpose |
+|------|---------|
+| **rust-analyzer** | Rust LSP |
+| **pyright** | Python LSP |
+| **tree-sitter** | Syntax parsing |
+| **stylua** | Lua formatter |
+| **luacheck** | Lua linter |
+| **markdownlint-cli** | Markdown linter |
+| **ruff** | Python linter/formatter |
+| **shellcheck** | Shell script linter |
 
 ---
 
@@ -76,9 +182,13 @@ These expand inline so you see the real command before running it, and history r
 
 ### Environment
 
-- `BAT_THEME=Nord` - bat uses Nord color scheme
-- `RIPGREP_CONFIG_PATH` - ripgrep auto-loads config (smart-case, hidden files, excludes .git/node_modules/.venv)
-- `direnv` - auto-loads `.envrc` files per project
+- `BAT_THEME=Nord` — bat uses Nord color scheme
+- `RIPGREP_CONFIG_PATH` — ripgrep auto-loads config (smart-case, hidden files, excludes .git/node_modules/.venv)
+- `zoxide init fish | source` — enables `z` / `zi` directory jumping
+- `direnv hook fish | source` — auto-loads `.envrc` files per project
+- `fzf --fish | source` — enables `Ctrl+T`, `Alt+C`, `Ctrl+R` keybindings
+- `atuin init fish | source` — shell history with fuzzy search
+- `starship init fish | source` — cross-shell prompt
 
 ---
 
