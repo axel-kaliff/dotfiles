@@ -363,7 +363,7 @@ autolock location="file:~/.config/zellij/plugins/zellij-autolock.wasm" {
         // Enabled at start?
         is_enabled true
         // Lock when any open these programs open.
-        triggers "nvim|vim|git|fzf|zoxide|atuin|ssh"
+        triggers "nvim|vim|git|fzf|zoxide|atuin"
         // Reaction to input occurs after this many seconds. (default=0.3)
         // (An existing scheduled reaction prevents additional reactions.)
         reaction_seconds "0.3"
