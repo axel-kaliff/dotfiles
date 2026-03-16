@@ -10,96 +10,140 @@ end
 
 return {
 
+  -- fzf-lua: replaces telescope with native fzf performance
   {
-    'nvimdev/dashboard-nvim',
+    'ibhagwan/fzf-lua',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     event = 'VimEnter',
-    dependencies = { { 'nvim-tree/nvim-web-devicons' } },
     config = function()
-      require('dashboard').setup {
-        theme = 'hyper',
-        config = {
-          week_header = { enable = true },
-          shortcut = {
-            { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
-            { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'Telescope find_files', key = 'f' },
-            { desc = ' Tree', group = 'Neotree', action = 'Neotree toggle left', key = 'e' },
-            { desc = '󰩈 Exit', group = 'ErrorMsg', action = 'q', key = 'q' },
-          },
+      local fzf = require 'fzf-lua'
+      fzf.setup {
+        'default-title',
+        fzf_colors = true,
+        winopts = {
+          preview = { default = 'bat' },
         },
       }
+
+      -- Register as the UI select handler (replaces telescope-ui-select)
+      fzf.register_ui_select()
+
+      local map = vim.keymap.set
+      map('n', '<leader>sh', fzf.helptags, { desc = '[S]earch [H]elp' })
+      map('n', '<leader>sk', fzf.keymaps, { desc = '[S]earch [K]eymaps' })
+      map('n', '<leader>sf', fzf.files, { desc = '[S]earch [F]iles' })
+      map('n', '<leader>ss', fzf.builtin, { desc = '[S]earch [S]elect Picker' })
+      map({ 'n', 'v' }, '<leader>sw', fzf.grep_cword, { desc = '[S]earch current [W]ord' })
+      map('n', '<leader>sg', fzf.live_grep, { desc = '[S]earch by [G]rep' })
+      map('n', '<leader>sd', fzf.diagnostics_workspace, { desc = '[S]earch [D]iagnostics' })
+      map('n', '<leader>sr', fzf.resume, { desc = '[S]earch [R]esume' })
+      map('n', '<leader>s.', fzf.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      map('n', '<leader>sc', fzf.commands, { desc = '[S]earch [C]ommands' })
+      map('n', '<leader><leader>', fzf.buffers, { desc = '[ ] Find existing buffers' })
+      map('n', '<leader>/', fzf.grep_curbuf, { desc = '[/] Fuzzily search in current buffer' })
+      map('n', '<leader>s/', function()
+        fzf.live_grep { grep_open_buffers = true }
+      end, { desc = '[S]earch [/] in Open Files' })
+      map('n', '<leader>sn', function()
+        fzf.files { cwd = vim.fn.stdpath 'config' }
+      end, { desc = '[S]earch [N]eovim files' })
     end,
   },
 
-  -- Neotree
+  -- snacks.nvim: modular QoL features (dashboard, zen, indent, notifier, etc.)
   {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
+    'folke/snacks.nvim',
+    priority = 1000,
+    lazy = false,
+    opts = {
+      dashboard = {
+        enabled = true,
+        sections = {
+          { section = 'header' },
+          { icon = ' ', title = 'Keymaps', section = 'keys', indent = 2, padding = 1 },
+          { icon = ' ', title = 'Recent Files', section = 'recent_files', indent = 2, padding = 1 },
+          { icon = ' ', title = 'Projects', section = 'projects', indent = 2, padding = 1 },
+          { section = 'startup' },
+        },
+      },
+      indent = { enabled = true },
+      notifier = { enabled = true },
+      scroll = { enabled = true },
+      bigfile = { enabled = true },
+      words = { enabled = true },
+      zen = {
+        enabled = true,
+        toggles = { dim = true },
+        win = { width = 90 },
+      },
+      lazygit = { enabled = true },
+      terminal = { enabled = true },
+    },
+    keys = {
+      { '<leader>cc', function() Snacks.zen() end, desc = 'Toggle Zen Mode' },
+      { '<leader>gg', function() Snacks.lazygit() end, desc = 'Lazygit' },
+      { '<leader>gl', function() Snacks.lazygit.log() end, desc = 'Lazygit Log' },
+      { '<leader>tt', function() Snacks.terminal() end, desc = 'Toggle Terminal' },
+      { '<leader>un', function() Snacks.notifier.show_history() end, desc = 'Notification History' },
+    },
+  },
+
+  -- noice.nvim: modern UI for cmdline, messages, and popupmenu
+  {
+    'folke/noice.nvim',
+    event = 'VeryLazy',
     dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons',
       'MunifTanjim/nui.nvim',
     },
-    lazy = false,
-    config = function()
-      require('neo-tree').setup {
-        close_if_last_window = true,
-        popup_border_style = 'rounded',
-        enable_git_status = true,
-        enable_diagnostics = false,
-        source_selector = {
-          winbar = false,
+    opts = {
+      lsp = {
+        override = {
+          ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
+          ['vim.lsp.util.stylize_markdown'] = true,
+          ['cmp.entry.get_documentation'] = true,
         },
-
-        default_component_configs = {
-          indent = {
-            indent_size = 1,
-            padding = 1, -- extra padding on left hand side
-            with_markers = true,
-            indent_marker = '│',
-            last_indent_marker = '└',
-            highlight = 'NeoTreeIndentMarker',
-          },
-          icon = {
-            folder_closed = '',
-            folder_open = '',
-            default = '',
-          },
-        },
-        filesystem = {
-          use_libuv_file_watcher = true,
-          filtered_items = {
-            show_hidden = true,
-            respect_gitignore = true,
-          },
-          window = {
-            position = 'float',
-            mappings = {
-              f = 'none',
-            },
-          },
-        },
-      }
-    end,
+      },
+      presets = {
+        bottom_search = true,
+        command_palette = true,
+        long_message_to_split = true,
+        lsp_doc_border = true,
+      },
+    },
   },
 
+  -- neogit: magit-style git interface
   {
-    's1n7ax/nvim-window-picker',
-    version = '2.*',
-    config = function()
-      require('window-picker').setup {
-        filter_rules = {
-          include_current_win = false,
-          autoselect_one = true,
-          -- filter using buffer options
-          bo = {
-            -- if the file type is one of following, the window will be ignored
-            filetype = { 'neo-tree', 'neo-tree-popup', 'notify', 'leftpad', 'rightpad' },
-            -- if the buffer type is one of following, the window will be ignored
-            buftype = { 'terminal', 'quickfix', 'leftpad', 'rightpad' },
-          },
-        },
-      }
-    end,
+    'NeogitOrg/neogit',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'sindrets/diffview.nvim',
+      'ibhagwan/fzf-lua',
+    },
+    cmd = 'Neogit',
+    opts = {
+      integrations = {
+        fzf_lua = true,
+        diffview = true,
+      },
+    },
+    keys = {
+      { '<leader>gn', '<cmd>Neogit<cr>', desc = 'Neogit' },
+      { '<leader>gc', '<cmd>Neogit commit<cr>', desc = 'Neogit Commit' },
+      { '<leader>gp', '<cmd>Neogit push<cr>', desc = 'Neogit Push' },
+    },
+  },
+
+  -- diffview.nvim: tabpage diff review and merge conflict resolution
+  {
+    'sindrets/diffview.nvim',
+    cmd = { 'DiffviewOpen', 'DiffviewFileHistory' },
+    keys = {
+      { '<leader>gd', '<cmd>DiffviewOpen<cr>', desc = 'Diffview Open' },
+      { '<leader>gh', '<cmd>DiffviewFileHistory %<cr>', desc = 'File History (current)' },
+      { '<leader>gH', '<cmd>DiffviewFileHistory<cr>', desc = 'File History (repo)' },
+    },
+    opts = {},
   },
 
   -- Bufferline
@@ -176,27 +220,38 @@ return {
     end,
   },
 
-  { 'numToStr/Comment.nvim', opts = {} },
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    opts = {},
+    keys = {
+      { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash' },
+      { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter' },
+    },
+  },
 
   { 'EdenEast/nightfox.nvim' },
 
   {
     'folke/persistence.nvim',
-    event = 'BufReadPre', -- this will only start session saving when an actual file was opened
-    opts = {
-      -- add any custom options here
-    },
+    event = 'BufReadPre',
+    opts = {},
   },
 
   { 'smithbm2316/centerpad.nvim' },
 
   {
-    'sQVe/bufignore.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = {
-      -- Input configuration here.
-      -- Refer to the configuration section below for options.
-      patterns = { '*leftpad*', '*rightpad*' },
+    'MagicDuck/grug-far.nvim',
+    opts = {},
+    keys = {
+      { '<leader>sR', function() require('grug-far').open() end, desc = 'Search and Replace (grug-far)' },
     },
+  },
+
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
+    ft = { 'markdown' },
+    opts = {},
   },
 }

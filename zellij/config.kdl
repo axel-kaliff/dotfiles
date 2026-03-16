@@ -404,92 +404,14 @@ theme "nightfox"
 // Default: $SHELL
 // 
 default_shell "fish"
- 
-// Choose the path to override cwd that zellij will use for opening new panes
-// 
-// default_cwd "/tmp"
- 
-// The name of the default layout to load on startup
-// Default: "default"
-// 
-// default_layout "compact"
- 
-// The folder in which Zellij will look for layouts
-// (Requires restart)
-// 
-// layout_dir "/tmp"
- 
-// The folder in which Zellij will look for themes
-// (Requires restart)
-// 
-// theme_dir "/tmp"
- 
-// Toggle enabling the mouse mode.
-// On certain configurations, or terminals this could
-// potentially interfere with copying text.
-// Options:
-//   - true (default)
-//   - false
-// 
-// mouse_mode false
- 
-// Toggle having pane frames around the panes
-// Options:
-//   - true (default, enabled)
-//   - false
-// 
-// pane_frames false
- 
-// When attaching to an existing session with other users,
-// should the session be mirrored (true)
-// or should each user have their own cursor (false)
-// (Requires restart)
-// Default: false
-// 
-// mirror_session true
- 
-// Choose what to do when zellij receives SIGTERM, SIGINT, SIGQUIT or SIGHUP
-// eg. when terminal window with an active zellij session is closed
-// (Requires restart)
-// Options:
-//   - detach (Default)
-//   - quit
-// 
-// on_force_close "quit"
- 
-// Configure the scroll back buffer size
-// This is the number of lines zellij stores for each pane in the scroll back
-// buffer. Excess number of lines are discarded in a FIFO fashion.
-// (Requires restart)
-// Valid values: positive integers
-// Default value: 10000
-// 
-// scroll_buffer_size 10000
- 
-// Provide a command to execute when copying text. The text will be piped to
-// the stdin of the program to perform the copy. This can be used with
-// terminal emulators which do not support the OSC 52 ANSI control sequence
-// that will be used by default if this option is not set.
-// Examples:
-//
-// copy_command "xclip -selection clipboard" // x11
-copy_command "wl-copy"                    // wayland
-// copy_command "pbcopy"                     // osx
-// 
-// copy_command "pbcopy"
- 
-// Choose the destination for copied text
-// Allows using the primary selection buffer (on x11/wayland) instead of the system clipboard.
-// Does not apply when using copy_command.
-// Options:
-//   - system (default)
-//   - primary
-// 
-// copy_clipboard "primary"
- 
-// Enable automatic copying (and clearing) of selection when releasing mouse
-// Default: true
-// 
+layout_dir "/var/home/akaliff/.config/zellij/layouts"
+pane_frames true
+ui {
+    pane_frames {
+        rounded_corners true
+    }
+}
+copy_command "wl-copy"
 copy_on_select true
  
 // Path to the default editor to use to edit pane scrollbuffer

@@ -60,6 +60,8 @@ These expand inline so you see the real command before running it, and history r
 | `dc` | devcontainer up (with nvim config mounted) |
 | `db` / `df` / `de` | devcontainer exec bash / fish / nvim |
 | `dr` | devcontainer up (rebuild) |
+| `r2d2` | SSH into r2d2 with tmux (auto-syncs nvim config) |
+| `rvim [host]` | Sync nvim config to remote host and open nvim |
 | `Ctrl+S` | Toggle sudo prefix on current command |
 
 ### Shell Tools
@@ -94,7 +96,8 @@ The `zj` function manages sessions:
 | `zj <name>` | Attach/create session with given name |
 | `zj ls` | List sessions |
 | `zj kill <name>` | Kill a session |
-| `zj layout <name> <layout>` | Attach with a specific layout |
+| `zj layout <name> <layout>` | Attach with a specific layout (remembers layout for reset) |
+| `zj reset <name>` | Kill session and restart with its original layout |
 
 ### Global (all modes except locked)
 
@@ -153,9 +156,14 @@ The `sics` layout connects to the `r2d2` remote for development:
 ```bash
 # Start the sics session
 zj layout sics sics
+
+# Reset it back to the original layout (kills and restarts)
+zj reset sics
 ```
 
-On first connect, the editor tab will take longer as it sets up the remote environment. Subsequent connections use the cached config.
+#### Automatic nvim config sync
+
+The `ssh` function automatically rsyncs your neovim config to r2d2 before every connection. This covers manual SSH, the `r2d2` function, and the sics layout scripts -- your remote nvim config always matches local.
 
 ---
 
@@ -175,7 +183,7 @@ Leader key: `Space`
 | `S` | Flash treesitter select |
 | `-` | Open oil.nvim (parent directory as editable buffer) |
 
-### File Finding & Search
+### File Finding & Search (fzf-lua)
 
 | Shortcut | Action |
 |----------|--------|
@@ -187,7 +195,8 @@ Leader key: `Space`
 | `Space sk` | Search keymaps |
 | `Space sc` | Search commands |
 | `Space sd` | Search diagnostics |
-| `Space sr` | Search and replace (grug-far, project-wide) |
+| `Space sr` | Resume last search |
+| `Space sR` | Search and replace (grug-far, project-wide) |
 | `Space sn` | Search nvim config files |
 | `Space /` | Fuzzy search in current buffer |
 | `Space s/` | Live grep in open files |
@@ -211,7 +220,9 @@ Leader key: `Space`
 
 Active language servers: `lua_ls`, `pyright`, `ruff`, `gopls`, `ts_ls`, `rust_analyzer`
 
-### Git (gitsigns)
+### Git
+
+#### Gitsigns (inline hunks)
 
 | Shortcut | Action |
 |----------|--------|
@@ -225,6 +236,19 @@ Active language servers: `lua_ls`, `pyright`, `ruff`, `gopls`, `ts_ls`, `rust_an
 | `Space hd` | Diff against index |
 | `Space hD` | Diff against last commit |
 | `Space tb` | Toggle blame line |
+
+#### Neogit & Diffview (full git workflow)
+
+| Shortcut | Action |
+|----------|--------|
+| `Space gn` | Neogit (magit-style interactive git UI) |
+| `Space gc` | Neogit commit |
+| `Space gp` | Neogit push |
+| `Space gg` | Lazygit (via snacks.nvim) |
+| `Space gl` | Lazygit log |
+| `Space gd` | Diffview (review all changed files) |
+| `Space gh` | File history (current file) |
+| `Space gH` | File history (entire repo) |
 
 ### Commenting
 
@@ -306,11 +330,36 @@ Oil can browse and edit remote filesystems over SSH using your local nvim config
 
 All file operations (create, rename, delete, move) work over SSH.
 
+### Treesitter Textobjects
+
+| Shortcut | Action |
+|----------|--------|
+| `af` / `if` | Select around/inside function |
+| `ac` / `ic` | Select around/inside class |
+| `aa` / `ia` | Select around/inside argument |
+| `]m` / `[m` | Next / previous function start |
+| `]M` / `[M` | Next / previous function end |
+| `]]` / `[[` | Next / previous class start |
+| `Space a` | Swap with next argument |
+| `Space A` | Swap with previous argument |
+| `;` / `,` | Repeat last textobject move forward / backward |
+
 ### Focus & Zen
 
 | Shortcut | Action |
 |----------|--------|
-| `Space cc` | Toggle Zen Mode (centered 90-col writing) |
+| `Space cc` | Toggle Zen Mode (centered 90-col writing, via snacks.nvim) |
+
+### UI (snacks.nvim & noice.nvim)
+
+| Shortcut | Action |
+|----------|--------|
+| `Space tt` | Toggle floating terminal |
+| `Space un` | Notification history |
+
+snacks.nvim also provides: dashboard, indent guides, smooth scrolling, bigfile handling, word highlighting under cursor, and lazygit integration.
+
+noice.nvim replaces the command line, messages, and popupmenu with modern floating windows.
 
 ### Session Management
 
@@ -383,7 +432,7 @@ dotfiles/
 ├── nvim/           # Neovim config (Kickstart-based)
 │   ├── init.lua    # Main config (keymaps, LSP, plugins)
 │   └── lua/
-│       ├── custom/plugins/   # oil, flash, trouble, grug-far, zen-mode
+│       ├── custom/plugins/   # fzf-lua, snacks, noice, neogit, diffview, oil, flash, trouble, grug-far
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
 ├── ripgrep/        # ripgrep config (smart-case, hidden files)
 ├── starship.toml   # Shell prompt config
