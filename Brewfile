@@ -39,12 +39,7 @@ brew "rust-analyzer"
 brew "pyright"
 brew "stylua"
 brew "luacheck"
-brew "markdownlint-cli"
 brew "tree-sitter"
-
-# AI/LLM
-brew "ollama"
-brew "aider-chat"
 
 # Container tools
 brew "dive"
@@ -87,5 +82,4 @@ brew "age"
 brew "sops"
 
 # System tools
-brew "wl-clipboard"
 brew "distrobox"

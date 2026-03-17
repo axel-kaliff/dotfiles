@@ -172,7 +172,25 @@ These replace standard commands — just use them as normal, the better version 
 | `g` | lazygit |
 | `ld` | lazydocker |
 | `y` | yazi file manager (cd on exit) |
+| `up` | Update all packages and tools (topgrade) |
+| `help <cmd>` | Quick help: tldr with man fallback |
 | `Ctrl+S` | Toggle sudo prefix on current command |
+
+### Workflow Functions
+
+| Command | Action |
+|---------|--------|
+| `tdd py -- pytest` | Watch files and re-run tests on change |
+| `gbr` | Fuzzy switch git branch (sorted by recent, with log preview) |
+| `zp` | Fuzzy jump to a project directory (zoxide + fzf) |
+| `fkill` | Fuzzy find and kill a process |
+| `zl dev` | Start zellij with a named layout |
+| `zl` | List available zellij layouts |
+| `rec` | Record terminal session as GIF (vhs) |
+| `rec file.tape` | Run an existing vhs tape file |
+| `env-encrypt` | Encrypt `.env` file with sops+age |
+| `env-encrypt secrets.yaml` | Encrypt a specific file |
+| `env-decrypt file.enc` | Decrypt sops-encrypted file |
 
 ### Smart Functions
 
@@ -191,7 +209,7 @@ These replace standard commands — just use them as normal, the better version 
 | `decrypt file.age` | Decrypt age-encrypted file |
 | `backup ~/dir` | Backup with restic |
 | `dive-last` | Inspect most recent container image layers |
-| `box` | List distroboxes |
+| `box` | Interactive distrobox picker (gum) |
 | `box ubuntu` | Enter or create an Ubuntu distrobox |
 | `use node@20` | Set tool version via mise |
 
@@ -199,7 +217,7 @@ These replace standard commands — just use them as normal, the better version 
 
 | Command | Action |
 |---------|--------|
-| `dn <name>` | Create new devcontainer project |
+| `dn <name>` | Create new devcontainer project (prompts with gum if no name given) |
 | `dc` | devcontainer up (with nvim config mounted) |
 | `db` / `df` / `de` | devcontainer exec bash / fish / nvim |
 | `dr` | devcontainer up (rebuild from scratch) |
@@ -208,8 +226,9 @@ These replace standard commands — just use them as normal, the better version 
 
 | Command | Action |
 |---------|--------|
-| `udot` | Commit + push dotfiles, then stow |
+| `udot` | Interactive commit + push dotfiles (gum confirm + custom message), then stow |
 | `uva` | Activate `.venv/bin/activate` |
+| `reload` | Reload fish config (optional `--zellij` to reset zellij session) |
 
 ### Shell Integrations & Keybindings
 
@@ -316,6 +335,30 @@ zj reset sics
 #### Automatic nvim config sync
 
 The `ssh` function automatically rsyncs your neovim config to r2d2 before every connection. This covers manual SSH, the `r2d2` function, and the sics layout scripts -- your remote nvim config always matches local.
+
+---
+
+## Yazi
+
+Terminal file manager with vim-style navigation. Launch with `y` (fish) or `Alt+Y` (zellij).
+
+### Bookmarks
+
+| Shortcut | Destination |
+|----------|-------------|
+| `g d` | `~/dotfiles` |
+| `g p` | `~/Projects` |
+| `g c` | `~/.config` |
+| `g D` | `~/Downloads` |
+| `g o` | `~/Documents` |
+
+### Keymaps
+
+| Shortcut | Action |
+|----------|--------|
+| `!` | Open fish shell in current directory |
+
+Config and code files (`.md`, `.json`, `.toml`, `.yaml`, `.kdl`, `.lua`, `.fish`, `.sh`) open directly in nvim.
 
 ---
 

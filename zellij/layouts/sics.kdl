@@ -1,14 +1,8 @@
 layout {
-    tab name="remote-1" {
+    tab name="remote" {
         pane {
             command "bash"
-            args "-c" "~/.config/zellij/scripts/sics-connect 1"
-        }
-    }
-    tab name="remote-2" {
-        pane {
-            command "bash"
-            args "-c" "~/.config/zellij/scripts/sics-connect 2"
+            args "-c" "~/.config/zellij/scripts/sics-connect"
         }
     }
     tab name="editor" {
