@@ -381,13 +381,7 @@ atuin init fish | source
 mise activate fish | source
 starship init fish | source
 
-# Wrap fish_command_not_found (after mise, which also defines it) so /clear
-# clears the screen in a normal shell and triggers the slash command in Claude Code.
 functions -c fish_command_not_found __original_command_not_found
 function fish_command_not_found
-    if test "$argv[1]" = "/clear"
-        clear
-        return 0
-    end
     __original_command_not_found $argv
 end
