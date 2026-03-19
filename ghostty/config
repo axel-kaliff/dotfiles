@@ -8,15 +8,23 @@ confirm-close-surface = false
 
 # custom-shader = /var/home/akaliff/crt-shader-with-chromatic-aberration-glow-scanlines-dot-matrix/crt-shader-with-chromatic-aberration-glow-scanlines-dot-matrix.glsl
 
+# --- Shaders ---
+custom-shader = ~/.config/ghostty/shaders/cursor_warp.glsl
+custom-shader-animation = true
+
 # --- Font ---
 font-family = JetBrains Mono
 font-family = Symbols Nerd Font
 font-size = 13
+adjust-cell-height = 3
 
 # --- Window ---
-window-padding-x = 8
-window-padding-y = 4
+window-padding-x = 16
+window-padding-y = 12
+window-padding-balance = true
 window-subtitle = working-directory
+unfocused-split-opacity = 0.7
+copy-on-select = clipboard
 
 # --- Cursor ---
 cursor-style = bar
@@ -34,11 +42,16 @@ scrollback-limit = 10000000
 
 # --- Notifications ---
 notify-on-command-finish = unfocused
-notify-on-command-finish-action = notify
+notify-on-command-finish-action = no-bell,notify
 notify-on-command-finish-after = 10s
 
 # --- Links ---
 link-url = true
+
+# --- Quick Terminal ---
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+quick-terminal-position = top
+quick-terminal-size = 0.4
 
 # --- Keybinds ---
 # Send real ESC when Ctrl+[ is pressed (fixes Zellij session manager navigation
@@ -47,3 +60,7 @@ keybind = ctrl+left_bracket=text:\x1b
 
 # Ctrl+C copies when text is selected, sends interrupt otherwise
 keybind = performable:ctrl+c=copy_to_clipboard
+
+# Prompt jumping (requires shell integration)
+keybind = alt+up=jump_to_prompt:-1
+keybind = alt+down=jump_to_prompt:1

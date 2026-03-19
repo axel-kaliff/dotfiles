@@ -25,7 +25,7 @@ shared {
 
     shared_except "locked" {
 	bind "Alt q" {
-            WriteChars "clear\n"
+            WriteChars "/clear\n"
         }
 
         bind "Alt z" {

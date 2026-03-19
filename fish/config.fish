@@ -366,6 +366,12 @@ export XDG_CONFIG_HOME="$HOME/.config/"
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin/"
 
+# ─── Zellij Auto-Start ───────────────────────────────────────────────────────
+
+if status is-interactive; and test "$TERM" = "xterm-ghostty"; and not set -q ZELLIJ
+    eval (zellij setup --generate-auto-start fish | string collect)
+end
+
 # ─── Shell Integrations ──────────────────────────────────────────────────────
 
 zoxide init fish | source
@@ -374,3 +380,14 @@ fzf --fish | source
 atuin init fish | source
 mise activate fish | source
 starship init fish | source
+
+# Wrap fish_command_not_found (after mise, which also defines it) so /clear
+# clears the screen in a normal shell and triggers the slash command in Claude Code.
+functions -c fish_command_not_found __original_command_not_found
+function fish_command_not_found
+    if test "$argv[1]" = "/clear"
+        clear
+        return 0
+    end
+    __original_command_not_found $argv
+end
