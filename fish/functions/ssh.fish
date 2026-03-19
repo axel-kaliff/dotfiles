@@ -26,13 +26,6 @@ function ssh --wraps ssh
         return
     end
 
-    # Sync neovim config to r2d2 before connecting
-    if test "$host" = r2d2
-        echo "Syncing nvim config to r2d2..."
-        rsync -az --delete "$HOME/.config/nvim/" "r2d2:.config/nvim/" 2>/dev/null
-        or echo "Warning: nvim config sync failed"
-    end
-
     # Copy Ghostty terminfo if needed
     if test "$TERM" = xterm-ghostty
         set -l cache_dir "$HOME/.cache/ghostty-ssh"

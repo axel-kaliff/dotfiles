@@ -1,6 +1,26 @@
 # Run all recipes in a login bash shell so it picks up your updated PATH
 set shell := ["bash", "-lc"]
 
+hostname := `hostname`
+
+# Pull latest and deploy
+sync: && deploy
+  @echo "Pulling latest dotfiles..."
+  @git -C ~/dotfiles pull --rebase --autostash
+
+# Stow + select correct machine config
+deploy: stow-dotfiles configure-zellij
+  @echo "Deploy complete for {{hostname}}"
+
+# Symlink the correct zellij config for this machine
+configure-zellij:
+  @if [ "{{hostname}}" = "r2d2" ]; then \
+    ln -sf "$HOME/dotfiles/zellij/config.r2d2.kdl" "$HOME/.config/zellij/config.kdl"; \
+    echo "Applied r2d2 zellij config"; \
+  else \
+    echo "Local zellij config (default stow symlink)"; \
+  fi
+
 bootstrap: setup-brew stow-dotfiles setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray
   @echo 'Bootstrap complete!'
 
@@ -46,11 +66,14 @@ stow-dotfiles:
   @stow -d ~ -t ~/.config --restow --adopt dotfiles
   @echo "Stowing bash config to ~..."
   @stow -d ~/dotfiles -t ~ --restow --adopt bash
+  @echo "Stowing claude config to ~/.claude..."
+  @stow -d ~/dotfiles -t ~/.claude --restow --adopt claude
   @echo "Dotfiles stowed."
 
 unstow-dotfiles:
   @stow -d ~ -t ~/.config -D dotfiles
   @stow -d ~/dotfiles -t ~ -D bash
+  @stow -d ~/dotfiles -t ~/.claude -D claude
 
 setup-git-config:
   @echo "Setting Git global username and email..."

@@ -17,7 +17,7 @@ function zj -d 'Zellij session helper'
                 set -l layout $argv[3]
                 mkdir -p "$HOME/.cache/zellij-layouts"
                 echo $layout >"$HOME/.cache/zellij-layouts/$session"
-                zellij attach -c $session options --layout $layout
+                zellij attach -c $session options --default-layout $layout
             case reset
                 # Kill and re-launch a session with its original layout
                 set -l session $argv[2]
@@ -32,8 +32,23 @@ function zj -d 'Zellij session helper'
                     set layout (cat "$layout_file")
                 end
                 zellij kill-session $session 2>/dev/null
+                zellij delete-session $session 2>/dev/null
                 echo "Restarting session '$session' with layout '$layout'..."
-                zellij attach -c $session options --layout $layout
+                zellij attach -c $session options --default-layout $layout
+            case remote
+                # Connect to a remote Zellij session over SSH
+                # Usage: zj remote [host] [session]
+                set -l host (test -n "$argv[2]" && echo $argv[2] || echo r2d2)
+                set -l session (test -n "$argv[3]" && echo $argv[3] || echo main)
+                ssh $host -t '$HOME/.linuxbrew/bin/zellij attach -c '$session
+            case web
+                # Open SSH tunnel to remote Zellij web server
+                # Usage: zj web [host] [port]
+                set -l host (test -n "$argv[2]" && echo $argv[2] || echo r2d2)
+                set -l port (test -n "$argv[3]" && echo $argv[3] || echo 8082)
+                echo "Tunneling $host:$port -> localhost:$port"
+                echo "Open http://localhost:$port in your browser"
+                ssh -N -L $port:127.0.0.1:$port $host
             case '*'
                 zellij attach -c $argv[1]
         end

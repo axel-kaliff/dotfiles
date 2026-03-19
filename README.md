@@ -308,7 +308,7 @@ The `zj` function manages sessions:
 
 ### Layouts
 
-Start zellij with a layout: `zellij --layout dev`
+Start zellij with a layout: `zellij layout dev`
 
 | Layout | Description |
 |--------|-------------|

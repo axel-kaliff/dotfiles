@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Sync neovim config to r2d2
-rsync -az --delete "$HOME/.config/nvim/" "r2d2:.config/nvim/" 2>/dev/null
-
 # Copy Ghostty terminfo if needed
 if [ "$TERM" = "xterm-ghostty" ]; then
     cache_dir="$HOME/.cache/ghostty-ssh"
@@ -16,4 +13,4 @@ if [ "$TERM" = "xterm-ghostty" ]; then
     fi
 fi
 
-exec ssh r2d2 -t "tmux new-session -A -s main"
+exec ssh r2d2 -t '$HOME/.linuxbrew/bin/zellij attach -c main'
