@@ -2,12 +2,12 @@
 """Filter linter output to only show violations on lines changed in the working tree.
 
 Reads `git diff --unified=0 HEAD` to build a set of (file, line) pairs that were
-added or modified.  Then filters stdin (ruff/mypy output in `file:line:...` format)
+added or modified.  Then filters stdin (ruff/ty output in `file:line:...` format)
 to only pass through lines whose file:line falls within a changed hunk.
 
 Usage:
     ruff check file1.py file2.py | python3 diff-filter.py
-    mypy file1.py --no-error-summary | python3 diff-filter.py
+    ty check --output-format concise file1.py | python3 diff-filter.py
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def _get_changed_lines() -> dict[str, set[int]]:
 
 def main() -> None:
     changed = _get_changed_lines()
-    # file:line: pattern (covers both ruff and mypy output)
+    # file:line: pattern (covers both ruff and ty output)
     line_pattern = re.compile(r'^(.+?):(\d+):')
 
     for line in sys.stdin:

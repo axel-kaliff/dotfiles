@@ -1,6 +1,6 @@
 ---
 name: analyse
-description: Run static analysis on Python files — ruff, mypy, radon (cyclomatic complexity), complexipy (cognitive complexity), style-guide forbidden patterns (Any, bare type-ignore, os.path, eval, etc.), plus logic error check on branch changes. Produces a deterministic scorecard. Use before committing, after completing a feature, or when explicitly asked to check code quality.
+description: Run static analysis on Python files — ruff, ty (type checking), radon (cyclomatic complexity), complexipy (cognitive complexity), style-guide forbidden patterns (Any, bare type-ignore, os.path, eval, etc.), plus logic error check on branch changes. Produces a deterministic scorecard. Use before committing, after completing a feature, or when explicitly asked to check code quality.
 argument-hint: "[path | file | 'changed' (default)]"
 user-invocable: true
 ---
@@ -45,11 +45,11 @@ echo "$targets" | xargs ruff check 2>&1
 ```
 Count lines containing `:` as violation count. Capture first 10 lines of output for details.
 
-### mypy
+### ty
 ```bash
-echo "$targets" | xargs mypy --no-error-summary 2>&1
+echo "$targets" | xargs ty check --output-format concise --extra-search-path src 2>&1
 ```
-Filter output: keep only lines containing ` error:`, then remove lines matching `\[import-untyped\]` or `\[import-not-found\]`. Count remaining lines.
+Count lines containing ` error` or ` warning`. Exclude lines matching `Unresolved import` (third-party stubs not available to ty). Count remaining lines.
 
 ### radon (cyclomatic complexity)
 ```bash
@@ -129,7 +129,7 @@ Output a fixed-width table with all five rows.
 Analysis: <N> file(s)
 ──────────────────────────────────────────
   ruff        <count> violation(s)  |  clean
-  mypy        <count> error(s)      |  clean
+  ty          <count> error(s)      |  clean
   cyclomatic  <count> fn(s) > CC10, max <N>  |  clean (all CC ≤ 10)
   cognitive   <count> fn(s) > CC15, max <N>  |  clean (all CC ≤ 15)
   style       <count> violation(s)  |  clean
@@ -143,8 +143,8 @@ ruff issues:
   src/foo.py:10:5: ANN001 Missing type annotation for 'x'
   ...
 
-mypy errors:
-  src/foo.py:32: error: Argument 1 has incompatible type [arg-type]
+ty errors:
+  src/foo.py:32: error: Argument 1 has incompatible type
   ...
 
 high cyclomatic complexity:

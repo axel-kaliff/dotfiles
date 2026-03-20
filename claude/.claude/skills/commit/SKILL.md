@@ -49,18 +49,18 @@ done
 git add $staged
 ```
 
-## Step 5: Run pyright on staged files
+## Step 5: Run ty on staged files
 
 ```bash
-.venv/bin/pyright <staged-python-files>
+ty check --output-format concise --extra-search-path src <staged-python-files>
 ```
 
-If pyright reports errors:
-1. Fix the errors (type: ignore for third-party stub issues, real fixes for our code)
+If ty reports errors:
+1. Fix the errors (`# ty: ignore[specific-code]` for third-party stub issues, real fixes for our code)
 2. Re-stage the fixed files
-3. Re-run pyright to confirm
+3. Re-run ty to confirm
 
-Do NOT skip pyright errors. Do NOT use `--no-verify`.
+Do NOT skip ty errors. Do NOT use `--no-verify`.
 
 ## Step 6: Commit
 
@@ -80,9 +80,9 @@ Show `git log --oneline -1` to confirm the commit.
 - Problem: Broken code gets committed
 - Fix: Always run relevant tests first (Step 2)
 
-**Skipping pyright**
+**Skipping ty**
 - Problem: Type errors discovered at commit time cause retry loops
-- Fix: Run pyright before committing (Step 5)
+- Fix: Run ty before committing (Step 5)
 
 **Using --no-verify**
 - Problem: Bypasses safety checks, breaks CI later

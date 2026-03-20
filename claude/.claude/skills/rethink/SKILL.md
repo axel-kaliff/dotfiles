@@ -83,7 +83,7 @@ Read the actual code (not just diffs). If the user provided a focus area, scope 
 
 For Python projects, run:
 ```bash
-pipdeptree 2>/dev/null
+pipdeptree --json 2>/dev/null
 ```
 
 For each non-stdlib dependency:
@@ -93,6 +93,24 @@ For each non-stdlib dependency:
 - Check for lighter alternatives that cover the actual usage
 
 For non-Python projects, inspect package manifests (package.json, Cargo.toml, go.mod, etc.) and apply the same reasoning.
+
+### Duplication Check
+
+Run the dedup checker to find types that overlap with existing codebase types:
+```bash
+python ~/.claude/skills/dedup/dedup_check.py --branch-diff -s src
+```
+
+If overlaps are found (exit code 1), include them in the assessment — they indicate types that should be consolidated rather than duplicated.
+
+### Size Check
+
+Measure changed files to flag bloat:
+```bash
+git diff --name-only master..HEAD -- '*.py' | xargs wc -l | sort -rn | head -20
+```
+
+Flag files over 300 lines — they likely need splitting.
 
 ### Complexity Audit
 

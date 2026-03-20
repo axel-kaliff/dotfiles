@@ -45,34 +45,7 @@ Files outside both directories (e.g. `tests/test_foo.py` at the top level) are f
 - `tests/unit/conftest.py` must NOT contain integration signals
 - `tests/integration/conftest.py` must NOT set up mocks as fixtures (defining `@pytest.fixture` that returns `MagicMock` or `AsyncMock`)
 
-## 1. Determine target files
-
-If `$ARGUMENTS` is a path or file, use it directly.
-
-Otherwise default to **git-changed test files**:
-```bash
-changed_py=$(git diff --name-only HEAD 2>/dev/null | grep '\.py$' | grep -E '(^tests/|test_)' || true)
-staged_py=$(git diff --cached --name-only 2>/dev/null | grep '\.py$' | grep -E '(^tests/|test_)' || true)
-targets=$(echo -e "$changed_py\n$staged_py" | sort -u | grep -v '^$')
-```
-
-If `$ARGUMENTS` is a directory, find all `test_*.py` and `*_test.py` files under it recursively, excluding `.venv`, `__pycache__`, and `build`.
-
-If no targets found, report "no test files to check" and exit cleanly.
-
-## 2. Classify each file
-
-For each target file:
-
-1. **Determine location**: is it under `tests/unit/`, `tests/integration/`, or elsewhere?
-2. **Scan for markers**: grep for `pytest.mark.integration`, `pytest.mark.unit`
-3. **Scan for integration signal imports/patterns**: check for the integration signals listed above
-4. **Scan for heavy mocking**: count occurrences of `@patch`, `MagicMock`, `AsyncMock`, `mocker.patch`
-5. **Check conftest scope** if the file is a `conftest.py`
-
-## 3. Flag violations
-
-A violation is any of:
+### Violation codes
 
 | Code | Severity | Description |
 |------|----------|-------------|
@@ -85,38 +58,49 @@ A violation is any of:
 | `TS-007` | ERROR | `tests/unit/conftest.py` contains integration signal imports |
 | `TS-008` | WARN  | `tests/integration/conftest.py` defines mock-returning fixtures |
 
-## 4. Present report
+## Phase 1: Deterministic analysis (AST script)
 
-Output a fixed-width table:
+Run the AST-based checker:
+
+```bash
+python ~/.claude/skills/check-test-separation/check_test_sep.py $ARGUMENTS
+```
+
+The script handles:
+- Target resolution (`changed`, file, directory)
+- AST-based marker and import detection
+- All TS-001 through TS-008 rules
+- Formatted table + violations output
+
+Present the script output verbatim. If the script exits with code 0 (no errors), report clean and stop.
+
+## Phase 2: LLM semantic review (only if Phase 1 found violations)
+
+If Phase 1 found violations, read each violated file and check for **false positives**:
+
+- Imports inside `TYPE_CHECKING` blocks are NOT integration signals
+- `subprocess` imports used only via mocks (e.g., `mocker.patch('subprocess.run')`) are NOT integration signals
+- `httpx.Client` with `transport=` parameter is a mock transport, not a real call
+
+For each false positive identified, note it alongside the violation. Present adjusted counts.
+
+## Output format
+
+Present the script's table and violations, then any Phase 2 adjustments:
 
 ```
 Test separation: <N> file(s) checked
 ──────────────────────────────────────────
-  unit/           <N> file(s), <N> violation(s)  |  clean
-  integration/    <N> file(s), <N> violation(s)  |  clean
-  unclassified    <N> file(s)                    |  none
+  unit/           <N> file(s), clean
+  integration/    <N> file(s), 1 violation(s)
+  unclassified    none
 ──────────────────────────────────────────
-```
 
-After the table, print a **violations section** grouped by file:
-
-```
 violations:
-  tests/unit/test_orders.py:
-    TS-001 ERROR  integration import: from sqlalchemy import create_engine (line 5)
-    TS-002 ERROR  has @pytest.mark.integration (line 12)
-
   tests/integration/test_cache.py:
-    TS-005 WARN   looks like a unit test: 4x MagicMock, no integration imports, no marker
+    TS-005 WARN   looks like a unit test: 4x mock usage, no integration imports, no marker
 
-  tests/test_utils.py:
-    TS-006 WARN   not in tests/unit/ or tests/integration/
+Phase 2 adjustments: none
 ```
-
-Limit to 5 violations per file. If more, add `  ... and N more`.
-
-## 5. Summarise
-
-One sentence: how many errors, how many warnings, what needs attention. If clean, say so.
 
 Do NOT fix anything. Do NOT move files. Do NOT add markers. Reporting only.
