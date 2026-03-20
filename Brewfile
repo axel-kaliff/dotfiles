@@ -44,11 +44,11 @@ brew "tree-sitter"
 # Container tools
 brew "dive"
 brew "podman-compose"
-brew "skopeo"
+# brew "skopeo"  # excluded: requires source build on non-standard prefix
 brew "lazydocker"
 
 # Network tools
-brew "nmap"
+# brew "nmap"  # excluded: requires source build on non-standard prefix
 brew "bandwhich"
 brew "trippy"
 brew "doggo"
