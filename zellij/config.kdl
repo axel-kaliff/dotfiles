@@ -284,6 +284,10 @@ load_plugins {
 	autolock
 }
 
+// Shell: fish preferred, zsh fallback
+default_shell "sh -c 'if command -v fish >/dev/null 2>&1; then exec fish; else exec zsh; fi'"
+copy_on_select true
+
 // r2d2-specific settings
 theme "nightfox"
 pane_frames true
