@@ -47,56 +47,64 @@ The tool reports field overlap with scores:
 
 **Filter false positives**: Types with overlapping names like `min`/`max` or `name`/`index` that appear on many unrelated types are noise. Focus on domain-specific field overlaps.
 
-## Phase 2: Semantic Analysis (LLM-driven)
+## Phase 2: Semantic Analysis (subagent)
 
-The automated tool only catches type-level duplication. Now search for duplication the tool cannot find:
+The automated tool only catches type-level duplication. Spawn a **general-purpose agent** (model: sonnet) to search for duplication the tool cannot find. This keeps search results out of the main conversation context.
 
-### 2a. Function-Level Duplication
-
-For each new/changed function, check if similar logic exists elsewhere:
-
-```bash
-# Search for functions with similar names or operations
-grep -rn "def.*find.*mesh\|def.*resolve.*path\|def.*discover.*asset" src/ --include='*.py' | grep -v __pycache__
-```
-
-Look for:
-- Same algorithm reimplemented with different naming
-- Utility functions that already exist in `utils/` or stdlib
-- Helper functions that are copy-pasted between sibling modules
-
-### 2b. Protocol ↔ Concrete Class Overlap
-
-Check if new protocols mirror existing concrete classes:
-
-```bash
-grep -rn "class.*Protocol" src/ --include='*.py' | grep -v __pycache__
-```
-
-A protocol that exactly matches an existing class's public interface is duplication — use the class directly or extract the protocol to a shared location.
-
-### 2c. Sibling Module Patterns
-
-If the new code is in `src/foo/bar/`, check sibling directories for the same patterns:
-
-```bash
-# What do sibling modules define?
-find src/simulation -name '*.py' -not -path '*__pycache__*' | head -30
-grep -rn "class " src/simulation/mujoco_sim/*.py 2>/dev/null | head -20
-```
-
-The strongest duplication signal is when a sibling module solves the same problem for a different backend.
-
-### 2d. Shared Layer Check
-
-Specifically verify that the new code doesn't ignore existing shared types:
-
-```bash
-# Read key shared modules
-ls src/world/*.py src/utils/*.py 2>/dev/null
-```
-
-Read the relevant shared modules. Types in `world/`, `utils/`, or top-level `simulation/` exist to be reused. New code that defines its own version is almost always a bug.
+> Search for semantic code duplication in the branch changes. The automated tool already found type-level overlaps — your job is to find function-level and structural duplication.
+>
+> ### 2a. Function-Level Duplication
+>
+> For each new/changed function, check if similar logic exists elsewhere:
+>
+> ```bash
+> # Search for functions with similar names or operations (cap output)
+> grep -rn "def.*find.*mesh\|def.*resolve.*path\|def.*discover.*asset" src/ --include='*.py' | grep -v __pycache__ | head -30
+> ```
+>
+> Look for:
+> - Same algorithm reimplemented with different naming
+> - Utility functions that already exist in `utils/` or stdlib
+> - Helper functions that are copy-pasted between sibling modules
+>
+> ### 2b. Protocol ↔ Concrete Class Overlap
+>
+> Check if new protocols mirror existing concrete classes:
+>
+> ```bash
+> grep -rn "class.*Protocol" src/ --include='*.py' | grep -v __pycache__ | head -30
+> ```
+>
+> A protocol that exactly matches an existing class's public interface is duplication.
+>
+> ### 2c. Sibling Module Patterns
+>
+> If the new code is in `src/foo/bar/`, check sibling directories for the same patterns:
+>
+> ```bash
+> find src/simulation -name '*.py' -not -path '*__pycache__*' | head -30
+> grep -rn "class " src/simulation/mujoco_sim/*.py 2>/dev/null | head -20
+> ```
+>
+> The strongest duplication signal is when a sibling module solves the same problem for a different backend.
+>
+> ### 2d. Shared Layer Check
+>
+> Verify that the new code doesn't ignore existing shared types:
+>
+> ```bash
+> ls src/world/*.py src/utils/*.py 2>/dev/null
+> ```
+>
+> Read the relevant shared modules. Types in `world/`, `utils/`, or top-level `simulation/` exist to be reused.
+>
+> **Output format** (keep under 40 lines):
+> ```
+> FUNCTION DUPLICATION: <findings or "none">
+> PROTOCOL OVERLAP: <findings or "none">
+> SIBLING DIVERGENCE: <findings or "none">
+> SHARED LAYER MISSES: <findings or "none">
+> ```
 
 ## Phase 3: Report
 

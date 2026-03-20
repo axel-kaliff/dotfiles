@@ -65,6 +65,8 @@ Spawn a **general-purpose agent** with this prompt:
 
 > Evaluate the design quality of the current code. {If focus area specified: "Scope to: $ARGUMENTS". Otherwise: "Scope to files changed on the branch" or "the specified directory"}.
 >
+> **Cap:** Read at most **10 files** (prioritize by diff stat — most changed lines first). If more files changed, note the unreviewed ones but do not read them.
+>
 > Read the actual code (not just diffs). Assess:
 >
 > **1. Design Fit**
@@ -99,7 +101,7 @@ Spawn a **general-purpose agent** with this prompt:
 >
 > **1. Dependency Assessment**
 > ```bash
-> pipdeptree --json 2>/dev/null | head -200
+> pipdeptree --json 2>/dev/null | python3 -c "import sys,json; deps=json.load(sys.stdin); [print(f'{d[\"package\"][\"package_name\"]} ({len(d.get(\"dependencies\",[]))} deps)') for d in deps[:50]]" 2>/dev/null || pipdeptree 2>/dev/null | head -80
 > ```
 > For each non-stdlib dependency in changed files:
 > - Is it justified, or could stdlib/existing deps handle it?

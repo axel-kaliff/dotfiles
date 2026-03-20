@@ -34,10 +34,13 @@ Pass this prompt to the agent:
 > 5. Deliver your verdict with severity tags and line references
 >
 > Focus on correctness bugs, resource leaks, and race conditions. Do not comment on style, naming, or formatting.
+> {If called from a pipeline (pre-merge, review-fix): "Limit output to your top 10 findings sorted by severity. Keep total output under 80 lines."}
 
 ## Step 3: Present the review
 
 Return the agent's response directly to the user. Do not filter, soften, or editorialize the agent's tone. The whole point is the unfiltered grumpy review.
+
+**Output cap for pipeline callers:** When invoked by `/pre-merge` or `/review-fix` (not directly by the user), instruct the agent to limit output to **top 10 findings sorted by severity**. When invoked directly by the user, no output cap — let it rant.
 
 ## When to use
 

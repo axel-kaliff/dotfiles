@@ -154,6 +154,7 @@ Spawn a **general-purpose agent** (model: sonnet) with this prompt:
 > - Import statements importing from modules that don't exist (may be caught by ruff too)
 >
 > For each candidate, VERIFY it's actually stale by searching for the referenced name.
+> **Cap grep output:** Use `| head -30` on all grep/find commands to prevent output bloat in large codebases.
 >
 > Return ONLY verified findings:
 > ```
