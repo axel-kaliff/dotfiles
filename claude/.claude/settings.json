@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch",
+      "mcp__plugin_context7-plugin_context7__query-docs",
+      "mcp__plugin_context7-plugin_context7__resolve-library-id"
+    ]
+  },
   "env": {
     "MAX_THINKING_TOKENS": "10000",
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
