@@ -1,6 +1,6 @@
 ---
 name: pre-merge
-description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, and grumpy review. Use before merging a PR or as a final quality gate.
+description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, consistency check, and grumpy review. Use before merging a PR or as a final quality gate.
 argument-hint: "[base-branch (default: origin/master)]"
 user-invocable: true
 ---
@@ -34,9 +34,9 @@ git log --oneline "$BASE"..HEAD
 
 If no changed Python files, report "no Python changes on branch" and stop.
 
-## Step 2: Launch 6 parallel agents
+## Step 2: Launch 7 parallel agents
 
-Launch ALL SIX agents simultaneously in a single message. Each agent works independently.
+Launch ALL SEVEN agents simultaneously in a single message. Each agent works independently.
 
 ### Agent 1: Static Analysis (analyse)
 
@@ -109,6 +109,35 @@ Spawn a **grumpy-reviewer agent** (subagent_type `grumpy-reviewer`) with this pr
 > Review the branch changes vs $BASE. Follow your review process. Read the actual code, check for dependency bloat, and deliver your verdict. Focus on real bugs: error path failures, resource leaks, race conditions, implicit assumptions. Not a style review.
 
 Present the agent's response directly — do not filter or soften the tone.
+
+### Agent 7: Consistency Check
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Run a hierarchical consistency check on the branch changes vs $BASE.
+>
+> 1. Get the list of changed Python files: `git diff --name-only $BASE..HEAD -- '*.py'`
+> 2. For EACH changed file, spawn a parallel **Sonnet file-orchestrator agent** (model: sonnet). Each file-orchestrator:
+>    a. Reads the file and identifies discrete components (functions, classes, methods, dataclasses, enums, top-level blocks)
+>    b. Gets the branch diff for that file to determine which components changed
+>    c. For each changed/added component, spawns a parallel **Haiku component-reviewer agent** (model: haiku) with ONLY:
+>       - The component source code (max 300 lines)
+>       - The relevant diff hunks
+>       - Instructions to check: internal consistency, logic correctness, contract coherence, boundary conditions, resource consistency, error path consistency, naming vs behavior
+>    d. Collects component results into a file report
+> 3. Collect all file reports into a unified consistency report.
+>
+> **CRITICAL constraints:**
+> - No component subagent sees more than 300 lines of code
+> - Component subagents get ONLY their component source and diff — no full file context
+> - Only review components CHANGED or ADDED by the branch — skip unchanged components
+> - Launch all file orchestrators in parallel, and within each, all component reviewers in parallel
+> - This is a consistency check, not a style review — only flag things that are wrong or inconsistent
+>
+> Return a report with:
+> - Per-file component results
+> - Summary table of all findings: `| # | File:Line | Type | Description |`
+> - Counts: files checked, components checked, clean, with findings
 
 ## Step 3: Collect and present unified report
 
