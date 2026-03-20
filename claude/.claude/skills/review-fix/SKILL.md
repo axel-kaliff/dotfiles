@@ -95,6 +95,16 @@ Focus on issues that tools CANNOT catch:
 
 **Important**: Tell the reviewer to skip anything already flagged by Phase 1 (ruff, ty, complexity, forbidden patterns). The reviewer should focus purely on semantic issues.
 
+## Phase 2b: Grumpy review
+
+Spawn the `grumpy-reviewer` agent (subagent_type `grumpy-reviewer`) targeting the branch changes. Pass this prompt:
+
+> Review the branch changes vs main/master. Follow your review process. Read the actual code, check for dependency bloat, and deliver your verdict.
+
+Present the agent's response directly — do not filter or soften the tone.
+
+Incorporate any **actionable** findings (over-engineering, unnecessary dependencies, complexity that should be removed) into the fix list for Phase 3. Ignore purely stylistic gripes that contradict project conventions.
+
 ## Phase 3: Auto-fix in batch
 
 Parse findings from both phases. Apply fixes using Edit tool. Group edits per file.

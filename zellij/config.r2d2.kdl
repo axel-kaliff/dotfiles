@@ -284,6 +284,9 @@ load_plugins {
 	autolock
 }
 
+// Shell: fish preferred, zsh fallback
+default_shell "~/.config/zellij/default-shell.sh"
+
 // r2d2-specific settings
 theme "nightfox"
 pane_frames true

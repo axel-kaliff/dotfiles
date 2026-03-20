@@ -285,8 +285,7 @@ load_plugins {
 }
 
 // Shell: fish preferred, zsh fallback
-default_shell "sh -c 'if command -v fish >/dev/null 2>&1; then exec fish; else exec zsh; fi'"
-copy_on_select true
+default_shell "~/.config/zellij/default-shell.sh"
 
 // r2d2-specific settings
 theme "nightfox"
