@@ -27,10 +27,11 @@ Overview of all custom skills, what tools they use, and when to invoke them.
 | `/new-feature-branch` | git worktree, git fetch | Starting a new feature. Creates an isolated worktree from latest master. |
 | `/integrate-main-branch-changes` | git fetch, git rebase | Updating a feature branch with latest master. Always rebases, never merges. |
 
-## Code Review
+## Code Review & Merge
 
 | Skill | Tools | When to use |
 |-------|-------|-------------|
+| `/pre-merge` | 4 parallel agents: analyse + check-test-separation + dedup + pytest | Final quality gate before merging. Runs all analysis in parallel and presents a unified verdict. |
 | `/review-pr` | gh CLI, 6 parallel review agents (Sonnet) + scoring agents (Haiku) | When you want to review someone's PR. Posts Swedish comments with user approval. |
 
 ## Session Management

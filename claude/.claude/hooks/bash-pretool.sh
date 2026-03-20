@@ -21,9 +21,9 @@ if echo "$command" | grep -qE 'rm\s+-[rRf]+\s+\.$'; then
   exit 2
 fi
 
-# Force push
-if echo "$command" | grep -qE 'git\s+push\s+.*(-f|--force)'; then
-  echo "BLOCKED: Force push detected: $command" >&2
+# Force push to main/master only
+if echo "$command" | grep -qE 'git\s+push\s+.*(-f|--force)' && echo "$command" | grep -qE '\b(main|master)\b'; then
+  echo "BLOCKED: Force push to main/master detected: $command" >&2
   exit 2
 fi
 
