@@ -3,6 +3,9 @@ set shell := ["bash", "-lc"]
 
 hostname := `hostname`
 
+# Fix PERL5LIB for stow — brew stow hardcodes a perl version that drifts on upgrade
+export PERL5LIB := `find $(brew --cellar)/stow -name 'Stow.pm' -print -quit 2>/dev/null | sed 's|/Stow.pm||'`
+
 # Pull latest and deploy
 sync: && deploy
   @echo "Pulling latest dotfiles..."
