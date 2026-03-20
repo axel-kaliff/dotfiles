@@ -1,13 +1,13 @@
 ---
 name: grumpy-review
-description: Summon a grumpy Linus Torvalds-style senior dev to tear apart your code. Hates fancy solutions, unnecessary dependencies, and workarounds. Defaults to branch changes, or pass a file/directory to target.
+description: Summon a grumpy systems engineer to find real bugs — error path failures, resource leaks, race conditions, and implicit assumptions. Not a style review. Defaults to branch changes, or pass a file/directory to target.
 argument-hint: "[file or directory path]"
 user-invocable: true
 ---
 
 # Grumpy Code Review
 
-Invoke the `grumpy-reviewer` agent to review code with the attitude of an old-school senior developer who has zero tolerance for unnecessary complexity.
+Invoke the `grumpy-reviewer` agent to review code with the eye of a systems engineer who has been paged at 3am because of exactly this kind of bug.
 
 **Announce at start:** "Summoning the grumpy reviewer..."
 
@@ -26,7 +26,14 @@ Pass this prompt to the agent:
 
 > Review the following target: `<target from Step 1, or "branch changes (default)" if no argument>`.
 >
-> Follow your review process. Read the actual code, check for dependency bloat, and deliver your verdict.
+> Follow your review process:
+> 1. Read the actual code (not just diffs)
+> 2. Write your comprehension summary before critiquing
+> 3. Check dependency impact if relevant
+> 4. Trace every error path and resource lifecycle — this is the highest-value step
+> 5. Deliver your verdict with severity tags and line references
+>
+> Focus on correctness bugs, resource leaks, and race conditions. Do not comment on style, naming, or formatting.
 
 ## Step 3: Present the review
 
@@ -34,8 +41,10 @@ Return the agent's response directly to the user. Do not filter, soften, or edit
 
 ## When to use
 
-- Before committing, to gut-check complexity
-- After implementing a feature, to catch over-engineering
-- When code "feels heavy" and you want a brutally honest second opinion
-- When you suspect dependency bloat
-- For entertainment value
+- Before committing, to catch error handling gaps and resource leaks
+- After implementing error handling, to verify all paths are covered
+- When code does I/O, file operations, or network calls
+- When code involves concurrency, locking, or shared state
+- When you suspect implicit assumptions or missing edge cases
+- When code "feels fragile" and you want a brutally honest second opinion
+- For entertainment value (it's still grumpy)
