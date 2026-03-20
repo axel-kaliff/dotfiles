@@ -70,6 +70,20 @@ Phase 1: deterministic analysis
 
 Show first 10 lines of detail for each tool with issues.
 
+## Phase 1c: Web confirmation check
+
+Run the `/web-check` skill targeting the changed files. This runs in parallel with Phase 2.
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Run the web-check skill on the branch changes. Identify all third-party libraries and non-trivial patterns in the changed files, then search the web in parallel for: official documentation, best practices, existing solutions, and known issues. Present a web confirmation report.
+
+Incorporate any **actionable** findings into the fix list for Phase 3:
+- Deprecated API calls → replace with recommended alternative
+- Wrong API usage → fix to match official docs
+- Existing stdlib/library solution available → flag for replacement
+- Known bug with a documented fix → apply the fix
+
 ## Phase 2: LLM semantic review
 
 Delegate to the `code-reviewer` agent with all changed files. Instruct the reviewer to return findings in this **structured format**:

@@ -1,6 +1,6 @@
 ---
 name: pre-merge
-description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, and unit tests. Use before merging a PR or as a final quality gate.
+description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, and grumpy review. Use before merging a PR or as a final quality gate.
 argument-hint: "[base-branch (default: origin/master)]"
 user-invocable: true
 ---
@@ -34,9 +34,9 @@ git log --oneline "$BASE"..HEAD
 
 If no changed Python files, report "no Python changes on branch" and stop.
 
-## Step 2: Launch 4 parallel agents
+## Step 2: Launch 6 parallel agents
 
-Launch ALL FOUR agents simultaneously in a single message. Each agent works independently.
+Launch ALL SIX agents simultaneously in a single message. Each agent works independently.
 
 ### Agent 1: Static Analysis (analyse)
 
@@ -89,6 +89,27 @@ Spawn a **test-runner agent** with this prompt:
 
 If no test directories, skip this agent and report "tests: no test directories changed".
 
+### Agent 5: Web Confirmation
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Run the web-check skill on the branch changes. Read the changed files, identify all third-party library imports and non-trivial patterns introduced. Then spawn parallel sub-agents to search the web for:
+> 1. Official documentation for each library used — verify API calls are correct
+> 2. Best practices for the patterns and approaches used
+> 3. Existing solutions — check if the problem has well-known solutions that should be used instead
+> 4. Known issues related to any bug fixes in the branch
+>
+> Use WebSearch, WebFetch, and context7 docs tools. Spawn as many parallel searches as needed — token cost is not a concern.
+> Present a web confirmation report with: documentation check table, best practices findings, existing solutions, and recommendations.
+
+### Agent 6: Grumpy Review
+
+Spawn a **grumpy-reviewer agent** (subagent_type `grumpy-reviewer`) with this prompt:
+
+> Review the branch changes vs $BASE. Follow your review process. Read the actual code, check for dependency bloat, and deliver your verdict. Focus on real bugs: error path failures, resource leaks, race conditions, implicit assumptions. Not a style review.
+
+Present the agent's response directly — do not filter or soften the tone.
+
 ## Step 3: Collect and present unified report
 
 Wait for all agents to complete. Combine results into a single report:
@@ -114,6 +135,17 @@ Wait for all agents to complete. Combine results into a single report:
 | cognitive | <count> fn(s) > CC15 / clean |
 | forbidden | <count> pattern(s) / clean |
 
+### Web Confirmation
+| Library | API Usage | Status |
+|---------|-----------|--------|
+| <lib> | <call> | Correct / Deprecated / Wrong args |
+
+Best practices: <summary of findings>
+Existing solutions: <summary or "implementation is warranted">
+
+### Grumpy Review
+<verdict from grumpy reviewer — present unfiltered>
+
 ### Findings on Changed Lines
 | # | File:Line | Issue | Severity |
 |---|-----------|-------|----------|
@@ -134,8 +166,8 @@ Wait for all agents to complete. Combine results into a single report:
 ## Common Mistakes
 
 **Running agents sequentially**
-- Problem: Takes 4x longer than necessary
-- Fix: Launch ALL FOUR agents in a single message with parallel tool calls
+- Problem: Takes 6x longer than necessary
+- Fix: Launch ALL SIX agents in a single message with parallel tool calls
 
 **Reporting pre-existing violations**
 - Problem: Noise from untouched code drowns real findings
