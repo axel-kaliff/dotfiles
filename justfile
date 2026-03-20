@@ -66,14 +66,14 @@ stow-dotfiles:
   @stow -d ~ -t ~/.config --restow --adopt dotfiles
   @echo "Stowing bash config to ~..."
   @stow -d ~/dotfiles -t ~ --restow --adopt bash
-  @echo "Stowing claude config to ~/.claude..."
-  @stow -d ~/dotfiles -t ~/.claude --restow --adopt claude
+  @echo "Stowing claude config to ~..."
+  @stow -d ~/dotfiles -t ~ --restow --adopt claude
   @echo "Dotfiles stowed."
 
 unstow-dotfiles:
   @stow -d ~ -t ~/.config -D dotfiles
   @stow -d ~/dotfiles -t ~ -D bash
-  @stow -d ~/dotfiles -t ~/.claude -D claude
+  @stow -d ~/dotfiles -t ~ -D claude
 
 setup-git-config:
   @echo "Setting Git global username and email..."

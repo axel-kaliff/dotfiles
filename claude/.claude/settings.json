@@ -1,0 +1,89 @@
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/bash-pretool.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/block-secrets-in-code.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/auto-format-python.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/session-snapshot-dirty.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/check-worktree-venv.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Reminders: Use ruff for formatting. Run pytest before committing. Type hints on all functions. Prefer vectorized operations over row iteration. Check ~/.claude/rules/ for full guidelines.'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"REMINDER: Always find the root cause before fixing. Read the source, trace the call chain. Simple fix at the source > complex workaround. Use /debug for structured analysis.\"}}'"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); used=$(echo \"$input\" | jq -r '.context_window.used_percentage // empty'); printf '\\033[01;32m%s@%s\\033[00m:\\033[01;34m%s\\033[00m' \"$(whoami)\" \"$(hostname -s)\" \"$cwd\"; branch=$(cd \"$cwd\" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null); [ -n \"$branch\" ] && printf ' \\033[01;35m(%s)\\033[00m' \"$branch\"; [ -n \"$used\" ] && printf ' \\033[01;33m[Context: %.1f%%]\\033[00m' \"$used\"; echo"
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": false,
+    "context7-plugin@context7-marketplace": true,
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "context7-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "upstash/context7"
+      }
+    }
+  }
+}
