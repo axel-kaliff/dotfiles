@@ -141,7 +141,13 @@ Spawn a **general-purpose agent** with this prompt:
 
 ## Step 3: Collect and present unified report
 
-Wait for all agents to complete. Combine results into a single report:
+Wait for all agents to complete.
+
+### Step 3a: Score consistency check findings
+
+If the consistency check (Agent 7) produced any findings, feed them through the `/score-findings` sub-skill to verify and score each finding. Combine the scored consistency findings with findings from other agents.
+
+### Step 3b: Combine results into a single report
 
 ```
 ## Pre-Merge Report: <branch-name> (<N> commits, <N> files)
@@ -172,6 +178,15 @@ Wait for all agents to complete. Combine results into a single report:
 Best practices: <summary of findings>
 Existing solutions: <summary or "implementation is warranted">
 
+### Consistency Check
+<N> files, <N> components checked — <N> clean, <N> with findings
+
+| # | File:Line | Type | Score | Description |
+|---|-----------|------|-------|-------------|
+| 1 | ... | ... | ... | ... |
+
+(Only findings scored >= 50 by score-findings. Lower-confidence findings filtered.)
+
 ### Grumpy Review
 <verdict from grumpy reviewer — present unfiltered>
 
@@ -189,14 +204,15 @@ Existing solutions: <summary or "implementation is warranted">
 - Any test failure → NOT ready
 - Any ERROR-severity static analysis finding on changed lines → NOT ready
 - Any TS-001/002/003/007 (ERROR-level test separation) → NOT ready
-- Only WARN/INFO findings → READY with notes
+- Any consistency check finding scored >= 80 → NOT ready
+- Only WARN/INFO findings and consistency findings scored < 80 → READY with notes
 - All clean → READY
 
 ## Common Mistakes
 
 **Running agents sequentially**
-- Problem: Takes 6x longer than necessary
-- Fix: Launch ALL SIX agents in a single message with parallel tool calls
+- Problem: Takes 7x longer than necessary
+- Fix: Launch ALL SEVEN agents in a single message with parallel tool calls
 
 **Reporting pre-existing violations**
 - Problem: Noise from untouched code drowns real findings
