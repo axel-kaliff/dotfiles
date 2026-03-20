@@ -99,7 +99,7 @@ Spawn a **general-purpose agent** with this prompt:
 > 3. Existing solutions — check if the problem has well-known solutions that should be used instead
 > 4. Known issues related to any bug fixes in the branch
 >
-> Use WebSearch, WebFetch, and context7 docs tools. Spawn as many parallel searches as needed — token cost is not a concern.
+> Use WebSearch, WebFetch, and context7 docs tools. **Cap at 8 total sub-agents** (max 5 library agents — prioritize unfamiliar or newly-added libraries — plus best-practices, existing-solutions, and bug-search agents).
 > Present a web confirmation report with: documentation check table, best practices findings, existing solutions, and recommendations.
 
 ### Agent 6: Grumpy Review
@@ -120,7 +120,7 @@ Spawn a **general-purpose agent** with this prompt:
 > 2. For EACH changed file, spawn a parallel **Sonnet file-orchestrator agent** (model: sonnet). Each file-orchestrator:
 >    a. Reads the file and identifies discrete components (functions, classes, methods, dataclasses, enums, top-level blocks)
 >    b. Gets the branch diff for that file to determine which components changed
->    c. For each changed/added component, spawns a parallel **Haiku component-reviewer agent** (model: haiku) with ONLY:
+>    c. Batches changed/added components (up to 3 per agent, max 600 lines total), spawning parallel **Sonnet component-reviewer agents** (model: sonnet) with ONLY:
 >       - The component source code (max 300 lines)
 >       - The relevant diff hunks
 >       - Instructions to check: internal consistency, logic correctness, contract coherence, boundary conditions, resource consistency, error path consistency, naming vs behavior
@@ -143,11 +143,15 @@ Spawn a **general-purpose agent** with this prompt:
 
 Wait for all agents to complete.
 
-### Step 3a: Score consistency check findings
+### Step 3a: Deduplicate all findings
 
-If the consistency check (Agent 7) produced any findings, feed them through the `/score-findings` sub-skill to verify and score each finding. Combine the scored consistency findings with findings from other agents.
+Collect findings from ALL agents (1, 5, 6, 7). Deduplicate by file:line — if multiple agents flagged the same location, merge into one finding with combined context and keep the most specific description. This prevents scoring the same issue multiple times.
 
-### Step 3b: Combine results into a single report
+### Step 3b: Score deduplicated findings
+
+Feed the deduplicated findings through the `/score-findings` sub-skill to verify and score each finding.
+
+### Step 3c: Combine results into a single report
 
 ```
 ## Pre-Merge Report: <branch-name> (<N> commits, <N> files)
@@ -217,6 +221,10 @@ Existing solutions: <summary or "implementation is warranted">
 **Reporting pre-existing violations**
 - Problem: Noise from untouched code drowns real findings
 - Fix: Only report violations on lines changed by this branch
+
+**Skipping deduplication before scoring**
+- Problem: Multiple agents flag the same issue at the same file:line, causing redundant scoring work
+- Fix: Always deduplicate by file:line before passing to score-findings
 
 **Fixing issues instead of reporting**
 - Problem: This skill is a quality gate, not a fixer

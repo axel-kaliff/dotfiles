@@ -33,13 +33,13 @@ Read the changed files to identify:
 
 ## Step 2: Launch parallel search agents
 
-Spawn **one agent per topic** simultaneously. Token cost is not a concern — thoroughness matters.
+Spawn agents simultaneously. Thoroughness matters, but cap total agents to **8 max** to keep context bounded.
 
 For each identified library or pattern, spawn a **general-purpose agent** or **docs-researcher agent**. Common searches to spawn in parallel:
 
-### Agent A: Library documentation (one per library)
+### Agent A: Library documentation (max 5 agents)
 
-For each third-party library import found in changed files, spawn:
+For up to 5 third-party library imports found in changed files (prioritize: newly-added imports > unfamiliar libraries > well-known libraries), spawn:
 
 > Look up the official documentation for `<library>` version `<version if known>`.
 > Verify that these API calls are correct:
@@ -118,7 +118,7 @@ Wait for all agents to complete. Combine into a single report:
 
 - **Always spawn agents in parallel** — never sequentially
 - **Minimum 2 agents per run** — documentation + best practices at minimum
-- **No token budgeting** — search as many queries as needed
+- **Cap at 8 total agents** — 5 library + 3 category (best practices, solutions, bugs). If more libraries, prioritize new/unfamiliar ones
 - **Trust web results over training data** when they conflict
 - **Skip trivial code** — don't search for `if/else` patterns or basic stdlib usage
 - **Focus on the non-obvious** — API correctness, edge cases, better approaches

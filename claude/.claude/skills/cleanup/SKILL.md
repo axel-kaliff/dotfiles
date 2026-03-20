@@ -79,14 +79,16 @@ Spawn a **general-purpose agent** (model: sonnet) with this prompt:
 > Find Python files that nothing imports in the target scope.
 >
 > ```bash
-> for f in $(find <target> -name '*.py' -not -name '__init__.py' -not -name '*_test.py' -not -path '*__pycache__*'); do
+> for f in $(find <target> -name '*.py' -not -name '__init__.py' -not -name '*_test.py' -not -path '*__pycache__*' | head -50); do
 >     module=$(echo "$f" | sed 's|src/||;s|/|.|g;s|\.py$||')
->     count=$(grep -rn "import.*${module##*.}\|from.*${module%.*}" src/ --include='*.py' | grep -v __pycache__ | grep -v "$f" | wc -l)
+>     count=$(grep -rn "import.*${module##*.}\|from.*${module%.*}" src/ --include='*.py' | grep -v __pycache__ | grep -v "$f" | head -1 | wc -l)
 >     if [ "$count" -eq 0 ]; then
 >         echo "ORPHAN: $f (no imports found)"
 >     fi
 > done
 > ```
+>
+> **Cap:** Process at most 50 files. If the target contains more, focus on files changed on the branch first.
 >
 > For each orphan found, check if it's:
 > - An entry point (has `if __name__ == "__main__"` or is referenced in pyproject.toml scripts/entry-points)

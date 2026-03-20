@@ -25,7 +25,9 @@ If no changed files, report "no Python changes on branch" and stop.
 
 ## Step 2: Launch parallel file-orchestrator agents
 
-For EACH changed file, spawn a **general-purpose agent** (model: sonnet) in parallel. Each file-orchestrator receives this prompt:
+**Cap:** Launch at most **10 file-orchestrator agents**. If more than 10 files changed, prioritize by diff size (most changed lines first) and batch remaining files into the last orchestrator.
+
+For EACH changed file (up to the cap), spawn a **general-purpose agent** (model: sonnet) in parallel. Each file-orchestrator receives this prompt:
 
 > You are a file-level orchestrator for a consistency check. Your job is to split this file into reviewable components, spawn parallel subagents to review each one, then run a file-level consistency pass across all components.
 >
@@ -60,9 +62,9 @@ For EACH changed file, spawn a **general-purpose agent** (model: sonnet) in para
 >
 > ### Step C: Spawn parallel component-reviewer subagents
 >
-> For each changed/added component, spawn a **Haiku agent** (model: haiku) in parallel with this prompt:
+> **Batch components:** Group changed/added components into batches of **up to 3 components per agent** (keeping total source under 600 lines per agent). For each batch, spawn a **Sonnet agent** (model: sonnet) in parallel with this prompt:
 >
-> > You are a component-level consistency reviewer. You receive ONE code component and check it for internal consistency and correctness.
+> > You are a component-level consistency reviewer. You receive 1-3 code components and check each independently for internal consistency and correctness.
 > >
 > > **File:** `$file_path`
 > > **Component:** `$component_name` (lines $start-$end)
@@ -104,9 +106,11 @@ For EACH changed file, spawn a **general-purpose agent** (model: sonnet) in para
 > > If the component is clean, just output the status line. Do NOT pad output. Do NOT suggest improvements — only flag things that are wrong or inconsistent.
 >
 > **CRITICAL constraints for component subagents:**
-> - Max 300 lines of source code per subagent — if a component is larger, split at the nearest method boundary
+> - Max 600 lines of source code per subagent (up to 3 components × 200 lines, or fewer components if they are larger — never exceed 300 lines per individual component)
+> - If a single component exceeds 300 lines, split at the nearest method boundary
 > - Include: component source, diff hunks, sibling signatures, dependency signatures, one-line PR context
 > - Do NOT include the full file — keep context minimal and focused
+> - Review each component independently, then note any cross-component findings within the batch
 >
 > ### Step D: File-level consistency pass
 >
@@ -162,8 +166,8 @@ If the caller is the pre-merge pipeline, return this report for inclusion in the
 ## Common Mistakes
 
 **Giving subagents too much context**
-- Problem: Defeats the purpose — subagents should have laser focus on one component
-- Fix: Each component subagent gets: component source (max 300 lines), relevant diff hunks, sibling signatures, dependency signatures, one-line PR context. No full file, no other files.
+- Problem: Defeats the purpose — subagents should have laser focus on a small set of components
+- Fix: Each component subagent gets: 1-3 component sources (max 600 lines total, max 300 per component), relevant diff hunks, sibling signatures, dependency signatures, one-line PR context. No full file, no other files.
 
 **Splitting mid-function**
 - Problem: Arbitrary line-count splits break semantic coherence
