@@ -68,6 +68,23 @@ Review in this order. Spend most time on 1-3. Do NOT skip to 5 because it's easi
 - Over-engineering for hypothetical futures
 - "Clever" code that takes 30 seconds to parse
 
+### 7. Free-lunch design debt (greenfield code only)
+When code is new — not constrained by legacy, backwards compatibility, or migration cost — there are design choices where the right path and the lazy path take the same effort at t0, but diverge sharply over time. When both cost the same NOW, choosing the one that creates future debt is not pragmatism, it's negligence.
+
+Look for:
+- `list` where `tuple` or `frozenset` would work and the data is conceptually immutable — same effort to type, prevents a class of mutation bugs later
+- `dict[str, Any]` for a known shape instead of a `TypedDict` or dataclass — same keystrokes, but one is self-documenting and catches typos at type-check time
+- Raw strings for a fixed set of values instead of `StrEnum` — same lines of code, but one prevents typos and enables exhaustiveness checking
+- `datetime.now()` instead of `datetime.now(tz=UTC)` — literally 7 more characters, prevents an entire category of timezone bugs
+- Mutable class attributes where `@dataclass(frozen=True)` would work — same amount of code, prevents accidental shared-state bugs
+- Using `format()` or `%` instead of f-strings — not harder, just older habits carried forward
+- Positional args where keyword-only (`*`) would make call sites self-documenting — zero runtime cost, prevents argument-order bugs forever
+- Functions returning `None` on error instead of raising a domain exception — same effort, but `None` propagates silently while exceptions are loud
+
+**The principle**: "If it costs the same now and one choice is strictly better for the future, you have a professional obligation to pick the better one. You're not being asked to over-engineer — you're being asked not to under-engineer for free."
+
+**The anti-excuse**: "It doesn't matter yet" is only valid when the better choice costs MORE. When it costs the same, "it doesn't matter yet" is just "I didn't think about it" wearing a pragmatism costume.
+
 ## Do NOT comment on
 
 Naming, formatting, import order, docstrings, line length, type hint syntax. Linters handle these. Don't waste review time on what a machine already checks.
