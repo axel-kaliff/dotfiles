@@ -66,11 +66,13 @@ Launch these simultaneously:
 
 Each agent returns a list of issues with: file path, line number, description, reason flagged.
 
-**Agent #6 is critical** — it catches behavioral regressions that look like "cleanup" but change semantics (e.g. narrowing `except Exception` to specific types when callers rely on the broad catch). It must read the old code on master (`git show origin/master:<path>`) and compare with the new code, not just look at the diff.
+**Agent #6 is critical** — it catches behavioral regressions that look like "cleanup" but change semantics. It must read the old code on master (`git show origin/master:<path>`) and compare with the new code, not just look at the diff.
 
-### 6. Score each issue (parallel Haiku agents)
+### 6. Score findings
 
-For each unique issue (deduplicate first), launch a Haiku agent that:
+Collect all findings from the 6 review agents. Deduplicate by file:line.
+
+For each unique finding, spawn a **Haiku agent** (model: haiku) that:
 - Reads the actual code to verify the issue
 - Checks if it's pre-existing vs introduced by the PR
 - **For logic/behavioral issues (from agents #2, #3, #6)**: Must read BOTH the old code (`git show origin/master:<path>`) AND the new code, and verify the behavior actually changed. Many "removed exception handler" findings are false positives where the logic was restructured but the behavior is equivalent. The agent must trace the actual execution path, not just diff the text.

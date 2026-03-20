@@ -13,139 +13,127 @@ Step back and answer: "If I knew everything I know now, what would I do differen
 
 ## Step 0: Determine Analysis Mode
 
-Check the current context to decide which analysis paths to run:
-
 ```bash
-git rev-parse --abbrev-ref HEAD
-git log --oneline main..HEAD 2>/dev/null | head -1
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+AHEAD=$(git log --oneline main..HEAD 2>/dev/null | wc -l)
 ```
 
-- **Feature branch with commits ahead of main** → run full analysis (Steps 1–6)
-- **On main, or no divergence from main** → skip git history (Steps 1–2), run current-state critique only (Steps 2.5–6)
-- **User provided a focus area argument** → scope the current-state analysis to that area (file, directory, or topic like "dependencies")
+- **Feature branch with commits ahead of main** (`$AHEAD > 0`) → run full analysis (all 3 sub-agents)
+- **On main, or no divergence** → skip retrospective agent, run design-critique and dependency-audit only
+- **User provided a focus area** → scope all agents to that area
 
-## Step 1: Gather the Full Picture
+## Step 1: Launch parallel analysis agents
 
-*(Skip if on main or no branch divergence)*
+Launch ALL applicable agents simultaneously in a single message.
 
-Run these in parallel:
+### Agent 1: Retrospective (skip if on main)
 
-```bash
-git log --oneline main..HEAD
-git diff --stat main..HEAD
-git diff main..HEAD
-git log --format="%s%n%b" main..HEAD
-```
+Spawn a **general-purpose agent** with this prompt:
 
-Also read any HANDOFF.md or TODO/task files if present — they capture intent that may have shifted.
+> Analyze the git history of this feature branch to reconstruct what happened and identify hindsight insights.
+>
+> Run:
+> ```bash
+> git log --oneline main..HEAD
+> git diff --stat main..HEAD
+> git log --format="%s%n%b" main..HEAD
+> ```
+>
+> Also read any HANDOFF.md or TODO files if present.
+>
+> Produce:
+>
+> **1. Branch Timeline**
+> For each commit, classify as: original-goal, pivot, patch, scope-drift
+> ```
+> 1. [commit] Started with: <original goal>
+> 2. [commit] Pivoted: <what changed and why>
+> 3. [commit] Patch: <symptom fix that hints at deeper issue>
+> ```
+>
+> **2. Hindsight Insights**
+> - Problem understanding: what was the actual problem vs initially assumed?
+> - Design decisions: which abstractions turned out wrong?
+> - Fix archaeology: group "fix" commits by root cause — multiple fixes with same root cause = missed design insight
+> - Unnecessary work: code written then deleted/replaced, abstractions never used as intended
+>
+> Keep output under 60 lines. Focus on insights, not commit descriptions.
 
-## Step 2: Reconstruct the Timeline
+### Agent 2: Design Critique
 
-*(Skip if on main or no branch divergence)*
+Spawn a **general-purpose agent** with this prompt:
 
-From the commit history, build a narrative:
+> Evaluate the design quality of the current code. {If focus area specified: "Scope to: $ARGUMENTS". Otherwise: "Scope to files changed on the branch" or "the specified directory"}.
+>
+> Read the actual code (not just diffs). Assess:
+>
+> **1. Design Fit**
+> - Does the solution match the problem's actual complexity? Over/under-engineered?
+> - Are abstractions at the right level? Too many layers? Too few?
+> - Single responsibility — does each module/class do one thing?
+> - Are there simpler alternatives that would work equally well?
+>
+> **2. Scalability & Maintainability**
+> - Where are the extension points? Where will this strain under growth?
+> - What would a new contributor need to understand to modify safely?
+> - Implicit coupling points that make changes cascade?
+>
+> **3. Complexity Audit (accidental vs essential)**
+> - Indirection without value? (Wrappers that forward, abstractions with one implementor)
+> - Simpler data structures possible? (Class hierarchy where enum + function would do)
+> - Is the solution harder to understand than the problem?
+>
+> **4. Size Check**
+> ```bash
+> git diff --name-only master..HEAD -- '*.py' | xargs wc -l | sort -rn | head -20
+> ```
+> Flag files over 300 lines.
+>
+> Keep output under 60 lines. Be concrete — file:line references for every claim.
 
-1. **Original intent**: What was the branch trying to accomplish based on early commits?
-2. **Pivots**: Where did direction change? Look for commits that undo, rework, or "fix fix" earlier work.
-3. **Accumulated patches**: Identify commits that patch symptoms rather than addressing root causes — the "fix X", "actually fix X", "fix X for real" pattern.
-4. **Scope drift**: What got added that wasn't part of the original goal?
+### Agent 3: Dependency & Duplication Audit
 
-Present this as a short timeline:
+Spawn a **general-purpose agent** with this prompt:
 
-```
-## Branch Timeline
-1. [commit] Started with: <original goal>
-2. [commit] Pivoted: <what changed and why>
-3. [commit] Patch: <symptom fix that hints at a deeper issue>
-...
-```
+> Audit dependencies and check for code duplication.
+>
+> **1. Dependency Assessment**
+> ```bash
+> pipdeptree --json 2>/dev/null | head -200
+> ```
+> For each non-stdlib dependency in changed files:
+> - Is it justified, or could stdlib/existing deps handle it?
+> - Flag heavy transitive chains (30+ sub-deps)
+> - Flag deps used for a single function that could be inlined
+> - Check for lighter alternatives
+>
+> **2. Dedup Check**
+> ```bash
+> python3 ~/.claude/skills/dedup/dedup_check.py --branch-diff -s src/ -v
+> ```
+> If overlaps found, assess whether consolidation is warranted.
+>
+> **3. Size Inventory**
+> ```bash
+> git diff --name-only master..HEAD -- '*.py' | xargs wc -l | sort -rn | head -20
+> ```
+>
+> Return:
+> ```
+> DEPENDENCIES:
+> - [dep] verdict: justified|replace-with-X|remove|inline
+>
+> DUPLICATION:
+> - [type/function] overlaps with [existing] — consolidate|intentional
+>
+> SIZE:
+> - [file] N lines — split|ok
+> ```
+> Keep output under 40 lines.
 
-## Step 2.5: Assess Current State
+## Step 2: Synthesize — Clean Slate Design
 
-*(Always runs — this is the core design-level critique)*
-
-Read the actual code (not just diffs). If the user provided a focus area, scope to that. Otherwise, assess all files changed on the branch (or the specified directory if on main).
-
-### Design Quality
-
-- Does the solution match the problem's actual complexity, or is it over/under-engineered?
-- Are abstractions at the right level? (Too many layers? Too few?)
-- Single responsibility — does each module/class do one thing?
-- Are there simpler alternatives that would work equally well?
-
-### Scalability & Maintainability
-
-- What happens when requirements grow? Where are the extension points?
-- What would a new contributor need to understand to modify this safely?
-- Are there implicit coupling points that would make changes cascade?
-
-### Dependency Assessment
-
-For Python projects, run:
-```bash
-pipdeptree --json 2>/dev/null
-```
-
-For each non-stdlib dependency:
-- Is it justified, or could stdlib/existing deps handle it?
-- Flag heavy transitive dependency chains (30+ sub-deps)
-- Flag dependencies used for a single function that could be inlined
-- Check for lighter alternatives that cover the actual usage
-
-For non-Python projects, inspect package manifests (package.json, Cargo.toml, go.mod, etc.) and apply the same reasoning.
-
-### Duplication Check
-
-Run the dedup checker to find types that overlap with existing codebase types:
-```bash
-python ~/.claude/skills/dedup/dedup_check.py --branch-diff -s src
-```
-
-If overlaps are found (exit code 1), include them in the assessment — they indicate types that should be consolidated rather than duplicated.
-
-### Size Check
-
-Measure changed files to flag bloat:
-```bash
-git diff --name-only master..HEAD -- '*.py' | xargs wc -l | sort -rn | head -20
-```
-
-Flag files over 300 lines — they likely need splitting.
-
-### Complexity Audit
-
-This is *not* cyclomatic/cognitive complexity (run `/analyse` for detailed metrics). This is about **accidental vs essential complexity**:
-
-- Is there indirection without value? (Wrappers that just forward, abstractions with one implementor)
-- Are there simpler data structures that would work? (e.g., class hierarchy where an enum + function would do, dict where a plain tuple suffices)
-- Is the solution harder to understand than the problem it solves?
-
-## Step 3: Identify Hindsight Insights
-
-*(Skip if on main or no branch divergence — the insights below come from git history)*
-
-For each category, assess what is now known that wasn't known at the start:
-
-### Problem Understanding
-- What was the actual problem vs. what was initially assumed?
-- Were there misunderstandings about requirements, APIs, or data shapes?
-
-### Design Decisions
-- Which abstractions turned out wrong? (Wrong boundaries, wrong data flow, unnecessary layers)
-- Which were right but implemented in the wrong order?
-
-### Fix Archaeology
-- List every "fix" commit. For each, ask: would this have been needed if the initial approach were different?
-- Group fixes by root cause — multiple fixes with the same root cause = missed design insight
-
-### Unnecessary Work
-- Code that was written and then deleted or replaced
-- Abstractions that were built but never used as intended
-- Over-engineering that added complexity without value
-
-## Step 4: Design the "Clean Slate" Alternative
-
-Based on hindsight and current-state assessment, describe what the code WOULD look like if designed fresh:
+Wait for all agents. Using their combined findings, design what the code WOULD look like if built fresh:
 
 ```
 ## Clean Slate Design
@@ -172,16 +160,14 @@ Based on hindsight and current-state assessment, describe what the code WOULD lo
 - Net lines changed: <roughly>
 ```
 
-## Step 5: Assess Whether to Act
-
-Classify the redesign:
+## Step 3: Assess Whether to Act
 
 ### Cost-Benefit
 
 **Redesign cost:**
 - How much work to implement the clean-slate version?
 - Risk of introducing new bugs?
-- Are there downstream consumers already depending on the current approach?
+- Downstream consumers depending on current approach?
 
 **Keeping current approach cost:**
 - Technical debt carried forward?
@@ -195,40 +181,38 @@ One of:
 1. **Rewrite the branch**: The clean-slate design is significantly better and the branch hasn't been merged. Start fresh.
 2. **Targeted refactor**: Keep most of the code but restructure specific parts. List the 2-3 highest-value refactors.
 3. **Accept and document**: The current approach works. The insights are real but the cost of change exceeds the benefit. Document the known compromises.
-4. **Simplify dependencies**: The design is sound but the dependency footprint is heavier than necessary. List specific deps to replace or remove, with lighter alternatives.
+4. **Simplify dependencies**: The design is sound but the dependency footprint is heavier than necessary. List specific deps to replace or remove.
 
-## Step 6: Present to User
-
-Output the full analysis in this format:
+## Step 4: Present to User
 
 ```
 ## Rethink: <branch name or focus area>
 
 ### Timeline
-<from Step 2 — omit if current-state only>
+<from retrospective agent — omit if current-state only>
 
 ### Current State Assessment
 
 #### Design Fit
-<Is this the right solution? Over/under-engineered?>
+<from design-critique agent>
 
 #### Dependency Footprint
-<What's pulled in, what could be lighter?>
+<from dependency-audit agent>
 
 #### Complexity Budget
-<Essential vs accidental complexity. What's earning its keep?>
+<from design-critique agent — essential vs accidental>
 
 #### Scalability Concerns
-<Where will this strain under growth?>
+<from design-critique agent>
 
 ### Hindsight Insights
-<from Step 3, bulleted — omit if current-state only>
+<from retrospective agent — omit if current-state only>
 
 ### Clean Slate Design
-<from Step 4>
+<from Step 2>
 
 ### Recommendation: <Rewrite | Targeted Refactor | Accept | Simplify Dependencies>
-<from Step 5, with reasoning>
+<from Step 3, with reasoning>
 
 ### Concrete Next Steps
 <if Rewrite or Targeted Refactor: ordered list of specific actions>
@@ -238,25 +222,27 @@ Output the full analysis in this format:
 
 **Do NOT apply any changes.** This skill is analysis only — present findings and wait for the user to decide.
 
-## When This Skill is Most Valuable
-
-- After a long debugging session that revealed the real problem was elsewhere
-- When a branch has 10+ commits and several are "fix" commits
-- When the user says "this feels messier than it should be"
-- When requirements changed mid-branch
-- Before merging a large branch — last chance to clean up
-- After completing a feature, before committing — "is this the right approach?"
-- When onboarding to unfamiliar code — "is this well-designed?"
-- When a module feels heavy or slow to work with
-- When dependency audit is needed
-
 ## Anti-Patterns to Flag
 
 - **Sunk cost reasoning**: "We already wrote it" is not a reason to keep bad design
 - **Patch stacking**: 5 small fixes where 1 structural change would suffice
 - **Scope creep masquerading as necessity**: Changes that "had to" happen but weren't part of the goal
-- **Copy-paste divergence**: Similar code in multiple places that should have been unified from the start
+- **Copy-paste divergence**: Similar code in multiple places that should have been unified
 - **Dependency bloat**: Pulling in a large library for one utility function
-- **Abstraction astronautics**: Layers of indirection with no current benefit, justified by hypothetical future needs
-- **Accidental complexity**: Solution is harder to understand than the problem it solves
-- **Golden hammer**: Using one pattern/library for everything because it's familiar, not because it fits
+- **Abstraction astronautics**: Layers of indirection with no current benefit
+- **Accidental complexity**: Solution is harder to understand than the problem
+- **Golden hammer**: Using one pattern/library for everything because it's familiar
+
+## Common Mistakes
+
+**Running agents sequentially**
+- Problem: Takes 3x longer than necessary
+- Fix: Launch ALL agents in a single message with parallel tool calls
+
+**Skipping the retrospective on feature branches**
+- Problem: Loses the most valuable part — understanding what went wrong and why
+- Fix: Always run the retrospective agent when on a feature branch with commits
+
+**Synthesizing without agent results**
+- Problem: Clean slate design based on own analysis instead of waiting for sub-agent findings
+- Fix: Wait for ALL agents to complete before writing Steps 2-4

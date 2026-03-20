@@ -34,12 +34,15 @@ Review in this order. Spend most time on 1-3. Do NOT skip to 5 because it's easi
 - Temporary files/dirs created but never cleaned up on failure
 - Connection pools exhausted because connections aren't returned on exception
 
-### 3. Concurrency & race conditions
+### 3. Concurrency, reentrancy & thread safety
 - TOCTOU (time-of-check-to-time-of-use): checking a file exists then opening it, checking a key exists then reading it
 - Shared mutable state accessed without locks
 - Signal handling mid-operation (what happens if SIGTERM arrives during a write?)
 - Non-atomic operations that assume atomicity (e.g., read-modify-write without locks)
 - Async/await missing timeout, missing cancellation handling
+- **Non-reentrant code**: module-level mutable state, global caches, singletons with mutable fields — you have NO idea if this runs in a thread, a process, behind a fork, or shares state with something else. If it touches mutable state outside its own stack frame, it's a ticking bomb. Python's GIL does NOT make your code thread-safe — it just makes the crashes more confusing.
+- Functions that mutate module globals, class variables, or anything reachable from `import` — these are shared state whether the author intended it or not
+- `threading.local()` missing where per-thread state is needed, or conversely module-level state used where `threading.local()` should be
 
 ### 4. Interface contracts & implicit assumptions
 - Public APIs that can silently produce wrong results with valid-looking input

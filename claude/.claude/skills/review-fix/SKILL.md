@@ -7,13 +7,11 @@ user-invocable: true
 
 # Review and Fix
 
-Combined code review + auto-fix workflow. Eliminates the review-then-manually-fix loop.
+Orchestrator that delegates analysis to focused sub-agents, then applies fixes with a clean context.
 
-## Phase 1: Deterministic analysis
+**Announce at start:** "Running review-fix pipeline."
 
-Run these tools on all changed Python files to catch mechanical issues before the LLM review.
-
-### 1a. Identify changed files
+## Phase 1: Gather scope
 
 ```bash
 changed=$(git diff --name-only master..HEAD -- '*.py' 2>/dev/null)
@@ -22,125 +20,157 @@ staged=$(git diff --cached --name-only -- '*.py' 2>/dev/null)
 targets=$(echo -e "$changed\n$uncommitted\n$staged" | sort -u | grep -v '^$')
 ```
 
-### 1b. Run tools in parallel
+If no targets, report "no Python changes found" and stop.
 
-**ruff** (all rules):
-```bash
-echo "$targets" | xargs ruff check --select ALL 2>&1
-```
+## Phase 2: Launch 4 parallel analysis agents
 
-**ty** (type checking):
-```bash
-echo "$targets" | xargs ty check --output-format concise --extra-search-path src 2>&1
-```
+Launch ALL FOUR agents simultaneously in a single message. Each returns a compact findings list.
 
-**complexipy** (cognitive complexity):
-```bash
-echo "$targets" | xargs complexipy -mx 15 -f 2>&1
-```
-
-**Forbidden patterns** (grep-based):
-```bash
-# Any usage (excluding TYPE_CHECKING blocks, comments, strings)
-echo "$targets" | xargs grep -n '\bAny\b' 2>/dev/null | grep -v '^\s*#' | grep -v 'TYPE_CHECKING'
-
-# Bare type: ignore
-echo "$targets" | xargs grep -nP '#\s*type:\s*ignore(?!\[)' 2>/dev/null
-
-# os.path, eval/exec, bare except, hasattr, global
-echo "$targets" | xargs grep -n '\bos\.path\b' 2>/dev/null | grep -v '^\s*#'
-echo "$targets" | xargs grep -nP '\b(eval|exec)\s*\(' 2>/dev/null | grep -v '^\s*#'
-echo "$targets" | xargs grep -nP '^\s*except\s*(:|\s+Exception\s*:)' 2>/dev/null | grep -v '^\s*#'
-echo "$targets" | xargs grep -n '\bhasattr\s*(' 2>/dev/null | grep -v '^\s*#'
-```
-
-### 1c. Present Phase 1 results
-
-Collect all tool output. Present a summary table:
-
-```
-Phase 1: deterministic analysis
-──────────────────────────────────────────
-  ruff          <count> violation(s)  |  clean
-  ty            <count> error(s)      |  clean
-  cognitive     <count> fn(s) > CC15  |  clean
-  forbidden     <count> pattern(s)    |  clean
-──────────────────────────────────────────
-```
-
-Show first 10 lines of detail for each tool with issues.
-
-## Phase 1c: Web confirmation check
-
-Run the `/web-check` skill targeting the changed files. This runs in parallel with Phase 2.
+### Agent 1: Static Analysis
 
 Spawn a **general-purpose agent** with this prompt:
 
-> Run the web-check skill on the branch changes. Identify all third-party libraries and non-trivial patterns in the changed files, then search the web in parallel for: official documentation, best practices, existing solutions, and known issues. Present a web confirmation report.
+> Run static analysis on changed Python files. Run in parallel:
+> 1. `echo "$targets" | xargs ruff check`
+> 2. `echo "$targets" | xargs ty check --output-format concise --extra-search-path src`
+> 3. `echo "$targets" | xargs complexipy -mx 15 -f`
+> 4. Forbidden patterns grep (Any, bare type:ignore, os.path, eval/exec, bare except, hasattr, global, datetime.now())
+>
+> Return a compact list of findings in this format ONLY:
+> ```
+> STATIC:
+> - [file:line] [tool] description
+> ```
+> No scorecard, no prose. Just the findings list. Max 30 items, prioritize errors over warnings.
 
-Incorporate any **actionable** findings into the fix list for Phase 3:
-- Deprecated API calls → replace with recommended alternative
-- Wrong API usage → fix to match official docs
-- Existing stdlib/library solution available → flag for replacement
-- Known bug with a documented fix → apply the fix
+### Agent 2: Web Confirmation
 
-## Phase 2: LLM semantic review
+Spawn a **general-purpose agent** with this prompt:
 
-Delegate to the `code-reviewer` agent with all changed files. Instruct the reviewer to return findings in this **structured format**:
+> Run the web-check skill on changed Python files. Identify third-party library imports and non-trivial patterns. Search the web in parallel for: official documentation, best practices, existing solutions, known issues.
+>
+> Return ONLY actionable findings that require code changes:
+> ```
+> WEB:
+> - [file:line] description — recommended fix
+> ```
+> Skip confirmations that everything is correct. Only report issues. Max 10 items.
+
+### Agent 3: Semantic Review
+
+Spawn a **code-reviewer agent** (subagent_type `code-reviewer`) with this prompt:
+
+> Review the branch changes vs main/master. Skip anything linters catch (ruff, ty, complexity, forbidden patterns are handled separately).
+>
+> Focus ONLY on:
+> - Logic errors and behavioral regressions
+> - Missing error handling at system boundaries
+> - Thread safety and race conditions
+> - Security issues
+> - Files over 300 lines
+>
+> Return findings in this format:
+> ```
+> ## CRITICAL
+> 1. [file:line] description
+>    FIX: exact code change needed
+>
+> ## WARNING
+> 1. [file:line] description
+>    FIX: exact code change needed
+> ```
+
+### Agent 4: Grumpy Review
+
+Spawn a **grumpy-reviewer agent** (subagent_type `grumpy-reviewer`) with this prompt:
+
+> Review the branch changes vs main/master. Follow your review process. Focus on correctness bugs, resource leaks, race conditions, and platform reinvention. Deliver your verdict.
+
+Present the grumpy review verbatim — do not filter or soften.
+
+## Phase 3: Consolidate findings
+
+Wait for all 4 agents. Build a single deduplicated fix list:
 
 ```
-## CRITICAL
-1. [file:line] Short description
-   FIX: <exact code change needed>
-
-## WARNING
-1. [file:line] Short description
-   FIX: <exact code change needed>
+FIX LIST:
+1. [file:line] [source: static|web|semantic|grumpy] [severity: critical|warning] description — fix
+2. ...
 ```
 
-Focus on issues that tools CANNOT catch:
-- Logic errors and behavioral regressions
-- Missing error handling at system boundaries
-- Thread safety and race conditions
-- Test quality (fixtures typed, proper teardown)
-- Private attribute access across modules
-- Security issues
-- Files over 300 lines
+Rules:
+- If multiple agents flag the same location, merge into one entry with the highest severity
+- Static analysis findings are always included
+- Web findings are included only if they recommend a specific code change
+- Grumpy findings are included only if they identify a concrete bug or resource leak (not design opinions)
+- Apply fixes for the requested severity level ($ARGUMENTS defaults to "all")
 
-**Important**: Tell the reviewer to skip anything already flagged by Phase 1 (ruff, ty, complexity, forbidden patterns). The reviewer should focus purely on semantic issues.
+## Phase 4: Apply fixes
 
-## Phase 2b: Grumpy review
+Spawn a **general-purpose agent** with this prompt:
 
-Spawn the `grumpy-reviewer` agent (subagent_type `grumpy-reviewer`) targeting the branch changes. Pass this prompt:
+> You are a code fixer. Apply these fixes to the codebase. Use the Edit tool. Group edits per file.
+>
+> FIX LIST:
+> <paste consolidated fix list>
+>
+> Rules:
+> - Fix ONLY the listed issues — no additional cleanup
+> - For each fix, read the file first to understand context
+> - If a fix is ambiguous or risky, skip it and mark as "MANUAL"
+> - Do NOT fix code that wasn't changed in this branch
 
-> Review the branch changes vs main/master. Follow your review process. Read the actual code, check for dependency bloat, and deliver your verdict.
+This agent gets a clean context with ONLY the fix list — no raw tool output competing for attention.
 
-Present the agent's response directly — do not filter or soften the tone.
+## Phase 5: Run tests
 
-Incorporate any **actionable** findings (over-engineering, unnecessary dependencies, complexity that should be removed) into the fix list for Phase 3. Ignore purely stylistic gripes that contradict project conventions.
+Spawn a **test-runner agent** (subagent_type `test-runner`) with this prompt:
 
-## Phase 3: Auto-fix in batch
+> Run unit tests for changed files:
+> ```bash
+> uv run python -m pytest tests/unit/ -x --tb=short
+> ```
+> Report pass/fail/skip counts and any failure tracebacks.
 
-Parse findings from both phases. Apply fixes using Edit tool. Group edits per file.
+## Phase 6: Report
 
-Apply fixes for the requested severity level ($ARGUMENTS defaults to "all"):
-- **Critical**: Always fix — thread safety, test pollution, security issues, ty errors, forbidden patterns
-- **Warning**: Fix unless `$ARGUMENTS` is "critical" — missing type hints, complexity violations, ruff warnings
+Two-column table of findings — what was found and whether it was fixed or needs manual attention.
 
-## Phase 4: Run tests
+```
+## Review-Fix Report
 
-Run `uv run python -m pytest tests/unit/ -x --tb=short` on affected test directories only. Use the test-runner agent for this.
+### Fixes Applied
+| # | File:Line | Issue | Source |
+|---|-----------|-------|--------|
+| 1 | ... | ... | static/web/semantic/grumpy |
 
-## Phase 5: Report
+### Manual Attention Needed
+| # | File:Line | Issue | Why Manual |
+|---|-----------|-------|------------|
+| 1 | ... | ... | ambiguous/risky/design-level |
 
-Two-column table of findings — what was found and whether it was fixed or needs manual attention. No prose explanations.
+### Tests
+<pass/fail summary>
+
+### Grumpy Verdict
+<unfiltered grumpy review>
+```
 
 ## Do NOT fix
 - Suggestions/style preferences — only fix clear violations
 - Code that wasn't changed in this branch
 - Test behavior — only fix test infrastructure issues (fixtures, teardown)
 
-## Token efficiency
-- Do NOT re-read files that the reviewer already read — trust the reviewer's line numbers
-- Apply multiple edits to the same file in a single MultiEdit call where possible
-- Skip reporting on files with zero findings
+## Common Mistakes
+
+**Running agents sequentially**
+- Problem: Takes 4x longer than necessary
+- Fix: Launch ALL FOUR analysis agents in a single message with parallel tool calls
+
+**Dumping raw tool output into the fix agent**
+- Problem: Fix agent drowns in noise, misses or misapplies fixes
+- Fix: Consolidate into a clean fix list first, then pass ONLY the list to the fix agent
+
+**Fixing grumpy opinions**
+- Problem: Grumpy reviewer has opinions about design that aren't bugs
+- Fix: Only include grumpy findings that identify concrete bugs or resource leaks
