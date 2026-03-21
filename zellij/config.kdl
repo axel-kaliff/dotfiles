@@ -284,8 +284,8 @@ load_plugins {
 	autolock
 }
 
-// Shell: fish preferred, zsh fallback
-default_shell "~/.config/zellij/default-shell.sh"
+// Shell: fish preferred (use full path — Zellij needs a binary, not a script)
+default_shell "/home/linuxbrew/.linuxbrew/bin/fish"
 
 // r2d2-specific settings
 theme "nightfox"
