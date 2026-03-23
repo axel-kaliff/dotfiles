@@ -7,6 +7,10 @@
     "type": "command",
     "command": "bash /var/home/bazzite/.claude/statusline-command.sh"
   },
+  "enabledPlugins": {
+    "context7-plugin@context7-marketplace": true,
+    "pyright-lsp@claude-plugins-official": true
+  },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
       "source": {
@@ -14,8 +18,5 @@
         "repo": "upstash/context7"
       }
     }
-  },
-  "enabledPlugins": {
-    "context7-plugin@context7-marketplace": true
   }
 }
