@@ -1,6 +1,6 @@
 ---
 name: cleanup
-description: Find dead code, unused dependencies, stale exports, and orphaned files. Uses vulture (dead code) and deptry (unused deps) as deterministic first pass, then LLM analysis for semantic cleanup opportunities. Use after removing features, before releases, or when a module feels bloated.
+description: Find dead code, unused dependencies, stale exports, and orphaned files. Uses vulture + deadcode (dead code) and deptry (unused deps) as deterministic first pass, then LLM analysis for semantic cleanup opportunities. Use after removing features, before releases, or when a module feels bloated.
 argument-hint: "[file, directory, or 'deps']"
 user-invocable: true
 ---
@@ -29,6 +29,12 @@ vulture <target> --min-confidence 100
 vulture <target> --min-confidence 80
 ```
 
+**deadcode** (complementary dead code — catches patterns vulture misses):
+```bash
+deadcode <target> 2>&1 | head -50
+```
+Note: deadcode catches commented-out code (DC12), empty files (DC11), unreachable code after return (DC13), and other patterns vulture misses. Run both tools and merge findings.
+
 **deptry** (unused deps — run from project root):
 ```bash
 deptry . 2>&1 | grep -E "^(DEP|src/)" | head -30
@@ -49,6 +55,11 @@ ruff check <target> --select F401,F811,F841 --no-fix
 <N> findings at 80-99% confidence (likely dead)
 
 <paste vulture output, grouped by confidence>
+
+### Deadcode
+<N> findings (commented-out code, empty files, unreachable code, etc.)
+
+<paste deadcode output>
 
 ### deptry (unused deps)
 <N> unused dependencies
@@ -178,6 +189,10 @@ Combine Phase 1 automated results with Phase 2 agent findings:
 #### Dead Code (80-99% confidence — verify before removing)
 - `possibly_unused()` at `path:line` — <brief assessment>
 
+#### Dead Code (deadcode)
+- `commented_out_block` at `path:line` — DC12
+- `unreachable_code` at `path:line` — DC13
+
 #### Unused Dependencies (deptry)
 - `package-name` declared but never imported
 
@@ -221,6 +236,7 @@ Combine Phase 1 automated results with Phase 2 agent findings:
 ## Prerequisites
 
 - `vulture` must be installed: `uv tool install vulture`
+- `deadcode` must be installed: `uv tool install deadcode`
 - `deptry` must be installed: `uv tool install deptry`
 - `ruff` must be installed: `uv tool install ruff`
 
