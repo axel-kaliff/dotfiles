@@ -37,13 +37,13 @@ brew "stow"
 # Dev tools (nvim LSP/lint/format dependencies)
 brew "rust-analyzer"
 brew "pyright"
+brew "semgrep"
 brew "stylua"
 brew "luacheck"
 brew "tree-sitter"
 
 # Container tools
 brew "dive"
-brew "podman-compose"
 # brew "skopeo"  # excluded: requires source build on non-standard prefix
 brew "lazydocker"
 
@@ -79,6 +79,8 @@ brew "rclone"
 
 # Security
 brew "age"
+brew "gitleaks"
+brew "pre-commit"
 brew "sops"
 
 # System tools

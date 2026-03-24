@@ -64,15 +64,21 @@ Launch these simultaneously:
 | #5 Code comments compliance | Read full files, check if changes violate inline comments | NOTE/TODO/WARNING/docstring guidance |
 | #6 Logic error deep-check | Compare old code (master) vs new code for behavioral regressions | **Split into per-file subagents**: for each changed file, spawn a Sonnet subagent that reads BOTH old (`git show origin/$BASE:<path>`) and new versions. Cap at 15 files — if more, prioritize files with the most changed lines. Each subagent checks: removed exception handlers, changed control flow, dropped fallbacks, narrowed catches, new crash paths. For each finding, read the callers to determine if the change is safe or breaks a contract. |
 
-Each agent returns a list of issues with: file path, line number, description, reason flagged.
+Finding-producing agents (#1, #2, #5, #6) return issues in canonical format:
+```
+FINDINGS:
+- [file:line] [severity: ERROR|WARN] description
+  FIX: concrete fix (or MANUAL — <reason>)
+```
+Context-gathering agents (#3, #4) return prose context, not findings.
 
 **Agent #6 is critical** — it catches behavioral regressions that look like "cleanup" but change semantics. Because reading old + new code for many functions can exceed a single agent's effective context, Agent #6 must split into per-file subagents rather than processing all files in one context.
 
 ### 6. Score findings
 
-Collect all findings from the 6 review agents. Deduplicate by file:line — if multiple agents flagged the same location, merge into one finding with combined context.
+Collect all findings from the 6 review agents. Label each with its source agent. Feed directly to the `/score-findings` sub-skill — it handles category-aware deduplication internally (findings at the same line from different categories are kept separate).
 
-Feed deduplicated findings through the `/score-findings` sub-skill (which batches 5 findings per Sonnet agent). Each scoring agent:
+Each scoring agent:
 - Reads the actual code to verify the issue
 - Checks if it's pre-existing vs introduced by the PR
 - **For logic/behavioral issues (from agents #2, #3, #6)**: Must read BOTH the old code (`git show origin/master:<path>`) AND the new code, and verify the behavior actually changed. Many "removed exception handler" findings are false positives where the logic was restructured but the behavior is equivalent. The agent must trace the actual execution path, not just diff the text.

@@ -22,9 +22,9 @@ targets=$(echo -e "$changed\n$uncommitted\n$staged" | sort -u | grep -v '^$')
 
 If no targets, report "no Python changes found" and stop.
 
-## Phase 2: Launch 4 parallel analysis agents
+## Phase 2: Launch 5 parallel analysis agents
 
-Launch ALL FOUR agents simultaneously in a single message. Each returns a compact findings list.
+Launch ALL FIVE agents simultaneously in a single message. Each returns a compact findings list.
 
 ### Agent 1: Static Analysis
 
@@ -34,14 +34,14 @@ Spawn a **general-purpose agent** with this prompt:
 > 1. `echo "$targets" | xargs ruff check`
 > 2. `echo "$targets" | xargs ty check --output-format concise --extra-search-path src`
 > 3. `echo "$targets" | xargs complexipy -mx 15 -f`
-> 4. Forbidden patterns grep (Any, bare type:ignore, os.path, eval/exec, bare except, hasattr, global, datetime.now())
 >
-> Return a compact list of findings in this format ONLY:
+> Return findings in canonical format ONLY:
 > ```
-> STATIC:
-> - [file:line] [tool] description
+> FINDINGS:
+> - [file:line] [severity: ERROR|WARN] [tool] description
+>   FIX: MANUAL — see tool output
 > ```
-> No scorecard, no prose. Just the findings list. Max 30 items, prioritize errors over warnings.
+> Map ruff errors and ty errors to ERROR, ruff warnings and complexipy to WARN. No scorecard, no prose. Just the findings list. Max 30 items, prioritize errors over warnings.
 
 ### Agent 2: Web Confirmation
 
@@ -49,10 +49,11 @@ Spawn a **general-purpose agent** with this prompt:
 
 > Run the web-check skill on changed Python files. Identify third-party library imports and non-trivial patterns. Search the web in parallel for: official documentation, best practices, existing solutions, known issues.
 >
-> Return ONLY actionable findings that require code changes:
+> Return ONLY actionable findings that require code changes, in canonical format:
 > ```
-> WEB:
-> - [file:line] description — recommended fix
+> FINDINGS:
+> - [file:line] [severity: WARN|INFO] description
+>   FIX: recommended fix
 > ```
 > Skip confirmations that everything is correct. Only report issues. Max 10 items.
 
@@ -69,16 +70,15 @@ Spawn a **code-reviewer agent** (subagent_type `code-reviewer`) with this prompt
 > - Security issues
 > - Files over 300 lines
 >
-> Return findings in this format:
+> Return findings in canonical format:
 > ```
-> ## CRITICAL
-> 1. [file:line] description
->    FIX: exact code change needed
->
-> ## WARNING
-> 1. [file:line] description
->    FIX: exact code change needed
+> FINDINGS:
+> - [file:line] [severity: ERROR] description
+>   FIX: exact code change needed
+> - [file:line] [severity: WARN] description
+>   FIX: exact code change needed
 > ```
+> Map critical issues to ERROR, warnings to WARN. If no findings: `FINDINGS: none`
 
 ### Agent 4: Grumpy Review
 
@@ -88,20 +88,40 @@ Spawn a **grumpy-reviewer agent** (subagent_type `grumpy-reviewer`) with this pr
 
 Present the grumpy review verbatim — do not filter or soften.
 
+### Agent 5: Style Guide Check
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Run the style-guide forbidden patterns check on these changed Python files: `$targets`
+>
+> Run the `/analyse` skill's style-guide grep checks against the files. This covers all forbidden patterns from the Python style guide (Any, bare type:ignore, os.path, eval/exec, bare except, hasattr, isinstance, global, datetime.now(), wildcard imports).
+>
+> Return findings in canonical format ONLY:
+> ```
+> FINDINGS:
+> - [file:line] [severity: ERROR] description
+>   FIX: concrete fix
+> ```
+> Style guide violations are ERROR severity (they are explicit rule violations). No scorecard, no prose. Just the findings list. Max 20 items. If no findings: `FINDINGS: none`
+
 ## Phase 3: Consolidate findings
 
-Wait for all 4 agents. Build a single deduplicated fix list:
+Wait for all 5 agents. Build a single deduplicated fix list.
+
+All finding-producing agents use canonical format (`FINDINGS:` blocks with severity and FIX lines). Deduplicate by `file:line:source` — findings from different sources at the same line are kept separate (e.g., a static analysis error and a semantic logic bug are different issues even if they're on the same line).
 
 ```
 FIX LIST:
-1. [file:line] [source: static|web|semantic|grumpy] [severity: critical|warning] description — fix
+1. [file:line] [source: static|style|web|semantic|grumpy] [severity: ERROR|WARN] description
+   FIX: concrete change
 2. ...
 ```
 
 Rules:
-- If multiple agents flag the same location, merge into one entry with the highest severity
-- Static analysis findings are always included
-- Web findings are included only if they recommend a specific code change
+- Same `file:line:source` → merge into one entry with highest severity
+- Same `file:line`, different source → keep as separate entries
+- Static analysis and style findings are always included
+- Web findings are included only if their FIX line contains a specific code change (not MANUAL)
 - Grumpy findings are included only if they identify a concrete bug or resource leak (not design opinions)
 - Apply fixes for the requested severity level ($ARGUMENTS defaults to "all")
 
@@ -126,11 +146,16 @@ This agent gets a clean context with ONLY the fix list — no raw tool output co
 
 Spawn a **test-runner agent** (subagent_type `test-runner`) with this prompt:
 
-> Run unit tests for changed files:
+> Run unit tests for changed files with coverage:
 > ```bash
-> uv run python -m pytest tests/unit/ -x --tb=short
+> uv run python -m pytest tests/unit/ -x --tb=short --cov=src --cov-report=xml
 > ```
-> Report pass/fail/skip counts and any failure tracebacks.
+> After tests pass, run diff-cover:
+> ```bash
+> diff-cover coverage.xml --compare-branch=origin/master --fail-under=80
+> ```
+> Report pass/fail/skip counts, failure tracebacks, and diff-coverage percentage.
+> If pytest-cov or diff-cover are not installed, skip coverage and note it.
 
 ## Phase 6: Report
 
@@ -142,7 +167,7 @@ Two-column table of findings — what was found and whether it was fixed or need
 ### Fixes Applied
 | # | File:Line | Issue | Source |
 |---|-----------|-------|--------|
-| 1 | ... | ... | static/web/semantic/grumpy |
+| 1 | ... | ... | static/style/web/semantic/grumpy |
 
 ### Manual Attention Needed
 | # | File:Line | Issue | Why Manual |
@@ -164,8 +189,8 @@ Two-column table of findings — what was found and whether it was fixed or need
 ## Common Mistakes
 
 **Running agents sequentially**
-- Problem: Takes 4x longer than necessary
-- Fix: Launch ALL FOUR analysis agents in a single message with parallel tool calls
+- Problem: Takes 5x longer than necessary
+- Fix: Launch ALL FIVE analysis agents in a single message with parallel tool calls
 
 **Dumping raw tool output into the fix agent**
 - Problem: Fix agent drowns in noise, misses or misapplies fixes

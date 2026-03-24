@@ -1,13 +1,13 @@
 ---
 name: analyse
-description: Run static analysis on Python files — ruff, ty (type checking), radon (cyclomatic complexity), complexipy (cognitive complexity), style-guide forbidden patterns (Any, bare type-ignore, os.path, eval, etc.), plus logic error check on branch changes. Produces a deterministic scorecard. Use before committing, after completing a feature, or when explicitly asked to check code quality.
+description: Run static analysis on Python files — ruff, ty (type checking), complexipy (cognitive complexity), style-guide forbidden patterns (Any, bare type-ignore, os.path, eval, isinstance, etc.), plus logic error check on branch changes. Produces a deterministic scorecard. Use before committing, after completing a feature, or when explicitly asked to check code quality.
 argument-hint: "[path | file | 'changed' (default)]"
 user-invocable: true
 ---
 
 # Python Code Analyser
 
-On-demand static analysis. Runs five tools, collects their output, and presents a single scorecard. No tests, no fixes — analysis only.
+On-demand static analysis. Runs four tools, collects their output, and presents a single scorecard. No tests, no fixes — analysis only.
 
 ## 1. Determine target files
 
@@ -34,7 +34,7 @@ Only fall back to all `.py` files if both (1) and (2) are empty.
 
 ## 2. Run each tool
 
-Run all five in parallel. Collect stdout+stderr for each.
+Run all four in parallel. Collect stdout+stderr for each.
 
 **IMPORTANT: Always pipe file lists through `xargs`** — never expand `$targets` inline.
 This prevents shell word-splitting issues when file lists contain spaces or are very long.
@@ -51,86 +51,55 @@ echo "$targets" | xargs ty check --output-format concise --extra-search-path src
 ```
 Count lines containing ` error` or ` warning`. Exclude lines matching `Unresolved import` (third-party stubs not available to ty). Count remaining lines.
 
-### radon (cyclomatic complexity)
-```bash
-echo "$targets" | xargs radon cc -s -n C 2>&1
-```
-`-n C` shows only functions rated C or above (CC ≥ 11). Count lines matching `^\s+(F|M|C)\s`. Extract max CC from `([0-9]+)` pattern.
-
-**Known issue:** radon may crash with `ValueError: invalid interpolation syntax` when `pyproject.toml` contains complex pytest config with `%` characters. If radon crashes:
-1. Report "radon: crashed (pyproject.toml parsing conflict)" in the scorecard
-2. Do NOT treat the crash as a code quality issue — it's a radon bug
-3. The cyclomatic complexity row still appears in the scorecard, marked as "tool error"
-
 ### complexipy (cognitive complexity)
 ```bash
 echo "$targets" | xargs complexipy -mx 15 -f 2>&1
 ```
 `-f` shows only functions that exceed the threshold (cognitive CC > 15). Count lines containing `FAILED`. Extract max from numeric values on those lines.
 
-### style-guide (forbidden patterns)
+### style-guide (forbidden patterns via semgrep)
 
-Grep target files for patterns banned by the Python style guide. Each check produces `file:line: description` output.
+Run semgrep with the project's forbidden-patterns ruleset against target files. Semgrep understands Python AST — it matches actual code usage, not strings or comments, and handles import aliasing.
 
 ```bash
-# 1. Any usage — imports and annotations (excluding comments and strings)
-echo "$targets" | xargs grep -n '\bAny\b' 2>/dev/null \
-  | grep -v '^\s*#' | grep -v '# noqa' | grep -v '# type: ignore' \
-  | sed 's/$/ [style: Any is forbidden — use specific type, object, Protocol, or generic T]/'
-
-# 2. Bare # type: ignore (without error code)
-echo "$targets" | xargs grep -nP '#\s*type:\s*ignore(?!\[)' 2>/dev/null \
-  | sed 's/$/ [style: bare type-ignore — must specify error code e.g. # type: ignore[override]]/'
-
-# 3. os.path usage (use pathlib.Path instead)
-echo "$targets" | xargs grep -n '\bos\.path\b' 2>/dev/null \
-  | grep -v '^\s*#' \
-  | sed 's/$/ [style: os.path is forbidden — use pathlib.Path]/'
-
-# 4. datetime.now() without tz (must be timezone-aware)
-echo "$targets" | xargs grep -nP 'datetime\.now\(\s*\)' 2>/dev/null \
-  | grep -v '^\s*#' \
-  | sed 's/$/ [style: datetime.now() without tz — use datetime.now(tz=UTC)]/'
-
-# 5. from X import * (wildcard imports)
-echo "$targets" | xargs grep -nP '^from\s+\S+\s+import\s+\*' 2>/dev/null \
-  | sed 's/$/ [style: wildcard import is forbidden — use explicit imports]/'
-
-# 6. bare except: or except Exception: without re-raise
-echo "$targets" | xargs grep -nP '^\s*except\s*(:|\s+Exception\s*:)' 2>/dev/null \
-  | grep -v '^\s*#' \
-  | sed 's/$/ [style: bare except or except Exception — catch specific exceptions]/'
-
-# 7. eval() / exec() usage
-echo "$targets" | xargs grep -nP '\b(eval|exec)\s*\(' 2>/dev/null \
-  | grep -v '^\s*#' \
-  | sed 's/$/ [style: eval\/exec is forbidden — security risk]/'
-
-# 8. hasattr() usage
-echo "$targets" | xargs grep -n '\bhasattr\s*(' 2>/dev/null \
-  | grep -v '^\s*#' \
-  | sed 's/$/ [style: hasattr is forbidden — use Protocol, isinstance, or direct attribute access]/'
-
-# 9. global statement
-echo "$targets" | xargs grep -nP '^\s*global\s+' 2>/dev/null \
-  | grep -v '^\s*#' \
-  | sed 's/$/ [style: global is forbidden — use module constants or pass state explicitly]/'
+echo "$targets" | xargs semgrep \
+  --config ~/.claude/skills/analyse/semgrep/forbidden-patterns.yaml \
+  --no-git-ignore --quiet 2>/dev/null
 ```
 
-Collect all output lines. Count total violations. Each line is one violation.
+The rules file (`~/.claude/skills/analyse/semgrep/forbidden-patterns.yaml`) defines 10 checks:
+1. `no-any-type` — Any usage in typed code (excludes tests/)
+2. `no-bare-type-ignore` — bare `# type: ignore` without error code
+3. `no-os-path` — os.path usage (use pathlib.Path)
+4. `no-naive-datetime-now` — datetime.now() without tz
+5. `no-wildcard-import` — `from X import *`
+6. `no-bare-except` — bare except or except Exception
+7. `no-eval-exec` — eval()/exec() usage
+8. `no-hasattr` — hasattr() usage (excludes tests/)
+9. `no-isinstance` — isinstance() usage
+10. `no-global` — global statement
 
-**False-positive filtering:** Exclude lines from test files (`tests/**`) for `Any` and `hasattr` checks only — tests may legitimately use these in assertions or parametrize helpers. All other checks apply everywhere.
+Each violation produces `file:line: message [rule-id]` output. Count total violations.
+
+**Test file exclusions** are handled in the semgrep rules via `paths.exclude: ["tests/**"]` on the `no-any-type` and `no-hasattr` rules.
+
+**Fallback:** If semgrep is not installed, fall back to the equivalent grep checks:
+```bash
+# Run grep-based checks as fallback (less accurate — matches in strings/comments)
+echo "$targets" | xargs grep -n '\bAny\b' 2>/dev/null | grep -v '^\s*#' | sed 's/$/ [style: Any forbidden]/'
+# ... (repeat for each pattern)
+```
+Note the fallback in the output so the user knows to install semgrep for accurate results.
 
 ## 3. Present scorecard
 
-Output a fixed-width table with all five rows.
+Output a fixed-width table with all four rows.
 
 ```
 Analysis: <N> file(s)
 ──────────────────────────────────────────
   ruff        <count> violation(s)  |  clean
   ty          <count> error(s)      |  clean
-  cyclomatic  <count> fn(s) > CC10, max <N>  |  clean (all CC ≤ 10)
   cognitive   <count> fn(s) > CC15, max <N>  |  clean (all CC ≤ 15)
   style       <count> violation(s)  |  clean
 ──────────────────────────────────────────
@@ -145,10 +114,6 @@ ruff issues:
 
 ty errors:
   src/foo.py:32: error: Argument 1 has incompatible type
-  ...
-
-high cyclomatic complexity:
-  src/foo.py:  F 15:0 process_data - C (12)
   ...
 
 high cognitive complexity:

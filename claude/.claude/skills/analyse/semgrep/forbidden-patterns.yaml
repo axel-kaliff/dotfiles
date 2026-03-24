@@ -1,0 +1,88 @@
+rules:
+  # 1. Any usage — imports and annotations
+  - id: no-any-type
+    patterns:
+      - pattern: "Any"
+      - pattern-inside: |
+          from typing import ...
+          ...
+    message: "Any is forbidden — use specific type, object, Protocol, or generic T"
+    severity: ERROR
+    languages: [python]
+    paths:
+      exclude:
+        - "tests/**"
+
+  # 2. Bare # type: ignore (without error code)
+  - id: no-bare-type-ignore
+    pattern-regex: "#\\s*type:\\s*ignore(?!\\[)"
+    message: "bare type-ignore — must specify error code e.g. # type: ignore[override]"
+    severity: ERROR
+    languages: [python]
+
+  # 3. os.path usage (use pathlib.Path instead)
+  - id: no-os-path
+    pattern: os.path
+    message: "os.path is forbidden — use pathlib.Path"
+    severity: ERROR
+    languages: [python]
+
+  # 4. datetime.now() without tz (must be timezone-aware)
+  - id: no-naive-datetime-now
+    pattern: datetime.now()
+    message: "datetime.now() without tz — use datetime.now(tz=UTC)"
+    severity: ERROR
+    languages: [python]
+
+  # 5. Wildcard imports
+  - id: no-wildcard-import
+    pattern: from $MOD import *
+    message: "wildcard import is forbidden — use explicit imports"
+    severity: ERROR
+    languages: [python]
+
+  # 6. Bare except or except Exception
+  - id: no-bare-except
+    pattern-either:
+      - pattern: |
+          except:
+              ...
+      - pattern: |
+          except Exception:
+              ...
+    message: "bare except or except Exception — catch specific exceptions"
+    severity: ERROR
+    languages: [python]
+
+  # 7. eval() / exec() usage
+  - id: no-eval-exec
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+    message: "eval/exec is forbidden — security risk"
+    severity: ERROR
+    languages: [python]
+
+  # 8. hasattr() usage
+  - id: no-hasattr
+    pattern: hasattr(...)
+    message: "hasattr is forbidden — use Protocol, direct attribute access, or match/case on typed unions"
+    severity: ERROR
+    languages: [python]
+    paths:
+      exclude:
+        - "tests/**"
+
+  # 9. isinstance() usage
+  - id: no-isinstance
+    pattern: isinstance(...)
+    message: "isinstance is forbidden — use Protocol, @overload, match/case on typed unions, or generic dispatch"
+    severity: ERROR
+    languages: [python]
+
+  # 10. global statement
+  - id: no-global
+    pattern: global $VAR
+    message: "global is forbidden — use module constants or pass state explicitly"
+    severity: ERROR
+    languages: [python]

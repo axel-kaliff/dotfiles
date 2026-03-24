@@ -1,6 +1,6 @@
 ---
 name: pre-merge
-description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, consistency check, and grumpy review. Use before merging a PR or as a final quality gate.
+description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, consistency check, grumpy review, style-guide check, and architecture check. Use before merging a PR or as a final quality gate.
 argument-hint: "[base-branch (default: origin/master)]"
 user-invocable: true
 ---
@@ -34,9 +34,9 @@ git log --oneline "$BASE"..HEAD
 
 If no changed Python files, report "no Python changes on branch" and stop.
 
-## Step 2: Launch 7 parallel agents
+## Step 2: Launch 9 parallel agents
 
-Launch ALL SEVEN agents simultaneously in a single message. Each agent works independently.
+Launch ALL NINE agents simultaneously in a single message. Each agent works independently.
 
 ### Agent 1: Static Analysis (analyse)
 
@@ -47,13 +47,17 @@ Spawn a **general-purpose agent** with this prompt:
 > Run in parallel:
 > 1. `echo "$all_files" | xargs ruff check`
 > 2. `echo "$all_files" | xargs ty check --output-format concise --extra-search-path src`
-> 3. `echo "$all_files" | xargs radon cc -s -n C`
-> 4. `echo "$all_files" | xargs complexipy -mx 15 -f`
-> 5. Forbidden patterns grep (Any, bare type:ignore, os.path, eval/exec, bare except, hasattr, global, datetime.now())
+> 3. `echo "$all_files" | xargs complexipy -mx 15 -f`
 >
 > IMPORTANT: Only report violations on lines CHANGED by this branch. Use `git diff $BASE..HEAD` to determine changed lines. Pre-existing violations are out of scope.
 >
-> Present a scorecard table + detail sections. Do NOT fix anything.
+> Present a scorecard table + detail sections, PLUS a canonical findings block:
+> ```
+> FINDINGS:
+> - [file:line] [severity: ERROR|WARN] [tool] description
+>   FIX: MANUAL — see tool output
+> ```
+> Do NOT fix anything.
 
 ### Agent 2: Test Separation
 
@@ -81,11 +85,16 @@ Spawn a **general-purpose agent** with this prompt:
 
 Spawn a **test-runner agent** with this prompt:
 
-> Run unit tests for the changed test directories:
+> Run unit tests for the changed test directories with coverage:
 > ```bash
-> uv run python -m pytest $test_dirs -x -v --tb=short
+> uv run python -m pytest $test_dirs -x -v --tb=short --cov=src --cov-report=xml
 > ```
-> Report pass/fail/skip counts and any failure tracebacks.
+> After tests pass, run diff-cover to check coverage on changed lines:
+> ```bash
+> diff-cover coverage.xml --compare-branch=$BASE --fail-under=80
+> ```
+> Report pass/fail/skip counts, any failure tracebacks, and diff-coverage percentage.
+> If pytest-cov or diff-cover are not installed, skip coverage and note it.
 
 If no test directories, skip this agent and report "tests: no test directories changed".
 
@@ -100,7 +109,12 @@ Spawn a **general-purpose agent** with this prompt:
 > 4. Known issues related to any bug fixes in the branch
 >
 > Use WebSearch, WebFetch, and context7 docs tools. **Cap at 8 total sub-agents** (max 5 library agents — prioritize unfamiliar or newly-added libraries — plus best-practices, existing-solutions, and bug-search agents).
-> Present a web confirmation report with: documentation check table, best practices findings, existing solutions, and recommendations.
+> Present a web confirmation report with: documentation check table, best practices findings, existing solutions. For actionable issues, also include a canonical findings block:
+> ```
+> FINDINGS:
+> - [file:line] [severity: WARN|INFO] description
+>   FIX: recommended fix
+> ```
 
 ### Agent 6: Grumpy Review
 
@@ -138,18 +152,61 @@ Spawn a **general-purpose agent** with this prompt:
 > - Per-file component results
 > - Summary table of all findings: `| # | File:Line | Type | Description |`
 > - Counts: files checked, components checked, clean, with findings
+> - A canonical findings block for all issues found:
+> ```
+> FINDINGS:
+> - [file:line] [severity: ERROR|WARN] description
+>   FIX: concrete fix (or MANUAL — <reason>)
+> ```
+
+### Agent 8: Style Guide Check
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Run the style-guide forbidden patterns check on these changed Python files: `$all_files`
+>
+> Run the `/analyse` skill's style-guide grep checks against the files. This covers all forbidden patterns from the Python style guide (Any, bare type:ignore, os.path, eval/exec, bare except, hasattr, isinstance, global, datetime.now(), wildcard imports).
+>
+> IMPORTANT: Only report violations on lines CHANGED by this branch. Use `git diff $BASE..HEAD` to determine changed lines. Pre-existing violations are out of scope.
+>
+> Return findings in canonical format:
+> ```
+> FINDINGS:
+> - [file:line] [severity: ERROR] description
+>   FIX: concrete fix
+> ```
+> Style guide violations are ERROR severity. Do NOT fix anything. If no findings: `FINDINGS: none`
+
+### Agent 9: Architecture Check
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Check if the project has import-linter contracts configured. Look for:
+> - `.importlinter` file in the project root
+> - `[importlinter]` section in `setup.cfg` or `pyproject.toml`
+>
+> If contracts exist, run:
+> ```bash
+> lint-imports
+> ```
+> Report any contract violations in canonical format:
+> ```
+> FINDINGS:
+> - [file:line] [severity: ERROR] description — violates contract: <contract name>
+>   FIX: move import or restructure module dependency
+> ```
+> If no contracts are configured, report: "architecture: no import-linter contracts configured — skipping".
+> If lint-imports is not installed, report: "architecture: import-linter not installed — skipping".
 
 ## Step 3: Collect and present unified report
 
 Wait for all agents to complete.
 
-### Step 3a: Deduplicate all findings
+### Step 3a: Collect and score all findings
 
-Collect findings from ALL agents (1, 5, 6, 7). Deduplicate by file:line — if multiple agents flagged the same location, merge into one finding with combined context and keep the most specific description. This prevents scoring the same issue multiple times.
+Collect `FINDINGS:` blocks from all finding-producing agents (1, 5, 7, 8, 9). Extract concrete findings from the grumpy review (agent 6) if they identify specific bugs or resource leaks. Label each finding with its source agent.
 
-### Step 3b: Score deduplicated findings
-
-Feed the deduplicated findings through the `/score-findings` sub-skill to verify and score each finding.
+Feed all collected findings (with source labels) directly to the `/score-findings` sub-skill. Score-findings handles category-aware deduplication internally — findings at the same `file:line` but from different categories (e.g., a static analysis error and a logic bug) are kept separate rather than falsely merged.
 
 ### Step 3c: Combine results into a single report
 
@@ -158,6 +215,7 @@ Feed the deduplicated findings through the `/score-findings` sub-skill to verify
 
 ### Tests
 <pass>/<fail>/<skip> — <one-line summary>
+Diff coverage: <N>% of changed lines covered (target: 80%)
 
 ### Test Separation
 <clean | N violation(s)> — <one-line summary>
@@ -170,9 +228,13 @@ Feed the deduplicated findings through the `/score-findings` sub-skill to verify
 |------|--------|
 | ruff | <count> violation(s) / clean |
 | ty | <count> error(s) / clean |
-| cyclomatic | <count> fn(s) > CC10 / clean |
 | cognitive | <count> fn(s) > CC15 / clean |
-| forbidden | <count> pattern(s) / clean |
+
+### Style Guide
+<clean | N violation(s)> — <one-line summary of forbidden pattern violations>
+
+### Architecture
+<clean | N contract violation(s) | not configured | not installed>
 
 ### Web Confirmation
 | Library | API Usage | Status |
@@ -206,8 +268,10 @@ Existing solutions: <summary or "implementation is warranted">
 ## Verdict logic
 
 - Any test failure → NOT ready
+- Diff coverage below 80% on changed lines → NOT ready (warn only if coverage tools unavailable)
 - Any ERROR-severity static analysis finding on changed lines → NOT ready
 - Any TS-001/002/003/007 (ERROR-level test separation) → NOT ready
+- Any import-linter contract violation → NOT ready
 - Any consistency check finding scored >= 80 → NOT ready
 - Only WARN/INFO findings and consistency findings scored < 80 → READY with notes
 - All clean → READY
@@ -215,8 +279,8 @@ Existing solutions: <summary or "implementation is warranted">
 ## Common Mistakes
 
 **Running agents sequentially**
-- Problem: Takes 7x longer than necessary
-- Fix: Launch ALL SEVEN agents in a single message with parallel tool calls
+- Problem: Takes 9x longer than necessary
+- Fix: Launch ALL NINE agents in a single message with parallel tool calls
 
 **Reporting pre-existing violations**
 - Problem: Noise from untouched code drowns real findings

@@ -172,7 +172,7 @@ These should NEVER appear in code:
 | `Any` | Specific type, `object`, `Protocol`, generic `T` |
 | `# type: ignore` (bare) | `# type: ignore[specific-code]` with explanation |
 | `dict` as a catch-all | `TypedDict`, dataclass, or pydantic model |
-| `isinstance()` chains | Pattern matching (`match/case`), visitor, or `Protocol` |
+| `isinstance()` | Stronger typing: `Protocol`, `@overload`, `match/case` on typed unions, or generic dispatch — if you need `isinstance`, your types are too weak |
 | `eval()` / `exec()` | Never — security risk |
 | `pickle` for untrusted data | `json`, `msgpack`, or protobuf |
 | `from X import *` | Explicit imports |
@@ -181,7 +181,7 @@ These should NEVER appear in code:
 | `datetime.now()` | `datetime.now(tz=UTC)` — always timezone-aware |
 | `global` | Module-level constants or pass state explicitly |
 | Mutable default args | `None` default + create inside function |
-| `hasattr()` | Use `Protocol`, `isinstance()` with a typed class, or direct attribute access with proper typing |
+| `hasattr()` | Use `Protocol`, direct attribute access with proper typing, or `match/case` on typed unions |
 | Nested comprehensions (2+ levels) | Extract to named helper — low cyclomatic but high cognitive complexity |
 | Long chained method calls (4+) | Break into named intermediate variables — improves readability and debuggability |
 | Dense single-expression returns | Split into steps with named locals — one operation per line for complex logic |
