@@ -21,10 +21,11 @@ configure-zellij:
     ln -sf "$HOME/dotfiles/zellij/config.r2d2.kdl" "$HOME/.config/zellij/config.kdl"; \
     echo "Applied r2d2 zellij config"; \
   else \
-    echo "Local zellij config (default stow symlink)"; \
+    ln -sf "$HOME/dotfiles/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"; \
+    echo "Applied default zellij config"; \
   fi
 
-bootstrap: setup-brew stow-dotfiles setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray enable-wireguard
+bootstrap: setup-brew stow-dotfiles setup-hooks setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray enable-wireguard
   @echo 'Bootstrap complete!'
 
 update:
@@ -50,7 +51,14 @@ doctor:
   @fc-list | grep -qi "JetBrainsMono Nerd" && echo "  nerd font ....... ok" || echo "  nerd font ....... MISSING"
   @[ -f ~/.ssh/id_ed25519 ] && echo "  ssh key ......... ok" || echo "  ssh key ......... MISSING"
   @fish -c 'type -q fisher' 2>/dev/null && echo "  fisher .......... ok" || echo "  fisher .......... MISSING"
+  @command -v gitleaks &>/dev/null && echo "  gitleaks ........ ok" || echo "  gitleaks ........ MISSING"
+  @command -v pre-commit &>/dev/null && echo "  pre-commit ...... ok" || echo "  pre-commit ...... MISSING"
   @echo "Done."
+
+setup-hooks:
+  @echo "Installing pre-commit hooks..."
+  @pre-commit install
+  @echo "Pre-commit hooks installed."
 
 setup-brew:
   @echo "Checking if Homebrew is installed..."

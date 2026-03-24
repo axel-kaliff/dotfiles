@@ -15,3 +15,8 @@ bash
 claude
 scripts
 CHEATSHEET\.md
+zellij/config\.r2d2\.kdl
+zellij/config\.kdl
+\.pre-commit-config\.yaml
+claude_todo\.md
+claude_readme\.md
