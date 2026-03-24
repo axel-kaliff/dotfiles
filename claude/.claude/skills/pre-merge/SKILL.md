@@ -1,6 +1,6 @@
 ---
 name: pre-merge
-description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, consistency check, grumpy review, style-guide check, and architecture check. Use before merging a PR or as a final quality gate.
+description: Run all analysis skills in parallel before merging a branch — analyse, check-test-separation, dedup, unit tests, web confirmation, consistency check, grumpy review, style-guide check, architecture check, and semgrep SAST. Use before merging a PR or as a final quality gate.
 argument-hint: "[base-branch (default: origin/master)]"
 user-invocable: true
 ---
@@ -34,9 +34,9 @@ git log --oneline "$BASE"..HEAD
 
 If no changed Python files, report "no Python changes on branch" and stop.
 
-## Step 2: Launch 9 parallel agents
+## Step 2: Launch 10 parallel agents
 
-Launch ALL NINE agents simultaneously in a single message. Each agent works independently.
+Launch ALL TEN agents simultaneously in a single message. Each agent works independently.
 
 ### Agent 1: Static Analysis (analyse)
 
@@ -198,13 +198,37 @@ Spawn a **general-purpose agent** with this prompt:
 > If no contracts are configured, report: "architecture: no import-linter contracts configured — skipping".
 > If lint-imports is not installed, report: "architecture: import-linter not installed — skipping".
 
+### Agent 10: Semgrep SAST
+
+Spawn a **general-purpose agent** with this prompt:
+
+> Run semgrep security analysis on the branch changes. Use `--baseline-commit` to only report NEW findings.
+>
+> ```bash
+> # Check if semgrep is installed
+> command -v semgrep >/dev/null 2>&1 || { echo "semgrep not installed — skipping SAST"; exit 0; }
+>
+> # Run curated security rulesets — only new findings
+> semgrep --config p/python --config p/owasp-top-ten --config p/security-audit \
+>   --baseline-commit $BASE --json --quiet $src_files 2>&1
+> ```
+>
+> Parse semgrep JSON output and present findings in canonical format:
+> ```
+> FINDINGS:
+> - [file:line] [severity: ERROR|WARN] [semgrep-rule-id] description
+>   FIX: recommended remediation from semgrep message
+> ```
+> Map semgrep ERROR severity to ERROR, WARNING to WARN, INFO to INFO.
+> If semgrep is not installed, report: "SAST: semgrep not installed — skipping". Do NOT fix anything.
+
 ## Step 3: Collect and present unified report
 
 Wait for all agents to complete.
 
 ### Step 3a: Collect and score all findings
 
-Collect `FINDINGS:` blocks from all finding-producing agents (1, 5, 7, 8, 9). Extract concrete findings from the grumpy review (agent 6) if they identify specific bugs or resource leaks. Label each finding with its source agent.
+Collect `FINDINGS:` blocks from all finding-producing agents (1, 5, 7, 8, 9, 10). Extract concrete findings from the grumpy review (agent 6) if they identify specific bugs or resource leaks. Label each finding with its source agent.
 
 Feed all collected findings (with source labels) directly to the `/score-findings` sub-skill. Score-findings handles category-aware deduplication internally — findings at the same `file:line` but from different categories (e.g., a static analysis error and a logic bug) are kept separate rather than falsely merged.
 
@@ -235,6 +259,9 @@ Diff coverage: <N>% of changed lines covered (target: 80%)
 
 ### Architecture
 <clean | N contract violation(s) | not configured | not installed>
+
+### SAST (Semgrep)
+<clean | N finding(s) | not installed>
 
 ### Web Confirmation
 | Library | API Usage | Status |
@@ -272,6 +299,7 @@ Existing solutions: <summary or "implementation is warranted">
 - Any ERROR-severity static analysis finding on changed lines → NOT ready
 - Any TS-001/002/003/007 (ERROR-level test separation) → NOT ready
 - Any import-linter contract violation → NOT ready
+- Any semgrep ERROR-severity SAST finding → NOT ready
 - Any consistency check finding scored >= 80 → NOT ready
 - Only WARN/INFO findings and consistency findings scored < 80 → READY with notes
 - All clean → READY
@@ -279,8 +307,8 @@ Existing solutions: <summary or "implementation is warranted">
 ## Common Mistakes
 
 **Running agents sequentially**
-- Problem: Takes 9x longer than necessary
-- Fix: Launch ALL NINE agents in a single message with parallel tool calls
+- Problem: Takes 10x longer than necessary
+- Fix: Launch ALL TEN agents in a single message with parallel tool calls
 
 **Reporting pre-existing violations**
 - Problem: Noise from untouched code drowns real findings
