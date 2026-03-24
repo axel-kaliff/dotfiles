@@ -22,9 +22,9 @@ targets=$(echo -e "$changed\n$uncommitted\n$staged" | sort -u | grep -v '^$')
 
 If no targets, report "no Python changes found" and stop.
 
-## Phase 2: Launch 5 parallel analysis agents
+## Phase 2: Launch 7 parallel analysis agents
 
-Launch ALL FIVE agents simultaneously in a single message. Each returns a compact findings list.
+Launch ALL SEVEN agents simultaneously in a single message (Agents 1, 2, 3a, 3b, 3c, 4, 5). Each returns a compact findings list.
 
 ### Agent 1: Static Analysis
 
@@ -57,28 +57,34 @@ Spawn a **general-purpose agent** with this prompt:
 > ```
 > Skip confirmations that everything is correct. Only report issues. Max 10 items.
 
-### Agent 3: Semantic Review
+### Agent 3: Semantic Review (multi-pass voting)
 
-Spawn a **code-reviewer agent** (subagent_type `code-reviewer`) with this prompt:
+Spawn THREE **code-reviewer agents** (subagent_type `code-reviewer`) in parallel, each with a different diff presentation order. This reduces false positives by ~87% — only findings that appear in 2+ passes survive.
 
-> Review the branch changes vs main/master. Skip anything linters catch (ruff, ty, complexity, forbidden patterns are handled separately).
+**Agent 3a** — original diff order:
+
+> Review the branch changes vs main/master. Process files in alphabetical order.
+> Skip anything linters catch (ruff, ty, complexity, forbidden patterns are handled separately).
 >
-> Focus ONLY on:
-> - Logic errors and behavioral regressions
-> - Missing error handling at system boundaries
-> - Thread safety and race conditions
-> - Security issues
-> - Files over 300 lines
+> Focus ONLY on: logic errors, behavioral regressions, missing error handling at system boundaries, thread safety, race conditions, security issues, files over 300 lines.
 >
 > Return findings in canonical format:
 > ```
 > FINDINGS:
 > - [file:line] [severity: ERROR] description
 >   FIX: exact code change needed
-> - [file:line] [severity: WARN] description
->   FIX: exact code change needed
 > ```
 > Map critical issues to ERROR, warnings to WARN. If no findings: `FINDINGS: none`
+
+**Agent 3b** — reversed file order:
+
+> Same prompt as 3a, but: "Process files in REVERSE alphabetical order (z→a). Start with the last file."
+
+**Agent 3c** — function-level focus:
+
+> Same prompt as 3a, but: "For each file, review functions from BOTTOM to TOP (last function first). This ensures you give equal attention to code at the end of files."
+
+**After all three return:** Intersect findings by `file:line`. Keep ONLY findings that appear in 2+ of the 3 passes. Use the most detailed description and fix from any pass.
 
 ### Agent 4: Grumpy Review
 
@@ -106,7 +112,9 @@ Spawn a **general-purpose agent** with this prompt:
 
 ## Phase 3: Consolidate findings
 
-Wait for all 5 agents. Build a single deduplicated fix list.
+Wait for all 7 agents. Build a single deduplicated fix list.
+
+**Semantic vote step:** Before consolidating, intersect Agent 3a/3b/3c findings by `file:line`. Only keep semantic findings that appear in 2+ of the 3 passes. Discard single-pass-only findings (likely false positives).
 
 All finding-producing agents use canonical format (`FINDINGS:` blocks with severity and FIX lines). Deduplicate by `file:line:source` — findings from different sources at the same line are kept separate (e.g., a static analysis error and a semantic logic bug are different issues even if they're on the same line).
 
@@ -189,8 +197,12 @@ Two-column table of findings — what was found and whether it was fixed or need
 ## Common Mistakes
 
 **Running agents sequentially**
-- Problem: Takes 5x longer than necessary
-- Fix: Launch ALL FIVE analysis agents in a single message with parallel tool calls
+- Problem: Takes 7x longer than necessary
+- Fix: Launch ALL SEVEN analysis agents (1, 2, 3a, 3b, 3c, 4, 5) in a single message with parallel tool calls
+
+**Skipping the vote intersection step**
+- Problem: Single-pass semantic findings have high false positive rate
+- Fix: ALWAYS intersect 3a/3b/3c findings — only keep those in 2+ passes
 
 **Dumping raw tool output into the fix agent**
 - Problem: Fix agent drowns in noise, misses or misapplies fixes
