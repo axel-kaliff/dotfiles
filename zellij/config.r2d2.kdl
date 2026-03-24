@@ -301,7 +301,7 @@ load_plugins {
 }
 
 // Shell: fish preferred (use full path — Zellij needs a binary, not a script)
-default_shell "/home/linuxbrew/.linuxbrew/bin/fish"
+default_shell "/space/personal/akaliff/.linuxbrew/bin/fish"
 
 // r2d2-specific settings
 theme "nightfox"

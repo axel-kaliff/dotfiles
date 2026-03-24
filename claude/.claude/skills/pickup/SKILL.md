@@ -15,9 +15,20 @@ Orient yourself from a handoff document left by a previous agent, then confirm t
 
 ### Step 1: Read Handoff
 
-Read `HANDOFF.md` at the project root.
+Look for `HANDOFF.md` in this order:
+1. Current working directory (worktree root)
+2. Project root (`$PROJECT_ROOT` or the git toplevel)
 
-If it doesn't exist, tell the user: "No HANDOFF.md found. Can you describe what you were working on?"
+```bash
+# Try worktree root first, then project root
+if [ -f HANDOFF.md ]; then
+  echo "Found HANDOFF.md in current directory"
+elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/HANDOFF.md" ]; then
+  echo "Found HANDOFF.md at project root"
+fi
+```
+
+Read whichever is found first. If neither exists, tell the user: "No HANDOFF.md found. Can you describe what you were working on?"
 
 ### Step 2: Verify State
 

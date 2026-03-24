@@ -5,7 +5,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash /var/home/bazzite/.claude/statusline-command.sh"
+    "command": "bash /home/akaliff/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
     "context7-plugin@context7-marketplace": true,
