@@ -57,11 +57,17 @@ if ! git check-ignore -q "$PROJECT_ROOT/.worktrees" 2>/dev/null; then
 fi
 ```
 
-### Step 4: Create Worktree from Existing Branch
+### Step 4: Detach HEAD and Create Worktree
+
+Git refuses to create a worktree for a branch that is currently checked out.
+Detach HEAD first, then create the worktree, then check out master.
 
 ```bash
 # Create parent directories if nested path (e.g., logging/refactor-logging)
 mkdir -p "$(dirname "$WORKTREE_PATH")"
+
+# Detach HEAD so the branch is free for the worktree
+git checkout --detach
 
 # Create worktree using the EXISTING branch (no -b flag)
 git worktree add "$WORKTREE_PATH" "$CURRENT_BRANCH"
@@ -104,6 +110,10 @@ To work on the branch:  cd $PROJECT_ROOT/.worktrees/<path>
 ### Using `-b` flag with existing branch
 - **Problem:** `git worktree add -b <branch>` tries to create a new branch and fails if it exists
 - **Fix:** Use `git worktree add <path> <branch>` without `-b` for existing branches
+
+### Not detaching HEAD before creating worktree
+- **Problem:** `git worktree add <path> <branch>` fails with "already checked out" error
+- **Fix:** Run `git checkout --detach` first to free the branch, then create worktree
 
 ### Not handling nested path arguments
 - **Problem:** `mkdir -p` needed for paths like `logging/refactor-logging`

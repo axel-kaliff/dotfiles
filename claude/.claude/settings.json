@@ -18,11 +18,13 @@
     "deny": [
       "Bash(rm -rf:*)",
       "Bash(rm -r:*)",
-      "Bash(git push:*)",
       "Bash(git clean:*)",
       "Bash(git reset --hard:*)",
       "Bash(git checkout -- :*)",
       "Bash(git restore:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
     ]
   },
   "statusLine": {
