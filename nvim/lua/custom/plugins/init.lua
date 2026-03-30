@@ -94,14 +94,37 @@ return {
     keys = {
       { '<leader>um', '<cmd>Noice history<cr>', desc = 'Message History (Noice)' },
       { '<leader>ud', '<cmd>Noice dismiss<cr>', desc = 'Dismiss Messages (Noice)' },
-      { '<c-d>', function() if not require('noice.lsp').scroll(4) then return '<c-d>' end end, silent = true, expr = true, desc = 'Scroll down (docs/hover)', mode = { 'n', 'i', 's' } },
-      { '<c-u>', function() if not require('noice.lsp').scroll(-4) then return '<c-u>' end end, silent = true, expr = true, desc = 'Scroll up (docs/hover)', mode = { 'n', 'i', 's' } },
+      {
+        '<c-d>',
+        function()
+          if not require('noice.lsp').scroll(4) then
+            return vim.fn.mode() == 'n' and '<c-d>zz' or '<c-d>'
+          end
+        end,
+        silent = true,
+        expr = true,
+        desc = 'Scroll down and center',
+        mode = { 'n', 'i', 's' },
+      },
+      {
+        '<c-u>',
+        function()
+          if not require('noice.lsp').scroll(-4) then
+            return vim.fn.mode() == 'n' and '<c-u>zz' or '<c-u>'
+          end
+        end,
+        silent = true,
+        expr = true,
+        desc = 'Scroll up and center',
+        mode = { 'n', 'i', 's' },
+      },
     },
     opts = {
       lsp = {
         override = {
           ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
           ['vim.lsp.util.stylize_markdown'] = true,
+          ['cmp.entry.get_documentation'] = true,
         },
       },
       presets = {
@@ -249,6 +272,12 @@ return {
     'folke/persistence.nvim',
     event = 'BufReadPre',
     opts = {},
+    keys = {
+      { '<leader>qs', function() require('persistence').load() end, desc = 'Load session (current dir)' },
+      { '<leader>qS', function() require('persistence').select() end, desc = 'Select and load session' },
+      { '<leader>ql', function() require('persistence').load { last = true } end, desc = 'Load last session' },
+      { '<leader>qd', function() require('persistence').stop() end, desc = 'Stop session auto-save' },
+    },
   },
 
   {

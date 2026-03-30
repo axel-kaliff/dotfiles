@@ -60,6 +60,8 @@ vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
 vim.keymap.set('n', '<leader>bo', '<cmd>BufferLineCloseOthers<cr>', { desc = 'Buffer Close Others' })
 vim.keymap.set('n', '<leader>bl', '<cmd>BufferLineCloseLeft<cr>', { desc = 'Buffer Close Left' })
 vim.keymap.set('n', '<leader>br', '<cmd>BufferLineCloseRight<cr>', { desc = 'Buffer Close Right' })
+vim.keymap.set('n', ']b', '<cmd>BufferLineCycleNext<cr>', { desc = 'Next buffer' })
+vim.keymap.set('n', '[b', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Previous buffer' })
 
 vim.keymap.set('n', '<leader>e', '<cmd>Oil<cr>', { desc = 'File explorer (Oil)' })
 
@@ -84,6 +86,7 @@ vim.keymap.set('x', 'p', '"_dP', { desc = 'Paste without losing register' })
 vim.keymap.set('n', '<leader>w-', '<cmd>split<cr>', { desc = 'Split horizontal' })
 vim.keymap.set('n', '<leader>w|', '<cmd>vsplit<cr>', { desc = 'Split vertical' })
 vim.keymap.set('n', '<leader>wd', '<cmd>close<cr>', { desc = 'Close split' })
+vim.keymap.set('n', '<leader>w=', '<C-w>=', { desc = 'Equalize splits' })
 
 -- Quickfix navigation
 vim.keymap.set('n', ']q', '<cmd>cnext<cr>zz', { desc = 'Next quickfix' })
@@ -96,23 +99,6 @@ vim.keymap.set('n', ']d', function() vim.diagnostic.jump { count = 1 } end, { de
 vim.keymap.set('n', '[d', function() vim.diagnostic.jump { count = -1 } end, { desc = 'Previous diagnostic' })
 vim.keymap.set('n', ']e', function() vim.diagnostic.jump { count = 1, severity = vim.diagnostic.severity.ERROR } end, { desc = 'Next error' })
 vim.keymap.set('n', '[e', function() vim.diagnostic.jump { count = -1, severity = vim.diagnostic.severity.ERROR } end, { desc = 'Previous error' })
-
--- SESSION MANAGEMENT
-vim.keymap.set('n', '<leader>qs', function()
-  require('persistence').load()
-end, { desc = 'Load session (current dir)' })
-
-vim.keymap.set('n', '<leader>qS', function()
-  require('persistence').select()
-end, { desc = 'Select and load session' })
-
-vim.keymap.set('n', '<leader>ql', function()
-  require('persistence').load { last = true }
-end, { desc = 'Load last session' })
-
-vim.keymap.set('n', '<leader>qd', function()
-  require('persistence').stop()
-end, { desc = 'Stop session auto-save' })
 
 -- Terminal escape
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
@@ -135,8 +121,17 @@ vim.keymap.set('n', '<leader>td', function()
   end
 end, { desc = '[T]oggle [D]iagnostic virtual text' })
 
+vim.keymap.set('n', '<leader>tw', function()
+  vim.o.wrap = not vim.o.wrap
+end, { desc = '[T]oggle [W]ord wrap' })
+
+vim.keymap.set('n', '<leader>ts', function()
+  vim.o.spell = not vim.o.spell
+end, { desc = '[T]oggle [S]pell check' })
+
 -- Lazy plugin manager
 vim.keymap.set('n', '<leader>ul', '<cmd>Lazy<cr>', { desc = 'Lazy Plugin Manager' })
+vim.keymap.set('n', '<leader>uM', '<cmd>Mason<cr>', { desc = 'Mason Package Manager' })
 
 -- Undo tree (built-in in nvim 0.12)
 vim.keymap.set('n', '<leader>uu', '<cmd>Undotree<cr>', { desc = 'Undo Tree' })
@@ -218,6 +213,9 @@ require('lazy').setup({
         { '<leader>b', group = '[B]uffer' },
         { '<leader>w', group = '[W]indow' },
         { '<leader>d', group = '[D]ebug' },
+        { '<leader>f', desc = '[F]ormat' },
+        { '<leader>a', desc = 'Swap next [a]rgument' },
+        { '<leader>A', desc = 'Swap prev [A]rgument' },
         { 'gr', group = 'LSP (Go to / Refactor)' },
         { 's', desc = 'Flash', mode = { 'n', 'x', 'o' } },
         { '-', desc = 'File Explorer (Oil)' },
@@ -345,7 +343,9 @@ require('lazy').setup({
 
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
+        'stylua',
+        'shellcheck',
+        'ruff',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -394,6 +394,10 @@ require('lazy').setup({
         lua = { 'stylua' },
         python = { 'ruff_format' },
         fish = { 'fish_indent' },
+        go = { 'goimports', 'gofumpt' },
+        rust = { 'rustfmt' },
+        javascript = { 'prettier' },
+        typescript = { 'prettier' },
       },
     },
   },
@@ -457,7 +461,16 @@ require('lazy').setup({
     },
   },
 
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = { signs = false },
+    keys = {
+      { ']t', function() require('todo-comments').jump_next() end, desc = 'Next todo comment' },
+      { '[t', function() require('todo-comments').jump_prev() end, desc = 'Previous todo comment' },
+    },
+  },
 
   {
     'echasnovski/mini.nvim',
