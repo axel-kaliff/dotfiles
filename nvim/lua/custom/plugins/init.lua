@@ -1,24 +1,6 @@
 return {
 
-  {
-    'nvimdev/dashboard-nvim',
-    event = 'VimEnter',
-    dependencies = { { 'nvim-tree/nvim-web-devicons' } },
-    config = function()
-      require('dashboard').setup {
-        theme = 'hyper',
-        config = {
-          week_header = { enable = true },
-          shortcut = {
-            { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
-            { icon = ' ', icon_hl = '@variable', desc = 'Files', group = 'Label', action = 'FzfLua files', key = 'f' },
-            { desc = ' Tree', group = 'Oil', action = 'Oil', key = 'e' },
-            { desc = '󰩈 Exit', group = 'ErrorMsg', action = 'q', key = 'q' },
-          },
-        },
-      }
-    end,
-  },
+  -- Dashboard handled by snacks.nvim (see below)
 
   -- fzf-lua: replaces telescope with native fzf performance
   {
@@ -90,11 +72,14 @@ return {
       terminal = { enabled = true },
     },
     keys = {
-      { '<leader>cc', function() Snacks.zen() end, desc = 'Toggle Zen Mode' },
+      { '<leader>tz', function() Snacks.zen() end, desc = 'Toggle Zen Mode' },
       { '<leader>gg', function() Snacks.lazygit() end, desc = 'Lazygit' },
       { '<leader>gl', function() Snacks.lazygit.log() end, desc = 'Lazygit Log' },
       { '<leader>tt', function() Snacks.terminal() end, desc = 'Toggle Terminal' },
       { '<leader>un', function() Snacks.notifier.show_history() end, desc = 'Notification History' },
+      { '<leader>uN', function() Snacks.notifier.hide() end, desc = 'Dismiss Notifications' },
+      { ']w', function() Snacks.words.jump(1) end, desc = 'Next word reference' },
+      { '[w', function() Snacks.words.jump(-1) end, desc = 'Previous word reference' },
     },
   },
 
@@ -104,6 +89,12 @@ return {
     event = 'VeryLazy',
     dependencies = {
       'MunifTanjim/nui.nvim',
+    },
+    keys = {
+      { '<leader>um', '<cmd>Noice history<cr>', desc = 'Message History (Noice)' },
+      { '<leader>ud', '<cmd>Noice dismiss<cr>', desc = 'Dismiss Messages (Noice)' },
+      { '<c-d>', function() if not require('noice.lsp').scroll(4) then return '<c-d>' end end, silent = true, expr = true, desc = 'Scroll down (docs/hover)', mode = { 'n', 'i', 's' } },
+      { '<c-u>', function() if not require('noice.lsp').scroll(-4) then return '<c-u>' end end, silent = true, expr = true, desc = 'Scroll up (docs/hover)', mode = { 'n', 'i', 's' } },
     },
     opts = {
       lsp = {
@@ -147,13 +138,37 @@ return {
   -- diffview.nvim: tabpage diff review and merge conflict resolution
   {
     'sindrets/diffview.nvim',
-    cmd = { 'DiffviewOpen', 'DiffviewFileHistory' },
+    cmd = { 'DiffviewOpen', 'DiffviewFileHistory', 'DiffviewClose' },
     keys = {
-      { '<leader>gd', '<cmd>DiffviewOpen<cr>', desc = 'Diffview Open' },
+      {
+        '<leader>gd',
+        function()
+          local lib = require 'diffview.lib'
+          if lib.get_current_view() then
+            vim.cmd.DiffviewClose()
+          else
+            vim.cmd.DiffviewOpen()
+          end
+        end,
+        desc = 'Diffview Toggle',
+      },
+      { '<leader>gq', '<cmd>DiffviewClose<cr>', desc = 'Diffview Close' },
       { '<leader>gh', '<cmd>DiffviewFileHistory %<cr>', desc = 'File History (current)' },
       { '<leader>gH', '<cmd>DiffviewFileHistory<cr>', desc = 'File History (repo)' },
     },
-    opts = {},
+    opts = {
+      keymaps = {
+        view = {
+          { 'n', 'q', '<cmd>DiffviewClose<cr>', { desc = 'Close Diffview' } },
+        },
+        file_panel = {
+          { 'n', 'q', '<cmd>DiffviewClose<cr>', { desc = 'Close Diffview' } },
+        },
+        file_history_panel = {
+          { 'n', 'q', '<cmd>DiffviewClose<cr>', { desc = 'Close Diffview' } },
+        },
+      },
+    },
   },
 
   -- Bufferline
@@ -321,6 +336,14 @@ return {
     opts = {},
     keys = {
       { '<leader>sR', function() require('grug-far').open() end, desc = 'Search and Replace (grug-far)' },
+      {
+        '<leader>sR',
+        function()
+          require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' }, visualSelectionUsed = true }
+        end,
+        mode = 'v',
+        desc = 'Search and Replace selection (grug-far)',
+      },
     },
   },
 
