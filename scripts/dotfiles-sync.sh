@@ -18,7 +18,7 @@ cd "$DOTFILES_DIR"
 # Auto-commit any local changes
 if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
     git add -A
-    git commit -m "auto-sync from $(hostname) at $(date -Is)" --no-gpg-sign
+    git commit -m "auto-sync from $(hostname) at $(date -Is)" --no-gpg-sign --no-verify
     log "OK: auto-committed local changes"
 fi
 

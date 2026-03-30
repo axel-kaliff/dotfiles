@@ -314,6 +314,9 @@ ui {
 show_startup_tips false
 focus_follows_mouse true
 mouse_click_through true
+scrollback_editor "nvim +G"
+copy_on_select false
+copy_clipboard "system"
 
 // Web server for session sharing
 web_server true

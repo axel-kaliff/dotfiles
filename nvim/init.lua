@@ -119,6 +119,24 @@ vim.o.showmode = false
 --  See `:help 'clipboard'`
 vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
+
+  -- Force OSC 52 clipboard provider inside zellij sessions.
+  -- Zellij forwards OSC 52 sequences to the outer terminal but does not
+  -- advertise the "Ms" capability, so neovim's auto-detection fails.
+  -- See: https://github.com/zellij-org/zellij/issues/3951
+  if vim.env.ZELLIJ then
+    vim.g.clipboard = {
+      name = 'OSC 52',
+      copy = {
+        ['+'] = require('vim.ui.clipboard.osc52').copy('+'),
+        ['*'] = require('vim.ui.clipboard.osc52').copy('*'),
+      },
+      paste = {
+        ['+'] = require('vim.ui.clipboard.osc52').paste('+'),
+        ['*'] = require('vim.ui.clipboard.osc52').paste('*'),
+      },
+    }
+  end
 end)
 
 -- Enable break indent

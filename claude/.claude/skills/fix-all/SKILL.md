@@ -23,7 +23,7 @@ If there are findings, proceed to Step 2.
 
 ## Step 2: Review and Fix
 
-Run the `/review-fix` skill. This launches the full 7-agent pipeline (static, web, semantic with multi-pass voting, grumpy, style) and applies fixes.
+Run the `/review-fix` skill (pass `--sequential` through if present in `$ARGUMENTS`). This launches the full 7-agent pipeline (static, web, semantic with multi-pass voting, grumpy, style) and applies fixes.
 
 After review-fix completes, re-run `/analyse` on the same scope to verify fixes resolved the issues.
 

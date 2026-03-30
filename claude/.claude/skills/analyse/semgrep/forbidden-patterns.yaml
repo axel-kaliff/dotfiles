@@ -20,11 +20,11 @@ rules:
     severity: ERROR
     languages: [python]
 
-  # 3. os.path usage (use pathlib.Path instead)
+  # 3. os.path usage (prefer pathlib.Path or project path utility)
   - id: no-os-path
     pattern: os.path
-    message: "os.path is forbidden — use pathlib.Path"
-    severity: ERROR
+    message: "os.path detected — use pathlib.Path or project-specific path utility (e.g. expanded_path)"
+    severity: WARNING
     languages: [python]
 
   # 4. datetime.now() without tz (must be timezone-aware)

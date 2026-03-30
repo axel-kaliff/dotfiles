@@ -1,7 +1,29 @@
 {
   "env": {
     "MAX_THINKING_TOKENS": "10000",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -r:*)",
+      "Bash(git push:*)",
+      "Bash(git clean:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout -- :*)",
+      "Bash(git restore:*)"
+    ]
   },
   "statusLine": {
     "type": "command",
@@ -9,13 +31,21 @@
   },
   "enabledPlugins": {
     "context7-plugin@context7-marketplace": true,
-    "pyright-lsp@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": true,
+    "grade@sics-cc-plugin-local": true,
+    "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
       "source": {
         "source": "github",
         "repo": "upstash/context7"
+      }
+    },
+    "sics-cc-plugin-local": {
+      "source": {
+        "source": "directory",
+        "path": "/home/akaliff/sics-cc-plugin"
       }
     }
   }

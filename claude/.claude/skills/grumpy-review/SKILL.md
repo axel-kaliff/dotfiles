@@ -33,7 +33,7 @@ Pass this prompt to the agent:
 > 4. Trace every error path and resource lifecycle — this is the highest-value step
 > 5. Deliver your verdict with severity tags and line references
 >
-> Focus on correctness bugs, resource leaks, and race conditions. Do not comment on style, naming, or formatting.
+> Focus on correctness bugs, resource leaks, race conditions, and DRY violations (removing calls to shared utilities and inlining logic that already exists elsewhere in the codebase). Do not comment on style, naming, or formatting.
 > {If called from a pipeline (pre-merge, review-fix): "Limit output to your top 10 findings sorted by severity. Keep total output under 80 lines."}
 
 ## Step 3: Present the review

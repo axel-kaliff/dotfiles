@@ -9,6 +9,11 @@ user-invocable: true
 
 Run all quality gates in parallel and present a unified report. No fixes — reporting only.
 
+**Disk-persisted mode:** If `$ARGUMENTS` contains `--sequential` or `--batch`, strip the flag and delegate:
+run `/review-seq --mode pre-merge [--sequential] $remaining_args` and stop. The disk-persisted pipeline
+runs tools in batches (default) or one at a time (--sequential), with file persistence and context
+compaction — slower but loses no findings to context overflow.
+
 **Announce at start:** "Running pre-merge analysis."
 
 ## Step 1: Gather scope

@@ -88,6 +88,7 @@ For EACH changed file (up to the cap), spawn a **general-purpose agent** (model:
 > > 6. **Error path consistency** — Do except blocks handle the right exceptions? Is error state cleaned up?
 > > 7. **Verb-behavior alignment** — Does the function name prefix (get/set/create/delete/validate/is/has/send/check) match what the body actually does? Does `is_valid` actually return a bool? Does `get_X` actually return X without side effects? Does `send_Y` actually send? Misleading verb prefixes are bugs.
 > > 8. **Sibling consistency** — Compared to the sibling signatures provided: is the naming convention consistent? If siblings use `user_id`, does this component use `uid` for the same concept? Are similar functions structured similarly?
+> > 9. **Type regression** — Does the diff widen a parameter or return type? If the old signature used `Literal["a", "b"]` and the new one uses `str`, or `SomeProtocol` became `object`, flag it — type narrowing catches bugs and documents intent. Only flag when the diff explicitly changes a type annotation to something broader.
 > >
 > > For each finding, rate confidence:
 > > - **HIGH**: Definitely wrong — evidence is in the code

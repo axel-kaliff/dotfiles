@@ -70,7 +70,7 @@ echo "$targets" | xargs semgrep \
 The rules file (`~/.claude/skills/analyse/semgrep/forbidden-patterns.yaml`) defines 10 checks:
 1. `no-any-type` — Any usage in typed code (excludes tests/)
 2. `no-bare-type-ignore` — bare `# type: ignore` without error code
-3. `no-os-path` — os.path usage (use pathlib.Path)
+3. `no-os-path` — os.path usage (use pathlib.Path or project path utility)
 4. `no-naive-datetime-now` — datetime.now() without tz
 5. `no-wildcard-import` — `from X import *`
 6. `no-bare-except` — bare except or except Exception

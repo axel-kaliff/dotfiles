@@ -9,6 +9,11 @@ user-invocable: true
 
 Orchestrator that delegates analysis to focused sub-agents, then applies fixes with a clean context.
 
+**Disk-persisted mode:** If `$ARGUMENTS` contains `--sequential` or `--batch`, strip the flag and delegate:
+run `/review-seq --mode review-fix [--sequential] $remaining_args` and stop. The disk-persisted pipeline
+runs tools in batches (default) or one at a time (--sequential), with file persistence and context
+compaction — slower but loses no findings to context overflow.
+
 **Announce at start:** "Running review-fix pipeline."
 
 ## Phase 1: Gather scope
@@ -66,7 +71,12 @@ Spawn THREE **code-reviewer agents** (subagent_type `code-reviewer`) in parallel
 > Review the branch changes vs main/master. Process files in alphabetical order.
 > Skip anything linters catch (ruff, ty, complexity, forbidden patterns are handled separately).
 >
-> Focus ONLY on: logic errors, behavioral regressions, missing error handling at system boundaries, thread safety, race conditions, security issues, files over 300 lines.
+> Focus ONLY on:
+> - Logic errors, behavioral regressions, missing error handling at system boundaries
+> - Thread safety, race conditions, security issues, files over 300 lines
+> - **Type regressions**: when a diff replaces a narrow type (`Literal[...]`, specific union, constrained generic) with a broader type (`str`, `Any`, `object`, bare `dict`), flag as WARN — stricter types catch bugs at type-check time and document valid values
+> - **Inlined shared utilities**: when a diff removes a call to an existing utility function and inlines its logic, flag as WARN — this violates DRY and loses the utility's documentation/test coverage
+> - **Path construction**: when a diff constructs file paths via f-string concatenation (`f'{dir}/{file}'`) or string `+` instead of the project's path utility, flag as WARN — raw concatenation breaks on edge cases (trailing slashes, tilde, Windows)
 >
 > Return findings in canonical format:
 > ```

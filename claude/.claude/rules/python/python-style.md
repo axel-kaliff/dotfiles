@@ -177,7 +177,7 @@ These should NEVER appear in code:
 | `pickle` for untrusted data | `json`, `msgpack`, or protobuf |
 | `from X import *` | Explicit imports |
 | Bare `except:` | `except SpecificError:` |
-| `os.path` | `pathlib.Path` |
+| `os.path` for path construction | `pathlib.Path` or project path utility (e.g. `expanded_path`) — `os.path` for fs checks like `isdir`/`exists` is acceptable when project convention prefers str paths |
 | `datetime.now()` | `datetime.now(tz=UTC)` — always timezone-aware |
 | `global` | Module-level constants or pass state explicitly |
 | Mutable default args | `None` default + create inside function |

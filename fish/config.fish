@@ -357,6 +357,7 @@ end
 # ─── Keybindings ─────────────────────────────────────────────────────────────
 
 bind \cs '__ethp_commandline_toggle_sudo'
+bind \ee 'nvim; commandline -f repaint'
 
 # ─── Environment ─────────────────────────────────────────────────────────────
 
