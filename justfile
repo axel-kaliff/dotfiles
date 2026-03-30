@@ -24,7 +24,7 @@ configure-zellij:
     echo "Local zellij config (default stow symlink)"; \
   fi
 
-bootstrap: setup-brew stow-dotfiles setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray
+bootstrap: setup-brew stow-dotfiles setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray enable-wireguard
   @echo 'Bootstrap complete!'
 
 update:
@@ -151,6 +151,11 @@ enable-tailscale-systray:
   @sudo tailscale set --operator=$USER
   @tailscale configure systray --enable-startup=systemd
   @systemctl --user enable --now tailscale-systray
+
+enable-wireguard:
+  @echo "Enabling WireGuard (wg0)..."
+  @sudo systemctl enable --now wg-quick@wg0
+  @echo "WireGuard wg0 enabled and started"
 
 install-bbrew:
   @/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Valkyrie00/bold-brew/main/install.sh)"
