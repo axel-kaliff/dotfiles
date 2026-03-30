@@ -9,7 +9,6 @@ return {
         python = { 'ruff' },
         sh = { 'shellcheck' },
         bash = { 'shellcheck' },
-        fish = { 'shellcheck' },
         -- markdown = { 'markdownlint' },
         lua = { 'luacheck' },
       }

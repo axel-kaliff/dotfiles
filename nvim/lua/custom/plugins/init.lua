@@ -39,6 +39,7 @@ return {
       map('n', '<leader>sn', function()
         fzf.files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+      map('n', '<leader>st', '<cmd>TodoFzfLua<cr>', { desc = '[S]earch [T]odo comments' })
     end,
   },
 
@@ -101,7 +102,6 @@ return {
         override = {
           ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
           ['vim.lsp.util.stylize_markdown'] = true,
-          ['cmp.entry.get_documentation'] = true,
         },
       },
       presets = {
@@ -177,7 +177,17 @@ return {
     version = '*',
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
-      require('bufferline').setup {}
+      require('bufferline').setup {
+        options = {
+          diagnostics = 'nvim_lsp',
+          show_close_icon = false,
+          show_buffer_close_icons = false,
+          separator_style = 'thin',
+          offsets = {
+            { filetype = 'oil', text = 'File Explorer', highlight = 'Directory' },
+          },
+        },
+      }
     end,
   },
 
@@ -212,7 +222,15 @@ return {
     },
   },
 
-  { 'EdenEast/nightfox.nvim' },
+  {
+    'EdenEast/nightfox.nvim',
+    priority = 1000,
+    lazy = false,
+    config = function()
+      require('nightfox').setup {}
+      vim.cmd.colorscheme 'nordfox'
+    end,
+  },
 
   {
     'folke/trouble.nvim',
@@ -258,6 +276,8 @@ return {
           -- Disable defaults that conflict with zellij-nav
           ['<C-h>'] = false,
           ['<C-l>'] = false,
+          ['<C-v>'] = { 'actions.select', opts = { vertical = true }, desc = 'Open in vsplit' },
+          ['<C-x>'] = { 'actions.select', opts = { horizontal = true }, desc = 'Open in split' },
           ['q'] = 'actions.close',
           ['gd'] = {
             desc = 'Toggle file detail view',
@@ -345,6 +365,61 @@ return {
         desc = 'Search and Replace selection (grug-far)',
       },
     },
+  },
+
+  -- Treesitter textobjects: select/move/swap functions, classes, parameters
+  {
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    event = 'VeryLazy',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      ---@diagnostic disable-next-line: missing-fields
+      require('nvim-treesitter.configs').setup {
+        textobjects = {
+          select = {
+            enable = true,
+            lookahead = true,
+            keymaps = {
+              ['af'] = { query = '@function.outer', desc = 'Select around function' },
+              ['if'] = { query = '@function.inner', desc = 'Select inside function' },
+              ['ac'] = { query = '@class.outer', desc = 'Select around class' },
+              ['ic'] = { query = '@class.inner', desc = 'Select inside class' },
+              ['aa'] = { query = '@parameter.outer', desc = 'Select around argument' },
+              ['ia'] = { query = '@parameter.inner', desc = 'Select inside argument' },
+            },
+          },
+          move = {
+            enable = true,
+            set_jumps = true,
+            goto_next_start = {
+              [']m'] = { query = '@function.outer', desc = 'Next function start' },
+              [']]'] = { query = '@class.outer', desc = 'Next class start' },
+            },
+            goto_next_end = {
+              [']M'] = { query = '@function.outer', desc = 'Next function end' },
+              [']['] = { query = '@class.outer', desc = 'Next class end' },
+            },
+            goto_previous_start = {
+              ['[m'] = { query = '@function.outer', desc = 'Previous function start' },
+              ['[['] = { query = '@class.outer', desc = 'Previous class start' },
+            },
+            goto_previous_end = {
+              ['[M'] = { query = '@function.outer', desc = 'Previous function end' },
+              ['[]'] = { query = '@class.outer', desc = 'Previous class end' },
+            },
+          },
+          swap = {
+            enable = true,
+            swap_next = {
+              ['<leader>a'] = { query = '@parameter.inner', desc = 'Swap with next argument' },
+            },
+            swap_previous = {
+              ['<leader>A'] = { query = '@parameter.inner', desc = 'Swap with previous argument' },
+            },
+          },
+        },
+      }
+    end,
   },
 
   {
