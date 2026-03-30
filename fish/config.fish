@@ -343,7 +343,7 @@ set -gx MANPAGER "bat -plman"
 set -gx MANROFFOPT "-c"
 
 fish_add_path --append ~/.local/bin
-fish_add_path --append /home/linuxbrew/.linuxbrew/bin
+fish_add_path --append ~/.linuxbrew/bin
 
 # ─── Tool Configuration (set before shell integrations) ─────────────────────
 

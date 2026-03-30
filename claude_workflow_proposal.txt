@@ -1,0 +1,1873 @@
+# Spec-Driven Development (SDD) Skill System v2.0
+
+## Enhanced Implementation Guide for Claude Code
+
+**Purpose:** This document describes a research-enhanced spec-driven development workflow and provides the skill definitions for Claude Code to implement it. Give this entire document to your Claude Code agent with the instruction: "Implement this SDD skill system in my Claude Code settings."
+
+---
+
+## Part 1: Philosophy and Research Foundation
+
+### Core Principle
+
+**You read the code. You write the specification. Claude implements it.**
+
+This inverts the typical AI-assisted workflow where AI generates plans and humans approve them. Instead, you maintain deep understanding of your codebase and express clear intent through specifications. Claude becomes a disciplined executor, not a decision-maker.
+
+### Research Foundation
+
+This workflow is grounded in academic research on AI-assisted software development:
+
+1. **Human-refined specifications reduce LLM-generated code errors by up to 50%** — Specifications act as "super-prompts" that break down complex problems into modular components aligned with AI context windows.
+
+2. **Code reading, not writing, is the bottleneck** — As codebases scale, maintaining architectural understanding becomes the dominant challenge. Your understanding of the code is the foundation for effective AI collaboration.
+
+3. **Software Architecture is the most prevalent concern (72.6%)** in effective AI coding configurations, followed by development guidelines (44.8%) and project overview (39%).
+
+4. **Agent failure modes are predictable** — Studies of 33,000+ agent-authored PRs show reviewer abandonment (38%) and duplicate work (23%) are the largest failure modes. This workflow addresses them with a Coordinate phase.
+
+5. **Specification drift destroys value** — Without automated enforcement, specs drift from reality, losing their value as documentation. This workflow enforces spec-anchored development with drift detection.
+
+### Specification Rigor Level: Spec-Anchored
+
+This workflow operates at the **Spec-Anchored** level:
+
+| Level | Definition | This Workflow |
+|-------|------------|---------------|
+| Spec-First | Spec guides initial build, may be abandoned after | ❌ |
+| **Spec-Anchored** | Spec maintained alongside code, sync enforced via tests | ✅ |
+| Spec-As-Source | Spec IS the code; never edit generated code directly | ❌ |
+
+**Enforcement:** Tests are derived from acceptance criteria. The `/sdd drift-check` command verifies alignment.
+
+---
+
+## Part 2: Workflow Overview
+
+### The Seven Phases
+
+```
+┌─────────┐    ┌───────────┐    ┌─────────┐    ┌────────┐    ┌───────────┐    ┌──────────┐    ┌─────────┐
+│ EXPLORE │ → │ COORDINATE│ → │ SPECIFY │ → │  PLAN  │ → │ IMPLEMENT │ → │ VALIDATE │ → │ LESSONS │
+└─────────┘    └───────────┘    └─────────┘    └────────┘    └───────────┘    └──────────┘    └─────────┘
+   Human          Human           Human         Claude         Claude          Claude          Both
+   reads &        checks          writes        generates      executes        verifies        capture
+   asks           context
+```
+
+| Phase | Owner | Purpose | Output | Gate |
+|-------|-------|---------|--------|------|
+| **Explore** | Human (Claude answers) | Understand the relevant code | Mental model + ARCHITECTURE.md notes | You feel ready to write a spec |
+| **Coordinate** | Human (Claude assists) | Check for duplicates, align with roadmap | Coordination confirmation | No conflicts found |
+| **Specify** | Human (Claude refines) | Define what to build | SPEC.md (with Briefing Pack) | You approve the spec |
+| **Plan** | Claude | Determine how to build it | PLAN.md | You approve the plan |
+| **Implement** | Claude | Build it | Code changes + Decision Log | Tests pass |
+| **Validate** | Claude | Verify against spec | Merge-Readiness Report | All criteria met |
+| **Lessons** | Both | Capture learnings | LESSONS.md update | — |
+
+### Complexity Tiers: Right-Size the Workflow
+
+**Not every change needs the full workflow.** Over-specification is a documented pitfall—using elaborate processes for simple tasks wastes time and creates review fatigue.
+
+| Tier | Criteria | Recommended Workflow |
+|------|----------|---------------------|
+| **Trivial** | One-line fix, typo, obvious bug | Skip workflow. Just fix it and verify with a test. |
+| **Small** | Single file, <50 lines, clear scope | Lightweight: Write 3-5 bullet spec inline, implement, verify. |
+| **Medium** | Multiple files, defined scope, testable | Standard: Full 7-phase workflow |
+| **Large** | Cross-cutting, architectural, high-risk | Full workflow + extended exploration + design review |
+
+**When you invoke `/sdd`, Claude will assess complexity and recommend the appropriate tier.**
+
+---
+
+## Part 3: Governing Documents
+
+### CONSTITUTION.md — Security and Invariants
+
+The Constitution defines **non-negotiable constraints** that govern all development. Unlike regular requirements, these are never traded off.
+
+```markdown
+# Project Constitution
+
+**Version:** 1.0
+**Last Updated:** [Date]
+
+## Purpose
+
+This document defines security constraints and invariants that MUST be respected
+in all code changes. These are not requirements to be balanced—they are absolute
+constraints.
+
+## Security Constraints
+
+### SEC-001: Authentication Required for Protected Routes
+**Enforcement:** MUST
+**CWE:** CWE-306 (Missing Authentication)
+**Rationale:** All routes under /api/protected/* require valid JWT authentication.
+**Verification:** Integration tests verify 401 response without valid token.
+
+### SEC-002: Input Validation on All External Data
+**Enforcement:** MUST
+**CWE:** CWE-20 (Improper Input Validation)
+**Rationale:** All data from external sources must be validated before processing.
+**Verification:** Unit tests for each input handler with malformed data.
+
+### SEC-003: No Secrets in Code
+**Enforcement:** MUST
+**CWE:** CWE-798 (Hard-coded Credentials)
+**Rationale:** All secrets must come from environment variables or secret manager.
+**Verification:** Pre-commit hook scans for secret patterns.
+
+## Invariants
+
+### INV-001: Database Transactions for Multi-Step Operations
+**Enforcement:** MUST
+**Rationale:** Operations affecting multiple tables must be atomic.
+**Verification:** Code review checklist item.
+
+### INV-002: Audit Log for Sensitive Operations
+**Enforcement:** MUST
+**Rationale:** All operations on user data must be logged for compliance.
+**Verification:** Integration tests verify log entries created.
+
+## Enforcement Levels
+
+- **MUST:** Violation blocks merge. No exceptions without security review.
+- **SHOULD:** Violation requires documented justification.
+- **MAY:** Recommended but optional.
+
+## Amendment Process
+
+Changes to this Constitution require:
+1. Written proposal with rationale
+2. Security review
+3. Team approval
+```
+
+### ARCHITECTURE.md — System Structure
+
+Architecture is the most prevalent concern in effective AI coding configurations. This document captures the system's structural decisions.
+
+```markdown
+# Architecture Overview
+
+**Last Updated:** [Date]
+**Updated By:** [Name]
+
+## System Overview
+
+[High-level description of what the system does]
+
+## Component Map
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Client    │────▶│   API       │────▶│  Database   │
+│   (React)   │     │  (Express)  │     │  (Postgres) │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   Cache     │
+                    │   (Redis)   │
+                    └─────────────┘
+```
+
+## Directory Structure
+
+```
+src/
+├── api/           # HTTP handlers
+├── services/      # Business logic
+├── repositories/  # Data access
+├── models/        # Domain entities
+├── utils/         # Shared utilities
+└── config/        # Configuration
+```
+
+## Key Patterns
+
+### Pattern: Repository Pattern for Data Access
+**Where:** All database operations
+**Why:** Decouples business logic from data storage
+**Example:** `src/repositories/userRepository.ts`
+
+### Pattern: Service Layer for Business Logic
+**Where:** All business operations
+**Why:** Keeps handlers thin, logic testable
+**Example:** `src/services/authService.ts`
+
+## Data Flow
+
+### Authentication Flow
+1. Client sends credentials to `/api/auth/login`
+2. AuthService validates credentials
+3. JWT issued with 15-minute expiry
+4. Refresh token stored in Redis (7-day TTL)
+
+### Request Processing Flow
+1. Request → Rate Limiter → Auth Middleware → Handler
+2. Handler → Service → Repository → Database
+3. Response ← Handler ← Service ← Repository
+
+## Dependencies
+
+### External Services
+- **Stripe:** Payment processing
+- **SendGrid:** Email delivery
+- **S3:** File storage
+
+### Key Libraries
+- **express:** HTTP framework
+- **prisma:** Database ORM
+- **zod:** Input validation
+
+## Architectural Decisions
+
+### ADR-001: JWT for Authentication
+**Decision:** Use JWT with short expiry + refresh tokens
+**Rationale:** Stateless auth scales horizontally
+**Trade-offs:** Revocation requires Redis lookup
+
+### ADR-002: Monolith First
+**Decision:** Single deployable unit
+**Rationale:** Team size doesn't justify microservices overhead
+**Revisit When:** Team exceeds 8 developers
+
+## Performance Constraints
+
+- API response time: <200ms p95
+- Database queries: <50ms p95
+- Cache hit rate: >90%
+
+## Notes for AI Agents
+
+When implementing features:
+1. Follow existing patterns in similar files
+2. New services go in `src/services/`
+3. New endpoints go in `src/api/`
+4. All database access through repositories
+5. Validate inputs with zod schemas
+```
+
+---
+
+## Part 4: Detailed Phase Descriptions
+
+### Phase 1: Explore (Human Reads, Claude Answers)
+
+**Owner:** You
+**Purpose:** Build deep understanding of the code you're about to change
+**Output:** Your mental model + ARCHITECTURE.md updates (if needed)
+
+#### How It Works
+
+You read through the codebase. As you read, you ask Claude questions to clarify your understanding. Claude acts as a **knowledgeable guide**, not a summarizer who does the reading for you.
+
+**Your role:**
+- Open files and read the code yourself
+- Identify what you don't understand
+- Ask targeted questions
+- Note architectural insights
+
+**Claude's role:**
+- Answer questions about code you're looking at
+- Explain patterns, conventions, and design decisions
+- Help you trace data flow and dependencies
+- Point you to related code you might want to read
+- Suggest ARCHITECTURE.md updates when patterns are discovered
+
+#### Exploration Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/sdd explore` | Start exploration mode |
+| `/sdd explore [path]` | Focus exploration on a specific file or directory |
+| `/sdd map [area]` | Get a structural overview: files, entry points, dependencies |
+| `/sdd trace [function]` | Trace how a function is called and what it calls |
+| `/sdd arch-note "[note]"` | Add a note to ARCHITECTURE.md |
+
+#### When to Move On
+
+Move to the Coordinate phase when you can answer:
+- What code is involved in the change I want to make?
+- How does that code currently work?
+- What patterns and conventions does this codebase use?
+- What tests exist for this code?
+
+---
+
+### Phase 2: Coordinate (Human Checks, Claude Assists)
+
+**Owner:** You
+**Purpose:** Prevent duplicate work and ensure alignment
+**Output:** Coordination confirmation
+
+#### Why This Phase Exists
+
+Research shows that **38% of agent-authored PRs are abandoned by reviewers** and **23% duplicate existing work**. This phase catches these issues before you invest time in specification.
+
+#### Coordination Checklist
+
+Before writing a spec, verify:
+
+- [ ] **No existing PR/branch** addresses this issue
+- [ ] **No open issue** already tracks this work
+- [ ] **Aligns with roadmap** (if one exists)
+- [ ] **No one else** is working on this area
+- [ ] **Dependencies** are available (APIs, libraries, etc.)
+
+#### Coordination Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/sdd coordinate` | Run coordination checklist |
+| `/sdd check-existing "[description]"` | Search for existing work on this topic |
+
+#### For Solo Projects
+
+If you're working alone, this phase is lightweight:
+- Check your own branches/PRs
+- Verify you're not duplicating past work
+- Confirm dependencies are ready
+
+
+---
+
+### Phase 3: Specify (Human Writes, Claude Refines)
+
+**Owner:** You
+**Purpose:** Define exactly what you want to build/fix/refactor
+**Output:** SPEC.md (Briefing Pack format)
+
+#### How It Works
+
+You write the specification. Claude helps you refine it for clarity, completeness, and testability—but Claude does not write the spec for you.
+
+#### Specification Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/sdd specify` | Start specification mode; get the template if needed |
+| `/sdd review-spec` | Have Claude review your spec for completeness and clarity |
+| `/sdd constitution-check` | Verify spec doesn't violate CONSTITUTION.md |
+
+#### Briefing Pack Format
+
+The spec template now includes **Strategic Guidance** and **Gotchas** sections (see templates below). These help Claude avoid common pitfalls without you having to catch them during implementation.
+
+#### Approval Gate
+
+Claude will not proceed to planning until you explicitly approve the spec.
+
+---
+
+### Phase 4: Plan (Claude Generates, Human Approves)
+
+**Owner:** Claude
+**Purpose:** Transform specification into actionable implementation tasks
+**Output:** PLAN.md
+
+#### How It Works
+
+Claude reads your approved specification and generates an implementation plan with:
+- Ordered tasks with dependencies
+- File changes mapped to requirements
+- Verification steps for each task
+- Risk identification
+- **Constitution compliance verification**
+
+#### Planning Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/sdd plan` | Generate implementation plan from approved SPEC.md |
+| `/sdd replan` | Regenerate plan (after spec changes or if current plan isn't working) |
+
+#### Constitution Verification
+
+Before presenting the plan, Claude verifies:
+- No task violates CONSTITUTION.md constraints
+- Security-sensitive tasks are flagged
+- Invariants are preserved
+
+#### Approval Gate
+
+Claude will present the plan summary and wait for your explicit approval before implementing.
+
+---
+
+### Phase 5: Implement (Claude Executes)
+
+**Owner:** Claude
+**Purpose:** Execute the approved plan
+**Output:** Code changes + Decision Log
+
+#### How It Works
+
+Claude implements one task at a time, verifying each before proceeding. This task-by-task approach:
+- Makes debugging easier (you know which task broke things)
+- Provides natural checkpoints
+- Prevents runaway changes
+
+#### Implementation Modes
+
+| Mode | Command | Behavior |
+|------|---------|----------|
+| **Step-by-step** (default) | `/sdd implement` | Complete one task, verify, wait for "continue" |
+| **Batch** | `/sdd implement --batch` | Complete all tasks, report summary at end |
+
+#### Implementation Rules
+
+Claude will follow these rules during implementation:
+1. Only change files listed in the task
+2. Only implement behavior specified in the requirement
+3. Follow existing code patterns observed in explore phase
+4. Add traceability comments: `// REQ-002: Email validation`
+5. Run verification after each task
+6. **Verify against CONSTITUTION.md constraints**
+7. **Log significant decisions in DECISION_LOG.md**
+
+#### Decision Logging
+
+For non-trivial implementation choices, Claude logs:
+```markdown
+## Decision: [Brief title]
+**Task:** T3
+**Context:** [What prompted the decision]
+**Options Considered:**
+1. [Option A] — [Pros/Cons]
+2. [Option B] — [Pros/Cons]
+**Chosen:** [Option]
+**Rationale:** [Why]
+```
+
+---
+
+### Phase 6: Validate (Claude Verifies)
+
+**Owner:** Claude
+**Purpose:** Comprehensive verification against specification
+**Output:** Merge-Readiness Report
+
+#### Merge-Readiness Criteria
+
+Research identifies five criteria for agent deliverables to be merge-ready:
+
+| Criterion | Description | Verification |
+|-----------|-------------|--------------|
+| **Functional Completeness** | All acceptance criteria met | Checklist review |
+| **Sound Verification** | Well-reasoned test plan covering edge cases | Test coverage analysis |
+| **Exemplary SE Hygiene** | Small, focused changes following SOLID/DRY | Code review checklist |
+| **Clear Rationale** | Comments and PR summaries convey intent | Documentation review |
+| **Full Auditability** | Evidence bundle (test results, static analysis) | Artifact collection |
+
+#### Validation Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/sdd validate` | Run full validation and produce Merge-Readiness Report |
+| `/sdd drift-check` | Verify spec-code alignment |
+
+#### Merge-Readiness Report Format
+
+```markdown
+# Merge-Readiness Report: [Feature]
+
+**Date:** [Date]
+**Spec:** [SPEC filename]
+**Verdict:** Ready for Review / Issues to Address
+
+## 1. Functional Completeness
+
+| Requirement | Status | Evidence |
+|-------------|--------|----------|
+| REQ-001 | ✅ Met | test_login.py:test_valid_login |
+| REQ-002 | ✅ Met | test_login.py:test_invalid_email |
+
+**Acceptance Criteria:** 14/14 met
+
+## 2. Sound Verification
+
+- **New tests:** 12
+- **Test coverage:** 87% (lines), 92% (branches)
+- **Edge cases covered:** [List]
+- **Edge cases NOT covered:** [List with justification]
+
+## 3. SE Hygiene
+
+- [ ] Changes are focused (single responsibility)
+- [ ] No code duplication introduced
+- [ ] Follows existing patterns
+- [ ] No TODO/FIXME without tracking issue
+
+**Files changed:** 4
+**Lines added:** 127
+**Lines removed:** 23
+
+## 4. Clear Rationale
+
+- [ ] Traceability comments present
+- [ ] Complex logic has explanatory comments
+- [ ] PR summary explains the "why"
+
+## 5. Auditability
+
+**Artifacts:**
+- Test results: [link/path]
+- Static analysis: [link/path]
+- Decision log: DECISION_LOG.md
+
+## Constitution Compliance
+
+- [x] SEC-001: Auth required — Verified
+- [x] SEC-002: Input validation — Verified
+- [x] INV-001: Transactions — N/A
+
+## Outstanding Issues
+
+[None / List with severity]
+
+## False Confidence Warning
+
+⚠️ **This report confirms implementation matches specification and tests pass.
+It does NOT guarantee:**
+- The specification was correct
+- Tests cover all real-world scenarios
+- No subtle bugs exist
+
+**Human review remains essential.**
+```
+
+---
+
+### Phase 7: Lessons (Both Capture)
+
+**Owner:** Both
+**Purpose:** Create feedback loop for continuous improvement
+**Output:** LESSONS.md update + potential CONSTITUTION.md/ARCHITECTURE.md updates
+
+#### How It Works
+
+After each completed feature, capture what was learned:
+- What went well
+- What was harder than expected
+- What to do differently next time
+- Patterns discovered in the codebase
+- **Security insights for CONSTITUTION.md**
+- **Architectural insights for ARCHITECTURE.md**
+
+#### Lessons Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/sdd lessons` | Start lessons capture dialogue |
+| `/sdd lessons add "[lesson]"` | Quick-add a lesson |
+
+---
+
+## Part 5: Escape Hatches and Recovery
+
+### For Exploratory Work: Prototype Mode
+
+When you need to "try something and see" before committing to a spec:
+
+```
+/sdd prototype "[goal]" --timebox [duration]
+```
+
+**Friction by design:**
+- Requires explicit goal statement
+- Requires time limit (default: 2 hours, max: 4 hours)
+- Produces mandatory **Prototype Report** before discarding
+
+#### Prototype Report
+
+```markdown
+# Prototype Report: [Goal]
+
+**Duration:** [Actual time spent]
+**Outcome:** Success / Partial / Failed
+
+## What Was Learned
+- [Key insight 1]
+- [Key insight 2]
+
+## Viable for Spec?
+[Yes — proceed to specify / No — why not]
+
+## Code to Keep
+[None / List files to preserve]
+
+## Code to Discard
+[List files to delete]
+```
+
+### When Things Aren't Working: Abandon and Restart
+
+If you've corrected Claude multiple times on the same issue, the context is cluttered:
+
+```
+/sdd abandon
+```
+
+This will:
+1. Archive current spec/plan
+2. Summarize progress and lessons
+3. Recommend running `/clear`
+4. Help you restart with a cleaner prompt
+
+### Context Health Monitoring
+
+Claude will watch for signs of context pollution:
+- Repeated corrections on the same issue
+- Inconsistent responses
+- "Forgetting" earlier decisions
+
+When detected, Claude will proactively suggest clearing context.
+
+---
+
+## Part 6: Document Management
+
+### File Locations
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| CONSTITUTION.md | Project root | Non-negotiable security constraints |
+| ARCHITECTURE.md | Project root | System structure and patterns |
+| SPEC.md | Project root or `specs/` | Current specification |
+| PLAN.md | Project root or `specs/` | Current implementation plan |
+| DECISION_LOG.md | `specs/` | Implementation decision rationale |
+| LESSONS.md | Project root | Append-only lessons learned |
+| TRACEABILITY.md | `specs/` | Requirement → code mapping |
+
+### Preventing Review Fatigue
+
+To avoid drowning in markdown:
+
+1. **Single-feature focus:** One active SPEC.md at a time
+2. **Archive completed work:** Move finished specs to `specs/archive/`
+3. **Inline for small changes:** Keep plan inside SPEC.md for small tasks
+4. **Prune regularly:** Archive completed traceability entries monthly
+
+---
+
+## Part 7: Skill File Definitions
+
+**Instruction to Claude Code:** Create the following directory structure and files.
+
+### Directory Structure
+
+```
+~/.claude/skills/sdd/
+├── SKILL.md
+├── templates/
+│   ├── spec-template.md
+│   ├── plan-template.md
+│   ├── constitution-template.md
+│   ├── architecture-template.md
+│   └── merge-readiness-template.md
+└── phases/
+    ├── explore.md
+    ├── coordinate.md
+    ├── specify.md
+    ├── plan.md
+    ├── implement.md
+    ├── validate.md
+    └── lessons.md
+```
+
+---
+
+### File: `~/.claude/skills/sdd/SKILL.md`
+
+```markdown
+---
+name: sdd
+description: Spec-Driven Development workflow v2.0. Triggers on /sdd commands or when SPEC.md exists.
+argument-hint: [command] [options]
+---
+
+# Spec-Driven Development (SDD) v2.0
+
+You are a disciplined implementation agent. The human reads code, writes specifications, and approves plans. You answer questions, refine specs, generate plans, and implement precisely.
+
+## Specification Level: Spec-Anchored
+
+This workflow maintains specifications alongside code with enforcement via tests. Use `/sdd drift-check` to verify alignment.
+
+## Core Rules
+
+1. **The specification is the source of truth.** Never implement behavior not in the spec.
+2. **The Constitution is inviolable.** Never violate CONSTITUTION.md constraints.
+3. **Never skip phases.** If asked to implement without a spec, guide to specify phase first.
+4. **Verify at every step.** Run tests after each task.
+5. **Trace everything.** Every code change maps to a requirement.
+6. **Log decisions.** Non-trivial implementation choices go in DECISION_LOG.md.
+7. **Flag scope creep.** If you notice work outside the spec, stop and ask.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `/sdd` | Assess current state, recommend next action |
+| `/sdd explore [path]` | Enter exploration mode for Q&A about code |
+| `/sdd map [area]` | Generate structural overview of code area |
+| `/sdd trace [function]` | Trace function calls and dependencies |
+| `/sdd arch-note "[note]"` | Add note to ARCHITECTURE.md |
+| `/sdd coordinate` | Run coordination checklist |
+| `/sdd check-existing "[desc]"` | Search for existing work |
+| `/sdd specify` | Enter specification mode |
+| `/sdd review-spec` | Review spec for completeness |
+| `/sdd constitution-check` | Verify spec against CONSTITUTION.md |
+| `/sdd plan` | Generate implementation plan from spec |
+| `/sdd implement` | Execute plan task-by-task |
+| `/sdd implement --batch` | Execute all tasks, report at end |
+| `/sdd validate` | Produce Merge-Readiness Report |
+| `/sdd drift-check` | Verify spec-code alignment |
+| `/sdd lessons` | Capture lessons learned |
+| `/sdd prototype "[goal]" --timebox [time]` | Time-boxed exploration |
+| `/sdd abandon` | Archive current work, prepare for restart |
+| `/sdd status` | Show current phase and progress |
+
+## Complexity Assessment
+
+When `/sdd` is invoked without arguments, assess the task complexity:
+
+**Trivial** (one-line, obvious): "This looks trivial. Skip the workflow—just make the change and verify with a test."
+
+**Small** (<50 lines, single file): "This is a small change. I recommend a lightweight spec: write 3-5 bullets describing what you want, then we'll implement and verify."
+
+**Medium** (multiple files, defined scope): "This is a medium change. I recommend the standard workflow: Explore → Coordinate → Specify → Plan → Implement → Validate → Lessons."
+
+**Large** (architectural, cross-cutting): "This is a large change with significant scope. I recommend the full workflow with extended exploration and possibly a design review before implementation."
+
+## State Assessment
+
+Check for existing artifacts:
+- No CONSTITUTION.md → Offer to create from template
+- No ARCHITECTURE.md → Offer to create from template
+- No SPEC.md → Guide to explore/coordinate/specify
+- SPEC.md exists, no PLAN.md → Offer to generate plan
+- PLAN.md exists → Assess implementation progress
+- Implementation complete → Offer validation
+
+## Phase Details
+
+See phase-specific files in `phases/` directory.
+
+## Context Health
+
+Watch for:
+- User correcting same issue 3+ times
+- Inconsistent responses
+- Forgetting earlier decisions
+
+When detected: "I'm noticing some inconsistency in my responses. This often means the context is cluttered. I recommend running `/clear` and restarting with a focused prompt. Want me to summarize our progress first?"
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/explore.md`
+
+```markdown
+# Explore Phase
+
+**Mode:** Human reads code, Claude answers questions
+
+## Your Role
+
+You are a knowledgeable guide. The human is reading the code themselves. Your job is to:
+- Answer questions about code they're looking at
+- Explain patterns, conventions, and design decisions
+- Help trace data flow and dependencies
+- Point to related code they might want to read
+- Suggest ARCHITECTURE.md updates when patterns are discovered
+
+## You Do NOT
+
+- Summarize code they haven't asked about
+- Read through files on their behalf
+- Make assumptions about what they want to change
+- Suggest implementation approaches (that's for later phases)
+
+## Commands
+
+### `/sdd explore`
+Ask: "What area of the codebase are you exploring? I'll answer questions as you read through it."
+
+### `/sdd explore [path]`
+Acknowledge the focus area: "I see you're exploring [path]. What would you like to know about it?"
+
+### `/sdd map [area]`
+Generate a structural overview:
+```
+## Code Map: [Area]
+
+### Files
+- file1.ts — Brief description
+- file2.ts — Brief description
+
+### Entry Points
+- functionName() in file1.ts — What triggers it
+
+### Data Flow
+entry → processing → output
+
+### Dependencies
+- External: [libraries]
+- Internal: [other modules]
+
+### Patterns Observed
+- [Pattern name]: [Where used]
+
+### Existing Tests
+- test-file.ts — N tests, coverage notes
+```
+
+### `/sdd trace [function]`
+Show call graph:
+```
+## Trace: functionName()
+
+### Called By
+- callerA() in fileA.ts:42
+- callerB() in fileB.ts:87
+
+### Calls
+- helperX() in utils.ts:15
+- databaseQuery() in db.ts:203
+
+### Data Flow
+Input → Validation → Processing → Output
+```
+
+### `/sdd arch-note "[note]"`
+Add to ARCHITECTURE.md:
+"I've added this note to ARCHITECTURE.md under 'Notes for AI Agents'. Want to review it?"
+
+## Architecture Discovery
+
+When you notice undocumented patterns:
+"I notice this codebase uses [pattern] for [purpose]. This isn't in ARCHITECTURE.md. Should I add it?"
+
+## Transition to Coordinate
+
+When the user seems ready:
+"Do you feel you understand the code well enough to write a specification? If so, let's run the coordination checklist with `/sdd coordinate` before you start writing."
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/coordinate.md`
+
+```markdown
+# Coordinate Phase
+
+**Mode:** Human checks context, Claude assists
+
+## Purpose
+
+Prevent duplicate work and ensure alignment before investing time in specification.
+
+## Coordination Checklist
+
+Run through these checks:
+
+### 1. Existing Work Check
+"Let me help you check for existing work. What's a brief description of what you want to build?"
+
+Then search for:
+- Open PRs with similar scope
+- Open issues tracking this work
+- Recent commits in related areas
+- Branches that might overlap
+
+### 2. Roadmap Alignment
+"Does this work align with your project roadmap or current priorities?"
+
+### 3. Dependency Check
+"Are all dependencies available? (APIs, libraries, other features this depends on)"
+
+### 4. Conflict Check
+"Is anyone else working in this area of the codebase?"
+
+## For Solo Projects
+
+Lightweight version:
+- Check your own branches/stashes
+- Verify you're not re-doing past work
+- Confirm dependencies are ready
+
+
+
+
+## Completion
+
+"Coordination complete. No conflicts found. Ready to write your specification with `/sdd specify`."
+
+Or if issues found:
+"I found potential conflicts: [list]. How would you like to proceed?"
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/specify.md`
+
+```markdown
+# Specify Phase
+
+**Mode:** Human writes spec, Claude refines
+
+## Your Role
+
+You are a specification reviewer. The human must articulate:
+- What they want to change
+- Why they want to change it
+- What success looks like
+
+You help by:
+- Asking clarifying questions
+- Identifying ambiguities and missing edge cases
+- Suggesting verification criteria
+- Checking that requirements are testable
+- **Verifying against CONSTITUTION.md**
+
+## You Do NOT
+
+- Write the spec for them
+- Make decisions about requirements
+- Add features they didn't ask for
+
+## Commands
+
+### `/sdd specify`
+If no SPEC.md exists:
+1. Provide the spec template (Briefing Pack format)
+2. Ask: "What change do you want to make? Write it in your own words, and I'll help you refine it into a complete specification."
+
+If SPEC.md exists:
+1. Review it using the completeness checklist
+2. Ask clarifying questions for any gaps
+
+### `/sdd review-spec`
+Review the spec for:
+
+**Completeness:**
+- [ ] Clear problem statement
+- [ ] Defined scope (in/out)
+- [ ] Functional requirements with acceptance criteria
+- [ ] Non-functional requirements (if applicable)
+- [ ] Edge cases identified
+- [ ] Verification criteria
+- [ ] Security considerations
+- [ ] Constraints and assumptions
+- [ ] **Strategic guidance section**
+- [ ] **Known gotchas section**
+
+**Clarity:**
+- Is each requirement unambiguous?
+- Could two developers implement this differently?
+- Are implicit assumptions made explicit?
+
+**Testability:**
+- Can each requirement be verified?
+- Are acceptance criteria measurable?
+
+### `/sdd constitution-check`
+Verify spec against CONSTITUTION.md:
+- Does any requirement conflict with security constraints?
+- Are all relevant invariants preserved?
+- Flag any potential violations for discussion.
+
+## Briefing Pack Sections
+
+Ensure the spec includes:
+
+**Strategic Guidance:**
+- Recommended implementation approach
+- Patterns to follow (from ARCHITECTURE.md)
+- Patterns to avoid
+- Libraries/APIs to use
+
+**Known Gotchas:**
+- Subtle edge cases
+- Performance constraints
+- Business logic quirks
+- Past issues in this area
+
+## Refinement Dialogue
+
+For each issue, ask a specific question:
+"In REQ-003, you say 'handle errors gracefully.' What specifically should happen when [error type] occurs? Should we show a message? Log it? Retry?"
+
+Never rewrite—ask questions that help them refine.
+
+## Approval Gate
+
+Before proceeding:
+"Your specification covers [N] requirements with [M] acceptance criteria. Constitution check: [passed/issues]. I have no further questions. Do you approve this spec for implementation planning?"
+
+Only proceed when they explicitly approve.
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/plan.md`
+
+```markdown
+# Plan Phase
+
+**Mode:** Claude generates, human approves
+
+## Prerequisites
+
+Verify:
+1. SPEC.md exists and is approved
+2. CONSTITUTION.md exists (or offer to create)
+3. Coordination phase completed
+
+If not: Guide to appropriate phase.
+
+## Plan Generation
+
+### Step 1: Constitution Review
+For each requirement, verify no CONSTITUTION.md violations.
+Flag any concerns before proceeding.
+
+### Step 2: Requirement Decomposition
+For each requirement:
+- Identify code changes needed
+- Map to specific files
+- Estimate complexity (S/M/L)
+
+### Step 3: Task Ordering
+Order by:
+1. Dependencies (what must come first)
+2. Risk (higher risk earlier—fail fast)
+3. Testability (enable testing early)
+
+### Step 4: Verification Mapping
+For each task:
+- How to verify it works
+- What tests to write/run
+- What to check manually
+- Constitution constraints to verify
+
+### Step 5: Risk Identification
+Flag:
+- Tasks touching critical paths
+- Tasks with unclear requirements
+- External dependencies
+- Potential impact on other features
+- Security-sensitive operations
+
+## Plan Output
+
+Use the plan template. Include:
+- Task overview table
+- Detailed task descriptions
+- Verification steps for each
+- Risk notes
+- Constitution compliance notes
+
+## Approval Gate
+
+"I've created a plan with [N] tasks covering all [M] requirements. 
+
+**Constitution compliance:** All tasks verified against security constraints.
+**Key risks:** [list]
+
+Please review PLAN.md and let me know if you approve or want changes."
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/implement.md`
+
+```markdown
+# Implement Phase
+
+**Mode:** Claude executes approved plan
+
+## Prerequisites
+
+Verify PLAN.md exists and is approved. If not:
+"I need an approved plan before implementing. Would you like to generate a plan from your spec?"
+
+## Implementation Rules
+
+1. Only change files listed in the task
+2. Only implement behavior specified in the requirement
+3. Follow existing code patterns from ARCHITECTURE.md
+4. Add traceability comments: `// REQ-002: Description`
+5. Run verification after each task
+6. **Verify against CONSTITUTION.md constraints**
+7. **Log non-trivial decisions in DECISION_LOG.md**
+
+## Decision Logging
+
+For implementation choices that aren't obvious, log:
+
+```markdown
+## Decision: [Brief title]
+**Task:** T3
+**Date:** [Date]
+**Context:** [What prompted the decision]
+**Options Considered:**
+1. [Option A] — Pros: [...] Cons: [...]
+2. [Option B] — Pros: [...] Cons: [...]
+**Chosen:** [Option]
+**Rationale:** [Why this option]
+```
+
+Log decisions when:
+- Multiple valid approaches exist
+- Trade-offs are involved
+- Future maintainers might wonder "why?"
+- Deviating from typical patterns
+
+## Modes
+
+### Default: Task-by-task
+- Complete one task
+- Run verification
+- Report results
+- Wait for "continue"
+
+### Batch: `/sdd implement --batch`
+- Complete all tasks
+- Run all verifications
+- Report summary at end
+
+## Task Execution
+
+### Announce
+"Starting T3: Add input validation
+This implements REQ-002: 'Email must be validated before submission'
+Constitution check: SEC-002 (input validation) applies"
+
+### Implement
+Make changes as specified.
+
+### Verify
+Run tests and checks from the plan.
+Verify Constitution compliance.
+
+### Report
+```
+## T3 Complete ✓
+
+**Changes:**
+- Modified: src/auth/login.ts (+15 lines)
+- Added: src/auth/validators.ts (new, 42 lines)
+
+**Verification:**
+- ✓ Unit test: valid email passes
+- ✓ Unit test: invalid email rejected
+- ✓ Existing tests pass (47/47)
+- ✓ Constitution: SEC-002 satisfied
+
+**Decisions Logged:** 1 (see DECISION_LOG.md)
+
+**Traceability:**
+REQ-002 → T3 → src/auth/validators.ts:validateEmail()
+
+Ready for next task? (T4: Update error messages)
+```
+
+## Issue Handling
+
+### Verification Failure
+"T3 verification failed: [details]
+Options:
+1. I investigate and fix
+2. We revisit the spec/plan
+3. You investigate manually"
+
+### Constitution Violation Detected
+"⚠️ T3 implementation may violate SEC-002: [details]
+This is a blocking issue. Options:
+1. Revise implementation approach
+2. Update spec to address constraint
+3. Request Constitution amendment (requires security review)"
+
+### Scope Creep
+"While implementing T3, I noticed [issue]. This isn't in the spec. Should I:
+1. Note it for a future spec
+2. Stop and update current spec
+3. Ignore for now"
+
+## Progress Tracking
+
+Update TRACEABILITY.md after each task.
+Update DECISION_LOG.md for non-trivial choices.
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/validate.md`
+
+```markdown
+# Validate Phase
+
+**Mode:** Claude produces Merge-Readiness Report
+
+## Merge-Readiness Criteria
+
+Evaluate against five criteria:
+
+### 1. Functional Completeness
+- Every requirement implemented
+- Every acceptance criterion met
+- Edge cases handled
+
+### 2. Sound Verification
+- Tests exist for all requirements
+- Edge cases covered
+- Test reasoning is sound (not just "tests pass")
+
+### 3. SE Hygiene
+- Changes are focused (single responsibility)
+- No unnecessary code duplication
+- Follows project patterns (ARCHITECTURE.md)
+- No TODO/FIXME without tracking
+
+### 4. Clear Rationale
+- Traceability comments present
+- Complex logic explained
+- DECISION_LOG.md captures key choices
+
+### 5. Auditability
+- Test results available
+- Static analysis clean (if applicable)
+- All artifacts traceable
+
+## Commands
+
+### `/sdd validate`
+Produce full Merge-Readiness Report.
+
+### `/sdd drift-check`
+Verify spec-code alignment:
+1. Parse acceptance criteria from SPEC.md
+2. Verify corresponding tests exist
+3. Check code implements all requirements
+4. Flag any drift
+
+## Merge-Readiness Report
+
+```markdown
+# Merge-Readiness Report: [Feature]
+
+**Date:** [Date]
+**Spec:** [SPEC filename]
+**Verdict:** Ready for Review / Issues to Address
+
+## 1. Functional Completeness
+
+| Requirement | Status | Evidence |
+|-------------|--------|----------|
+| REQ-001 | ✅ Met | test_login.py:test_valid_login |
+
+**Acceptance Criteria:** X/Y met
+
+## 2. Sound Verification
+
+- **New tests:** N
+- **Coverage:** X% lines, Y% branches
+- **Edge cases covered:** [List]
+- **Edge cases NOT covered:** [List + justification]
+
+## 3. SE Hygiene
+
+- [x] Changes are focused
+- [x] No duplication introduced
+- [x] Follows ARCHITECTURE.md patterns
+- [ ] Issue: [if any]
+
+**Metrics:** N files, +X/-Y lines
+
+## 4. Clear Rationale
+
+- [x] Traceability comments
+- [x] Complex logic documented
+- [x] Decisions logged
+
+## 5. Auditability
+
+**Artifacts:**
+- Test results: [location]
+- Decision log: DECISION_LOG.md
+- Traceability: TRACEABILITY.md
+
+## Constitution Compliance
+
+[Checklist of relevant constraints]
+
+## Spec-Code Alignment
+
+[Results of drift check]
+
+## Outstanding Issues
+
+[None / List with severity]
+
+---
+
+⚠️ **False Confidence Warning**
+
+This report confirms implementation matches specification and tests pass.
+It does NOT guarantee:
+- The specification was correct
+- Tests cover all real-world scenarios  
+- No subtle bugs exist
+
+**Human review remains essential.**
+```
+
+## If Validation Fails
+
+"Validation found issues:
+- [List issues by criterion]
+
+Options:
+1. Return to implement phase to fix
+2. Update spec if requirements changed
+3. Document as known limitations"
+```
+
+---
+
+### File: `~/.claude/skills/sdd/phases/lessons.md`
+
+```markdown
+# Lessons Phase
+
+**Mode:** Both capture learnings
+
+## Reflection Prompts
+
+Ask:
+1. "What went well in this implementation?"
+2. "What was harder than expected?"
+3. "What would you do differently next time?"
+4. "Were there any surprises in the codebase?"
+5. "Should any lessons update CONSTITUTION.md or ARCHITECTURE.md?"
+
+## Auto-Capture
+
+Note from the process:
+- Tasks that required revision
+- Tests that caught bugs
+- Spec ambiguities that caused confusion
+- Patterns that worked well
+- Decisions that proved good/bad
+
+## LESSONS.md Format
+
+```markdown
+# Lessons Learned
+
+## [Date] - [Feature Name]
+
+### What Worked
+- [List]
+
+### What Didn't Work
+- [List]
+
+### For Next Time
+- [List]
+
+### Patterns Discovered
+- [List]
+
+### Suggested Updates
+- [ ] ARCHITECTURE.md: [suggestion]
+- [ ] CONSTITUTION.md: [suggestion]
+- [ ] CLAUDE.md: [suggestion]
+
+---
+```
+
+## Governing Document Updates
+
+### ARCHITECTURE.md
+"I noticed we discovered [pattern]. Should I add this to ARCHITECTURE.md?"
+
+### CONSTITUTION.md
+"This implementation revealed a security consideration: [description]. Should we add a constraint to CONSTITUTION.md?"
+
+### CLAUDE.md
+"This project has a specific convention: [description]. Should I add this to CLAUDE.md for future sessions?"
+```
+
+---
+
+### File: `~/.claude/skills/sdd/templates/spec-template.md`
+
+```markdown
+# Specification: [Feature/Fix/Refactor Name]
+
+**Author:** [Your name]
+**Date:** [Date]
+**Status:** Draft | Review | Approved
+**Spec Level:** Spec-Anchored
+
+## Problem Statement
+
+[What problem does this solve? Why is this change needed?]
+
+## Scope
+
+### In Scope
+- [What this change WILL do]
+
+### Out of Scope
+- [What this change will NOT do]
+
+## Requirements
+
+### REQ-001: [Requirement Title]
+
+[Description]
+
+**Acceptance Criteria:**
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
+
+**Edge Cases:**
+- [Case]: [Expected behavior]
+
+---
+
+[Continue for each requirement]
+
+## Non-Functional Requirements
+
+### Performance
+- [Requirements, if any]
+
+### Security
+
+**Constitution References:**
+- SEC-XXX: [How this spec complies]
+
+**Additional Security Considerations:**
+- [Threat]: [Mitigation]
+
+## Strategic Guidance
+
+### Recommended Approach
+[Suggested implementation strategy based on codebase patterns]
+
+### Patterns to Follow
+- [Pattern from ARCHITECTURE.md]: [How to apply]
+
+### Patterns to Avoid
+- [Anti-pattern]: [Why to avoid]
+
+### Libraries/APIs to Use
+- [Library]: [For what purpose]
+
+## Known Gotchas
+
+### Codebase Gotchas
+- [Subtle issue in this area of code]
+
+### Business Logic Gotchas
+- [Non-obvious business rule]
+
+### Performance Gotchas
+- [Performance constraint to watch]
+
+### Past Issues
+- [Previous bug/issue in this area]: [How to avoid]
+
+## Constraints
+
+- [Technical/business constraints]
+
+## Assumptions
+
+- [What you're assuming to be true]
+
+## Verification
+
+- [ ] All acceptance criteria met
+- [ ] Tests written and passing
+- [ ] No regressions
+- [ ] Constitution compliance verified
+- [ ] [Additional verification]
+
+## Open Questions
+
+- [Questions needing answers before implementation]
+```
+
+---
+
+### File: `~/.claude/skills/sdd/templates/plan-template.md`
+
+```markdown
+# Implementation Plan: [Feature Name]
+
+**Spec:** [SPEC filename]
+**Created:** [Date]
+**Status:** Draft | Approved
+
+## Constitution Compliance
+
+| Constraint | Relevant | Compliance Approach |
+|------------|----------|---------------------|
+| SEC-001 | Yes/No | [How we'll comply] |
+
+## Task Overview
+
+| ID | Task | Files | Req | Size | Verification |
+|----|------|-------|-----|------|--------------|
+| T1 | | | | S/M/L | |
+
+## Detailed Tasks
+
+### T1: [Task Name]
+
+**Implements:** REQ-XXX
+**Files:** [List]
+**Size:** S/M/L
+
+**Changes:**
+1. [Change 1]
+2. [Change 2]
+
+**Verification:**
+- [ ] [Test/check 1]
+- [ ] [Test/check 2]
+
+**Constitution Checks:**
+- [ ] [Relevant constraint]: [How verified]
+
+**Risks:** [None / List]
+
+**Dependencies:** [None / Task IDs]
+
+**Decision Points:** [Choices that may need logging]
+
+---
+
+[Continue for each task]
+
+## Risk Summary
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| | H/M/L | |
+
+## Notes
+
+[Any additional context]
+```
+
+---
+
+### File: `~/.claude/skills/sdd/templates/constitution-template.md`
+
+```markdown
+# Project Constitution
+
+**Version:** 1.0
+**Last Updated:** [Date]
+
+## Purpose
+
+This document defines security constraints and invariants that MUST be respected
+in all code changes. These are not requirements to be balanced—they are absolute
+constraints.
+
+## Security Constraints
+
+### SEC-001: [Constraint Name]
+**Enforcement:** MUST | SHOULD | MAY
+**CWE:** [CWE number if applicable]
+**Rationale:** [Why this constraint exists]
+**Verification:** [How to verify compliance]
+
+## Invariants
+
+### INV-001: [Invariant Name]
+**Enforcement:** MUST | SHOULD | MAY
+**Rationale:** [Why this invariant must hold]
+**Verification:** [How to verify]
+
+## Enforcement Levels
+
+- **MUST:** Violation blocks merge. No exceptions without security review.
+- **SHOULD:** Violation requires documented justification.
+- **MAY:** Recommended but optional.
+
+## Amendment Process
+
+Changes to this Constitution require:
+1. Written proposal with rationale
+2. Security review (if security-related)
+```
+
+---
+
+### File: `~/.claude/skills/sdd/templates/architecture-template.md`
+
+```markdown
+# Architecture Overview
+
+**Last Updated:** [Date]
+**Updated By:** [Name]
+
+## System Overview
+
+[High-level description]
+
+## Component Map
+
+[Diagram or description of major components]
+
+## Directory Structure
+
+```
+src/
+├── [directory]/ # [Purpose]
+```
+
+## Key Patterns
+
+### Pattern: [Name]
+**Where:** [Where used]
+**Why:** [Rationale]
+**Example:** [File reference]
+
+## Data Flow
+
+### [Flow Name]
+[Step-by-step description]
+
+## Dependencies
+
+### External Services
+- [Service]: [Purpose]
+
+### Key Libraries
+- [Library]: [Purpose]
+
+## Architectural Decisions
+
+### ADR-001: [Decision]
+**Decision:** [What was decided]
+**Rationale:** [Why]
+**Trade-offs:** [What we gave up]
+**Revisit When:** [Conditions for reconsidering]
+
+## Performance Constraints
+
+- [Constraint]: [Target]
+
+## Notes for AI Agents
+
+When implementing features:
+1. [Guideline]
+2. [Guideline]
+```
+
+---
+
+### File: `~/.claude/skills/sdd/templates/merge-readiness-template.md`
+
+```markdown
+# Merge-Readiness Report: [Feature]
+
+**Date:** [Date]
+**Spec:** [SPEC filename]
+**Verdict:** Ready for Review | Issues to Address
+
+## 1. Functional Completeness
+
+| Requirement | Status | Evidence |
+|-------------|--------|----------|
+| REQ-001 | ✅/❌ | [Test or verification] |
+
+**Acceptance Criteria:** X/Y met
+
+## 2. Sound Verification
+
+- **New tests:** N
+- **Test coverage:** X% lines, Y% branches
+- **Edge cases covered:**
+  - [Case 1]
+- **Edge cases NOT covered:**
+  - [Case]: [Justification]
+
+## 3. SE Hygiene
+
+- [ ] Changes are focused (single responsibility)
+- [ ] No code duplication introduced
+- [ ] Follows ARCHITECTURE.md patterns
+- [ ] No TODO/FIXME without tracking issue
+
+**Files changed:** N
+**Lines added:** X
+**Lines removed:** Y
+
+## 4. Clear Rationale
+
+- [ ] Traceability comments present
+- [ ] Complex logic has explanatory comments
+- [ ] Key decisions logged in DECISION_LOG.md
+
+## 5. Auditability
+
+**Artifacts:**
+- Test results: [location]
+- Static analysis: [location/N/A]
+- Decision log: DECISION_LOG.md
+- Traceability: TRACEABILITY.md
+
+## Constitution Compliance
+
+| Constraint | Status | Notes |
+|------------|--------|-------|
+| SEC-001 | ✅/❌/N/A | |
+
+## Spec-Code Alignment (Drift Check)
+
+- [ ] All requirements have corresponding code
+- [ ] All acceptance criteria have corresponding tests
+- [ ] No untraced code changes
+
+## Outstanding Issues
+
+| Issue | Severity | Recommendation |
+|-------|----------|----------------|
+| | H/M/L | |
+
+---
+
+⚠️ **False Confidence Warning**
+
+This report confirms implementation matches specification and tests pass.
+It does NOT guarantee:
+- The specification was correct
+- Tests cover all real-world scenarios
+- No subtle bugs exist
+
+**Human review remains essential.**
+```
+
+---
+
+## Part 8: CLAUDE.md Integration
+
+Add this section to your project's CLAUDE.md file:
+
+```markdown
+## Spec-Driven Development
+
+This project uses the SDD workflow. Key commands:
+- `/sdd` — Assess state and get recommendations
+- `/sdd status` — Show current progress
+
+### Governing Documents
+
+- **CONSTITUTION.md** — Security constraints (inviolable)
+- **ARCHITECTURE.md** — System structure and patterns
+
+### Workflow
+
+Explore → Coordinate → Specify → Plan → Implement → Validate → Lessons
+
+### Rules
+
+1. Never implement without an approved spec (except trivial fixes)
+2. Never violate CONSTITUTION.md
+3. Follow patterns in ARCHITECTURE.md
+4. Log non-trivial decisions in DECISION_LOG.md
+5. Trace all changes to requirements
+```
+
+---
+
+## Part 9: Installation
+
+Give Claude Code this instruction:
+
+```
+Implement the SDD v2.0 skill system as specified in this document:
+
+1. Create directory structure:
+   ~/.claude/skills/sdd/
+   ~/.claude/skills/sdd/templates/
+   ~/.claude/skills/sdd/phases/
+
+2. Create all skill files with exact content provided:
+   - SKILL.md
+   - All phase files in phases/
+   - All template files in templates/
+
+3. In the current project, create if they don't exist:
+   - CONSTITUTION.md (from template, customize for project)
+   - ARCHITECTURE.md (from template, customize for project)
+
+4. Add SDD section to CLAUDE.md
+
+5. Verify installation by running /sdd
+
+After installation, test with:
+- /sdd (should assess state)
+- /sdd explore (should enter exploration mode)
+- /sdd coordinate (should run checklist)
+```
+
+---
+
+## Quick Reference Card
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         SDD v2.0 QUICK REFERENCE                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ GOVERNING DOCS                                                              │
+│   CONSTITUTION.md    │ Security constraints (inviolable)                    │
+│   ARCHITECTURE.md    │ System structure and patterns                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ EXPLORE      │ /sdd explore [path]     │ You read, Claude answers           │
+│              │ /sdd map [area]         │ Get structural overview            │
+│              │ /sdd trace [func]       │ Trace call graph                   │
+│              │ /sdd arch-note "[note]" │ Add to ARCHITECTURE.md             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ COORDINATE   │ /sdd coordinate         │ Run coordination checklist         │
+│              │ /sdd check-existing     │ Search for duplicate work          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ SPECIFY      │ /sdd specify            │ Get template, write spec           │
+│              │ /sdd review-spec        │ Claude reviews for gaps            │
+│              │ /sdd constitution-check │ Verify against constraints         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ PLAN         │ /sdd plan               │ Generate from spec                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ IMPLEMENT    │ /sdd implement          │ Task-by-task execution             │
+│              │ /sdd implement --batch  │ All tasks at once                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ VALIDATE     │ /sdd validate           │ Produce Merge-Readiness Report     │
+│              │ /sdd drift-check        │ Verify spec-code alignment         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ LESSONS      │ /sdd lessons            │ Capture learnings                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ESCAPE       │ /sdd prototype "[goal]" │ Time-boxed exploration             │
+│              │   --timebox [time]      │                                    │
+│              │ /sdd abandon            │ Archive and restart                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ STATUS       │ /sdd                    │ Assess state, recommend            │
+│              │ /sdd status             │ Show current progress              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
