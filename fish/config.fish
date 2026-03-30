@@ -8,9 +8,9 @@ set -g fish_greeting
 abbr --add g lazygit
 abbr --add ld lazydocker
 abbr --add cat bat
-abbr --add ls 'eza --icons'
-abbr --add ll 'eza -la --icons --git'
-abbr --add lt 'eza --tree --icons --level=2'
+abbr --add ls 'eza --icons --group-directories-first'
+abbr --add ll 'eza -la --icons --git --group-directories-first --time-style=relative --hyperlink'
+abbr --add lt 'eza --tree --icons --level=2 --group-directories-first'
 abbr --add vi nvim
 abbr --add v nvim
 abbr --add vim nvim
@@ -57,9 +57,13 @@ function gbr -d 'Fuzzy switch git branch'
     git checkout $branch
 end
 
-# fzf-powered project jumper via zoxide
+# fzf-powered project jumper via zoxide (scored, with tree preview)
 function zp -d 'Fuzzy jump to a project directory'
-    set -l dir (zoxide query -l | fzf --height 40% --preview 'eza --icons --tree --level=1 {1}')
+    set -l dir (zoxide query -ls | fzf --height 50% --layout=reverse \
+        --preview 'eza --icons --tree --level=2 --color=always {2..}' \
+        --preview-window 'right:50%' \
+        --with-nth 2.. \
+        | awk '{print $2}')
     if test $pipestatus[2] -ne 0; or test -z "$dir"
         return
     end
@@ -275,7 +279,33 @@ function udot
 end
 
 function uva
-    source .venv/bin/activate
+    source .venv/bin/activate.fish
+end
+
+# ─── Discovery & Search ─────────────────────────────────────────────────────
+
+# Searchable cheatsheet
+function cheat -d 'Search cheatsheet or render it'
+    if test (count $argv) -gt 0
+        rg -i $argv[1] -C 1 ~/dotfiles/CHEATSHEET.md | bat -l md --style=plain
+    else
+        glow ~/dotfiles/CHEATSHEET.md
+    end
+end
+
+# Fuzzy search fish abbreviations
+function abbrs -d 'Fuzzy search abbreviations'
+    abbr --show | fzf --height 60% --border
+end
+
+# Find recently changed files
+function recent -d 'Files changed within a duration (default: 1day)'
+    fd --changed-within (test (count $argv) -gt 0; and echo $argv[1]; or echo "1day")
+end
+
+# Find large files
+function bloat -d 'Find files larger than size (default: 10MB)'
+    fd --size +(test (count $argv) -gt 0; and echo $argv[1]; or echo "10MB") --type f
 end
 
 # ─── Event Handlers ─────────────────────────────────────────────────────────
@@ -308,8 +338,29 @@ set -gx VISUAL nvim
 set -gx XDG_CONFIG_HOME "$HOME/.config"
 set -gx CDPATH . ~ ~/projects
 
+# Man pages with syntax highlighting (bat)
+set -gx MANPAGER "bat -plman"
+set -gx MANROFFOPT "-c"
+
 fish_add_path --append ~/.local/bin
 fish_add_path --append /home/linuxbrew/.linuxbrew/bin
+
+# ─── Tool Configuration (set before shell integrations) ─────────────────────
+
+# fzf: use fd backend, reverse layout, previews, scroll bindings
+set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --strip-cwd-prefix'
+set -gx FZF_DEFAULT_OPTS '--layout=reverse --border=rounded --height=~80% --min-height=20 --info=inline-right --scroll-off=3 --cycle --bind=ctrl-/:toggle-preview --bind=ctrl-u:preview-half-page-up --bind=ctrl-d:preview-half-page-down --bind=ctrl-space:toggle+down'
+set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
+set -gx FZF_CTRL_T_OPTS '--preview "[ -d {} ] && eza --all --icons --tree --level=2 --color=always {} || bat --color=always --style=numbers,changes --line-range=:200 {}" --preview-window=right:55%:hidden --bind=ctrl-/:toggle-preview'
+set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --strip-cwd-prefix'
+set -gx FZF_ALT_C_OPTS '--preview "eza --all --icons --tree --level=2 --color=always {}" --preview-window=right:55%'
+
+# zoxide: tree preview for zi, exclude noise directories
+set -gx _ZO_FZF_OPTS '--height=60% --layout=reverse --border=rounded --preview "eza --icons --tree --level=2 --color=always {2..}" --preview-window=right:45%:wrap --bind=ctrl-/:toggle-preview'
+set -gx _ZO_EXCLUDE_DIRS "$HOME:$HOME/Downloads:$HOME/.cache:/tmp"
+
+# direnv: dim output instead of noisy env-diff
+set -gx DIRENV_LOG_FORMAT (printf '\033[2mdirenv: %%s\033[0m')
 
 # ─── Zellij Auto-Start ───────────────────────────────────────────────────────
 
@@ -325,6 +376,16 @@ fzf --fish | source
 atuin init fish | source
 mise activate fish | source
 starship init fish | source
+
+# ─── Post-Integration Keybinding Overrides ──────────────────────────────────
+
+# fzf: rebind file finder from Ctrl+T (Zellij Tab mode) to Alt+T
+bind --erase \ct
+bind \et fzf-file-widget
+if bind -M insert \ct 2>/dev/null
+    bind -M insert --erase \ct
+    bind -M insert \et fzf-file-widget
+end
 
 functions -c fish_command_not_found __original_command_not_found
 function fish_command_not_found

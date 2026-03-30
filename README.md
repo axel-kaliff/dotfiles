@@ -40,7 +40,7 @@ ujust update-all
 | **Fish** | Shell (with zoxide, direnv, fzf, atuin integrations) |
 | **Neovim** | Editor (Kickstart-based config) |
 | **Starship** | Shell prompt |
-| **Atuin** | Shell history (synced, fuzzy search) |
+| **Atuin** | Shell history (synced, fuzzy search, directory/workspace filtering) |
 | **lazygit** | Git TUI |
 | **lazydocker** | Container TUI (same keybindings as lazygit) |
 | **yazi** | Terminal file manager |
@@ -49,7 +49,7 @@ ujust update-all
 
 | Tool | Replaces | Usage |
 |------|----------|-------|
-| **bat** | `cat` | `cat file.txt` (aliased in fish) |
+| **bat** | `cat` | `cat file.txt` (aliased, with git change markers + man pager) |
 | **eza** | `ls` | `ls` (aliased in fish) |
 | **fd** | `find` | `fd pattern` — simple, fast file search |
 | **ripgrep** | `grep` | `rg pattern` — fast recursive search |
@@ -119,7 +119,7 @@ ujust update-all
 |------|---------|-------|
 | **glow** | Markdown viewer | `glow README.md` — render markdown in terminal |
 | **slides** | Presentations | `slides deck.md` — terminal presentations from markdown |
-| **fzf** | Fuzzy finder | `Ctrl+T` files, `Alt+C` cd, `Ctrl+R` history |
+| **fzf** | Fuzzy finder | `Alt+T` files (with preview), `Alt+C` cd (with tree preview), `Ctrl+R` history |
 | **jq** | JSON processor | `curl api | jq '.data'` — query/transform JSON |
 | **jnv** | JSON explorer | `jnv file.json` — interactive jq filter builder |
 | **tealdeer** | Quick help | `tldr tar` — community-maintained command examples |
@@ -150,10 +150,11 @@ These replace standard commands — just use them as normal, the better version 
 
 | You type | Runs | Improvement |
 |----------|------|-------------|
-| `cat file` | `bat` | Syntax highlighting, line numbers |
-| `ls` | `eza --icons` | Icons, colors |
-| `ll` | `eza -la --icons --git` | Long list with git status |
-| `lt` | `eza --tree --icons` | Tree view (2 levels) |
+| `cat file` | `bat` | Syntax highlighting, line numbers, git change markers |
+| `man cmd` | `bat` (MANPAGER) | Syntax-highlighted man pages |
+| `ls` | `eza` | Icons, colors, directories sorted first |
+| `ll` | `eza -la` | Long list with git status, relative times, clickable filenames |
+| `lt` | `eza --tree` | Tree view (2 levels), directories first |
 | `diff a b` | `delta` | Side-by-side with syntax highlighting |
 | `ps` | `procs` | Color-coded, searchable |
 | `du` | `dust` | Visual disk usage tree |
@@ -174,6 +175,8 @@ These replace standard commands — just use them as normal, the better version 
 | `y` | yazi file manager (cd on exit) |
 | `up` | Update all packages and tools (topgrade) |
 | `help <cmd>` | Quick help: tldr with man fallback |
+| `cheat [term]` | Search cheatsheet (or render with glow if no term) |
+| `abbrs` | Fuzzy search all fish abbreviations |
 | `Ctrl+S` | Toggle sudo prefix on current command |
 
 ### Workflow Functions
@@ -182,7 +185,9 @@ These replace standard commands — just use them as normal, the better version 
 |---------|--------|
 | `tdd py -- pytest` | Watch files and re-run tests on change |
 | `gbr` | Fuzzy switch git branch (sorted by recent, with log preview) |
-| `zp` | Fuzzy jump to a project directory (zoxide + fzf) |
+| `zp` | Fuzzy jump to a project directory (scored, with tree preview) |
+| `recent [dur]` | Find files changed within duration (default: 1day, uses fd) |
+| `bloat [size]` | Find files larger than size (default: 10MB, uses fd) |
 | `fkill` | Fuzzy find and kill a process |
 | `zl dev` | Start zellij with a named layout |
 | `zl` | List available zellij layouts |
@@ -227,18 +232,19 @@ These replace standard commands — just use them as normal, the better version 
 | Command | Action |
 |---------|--------|
 | `udot` | Interactive commit + push dotfiles (gum confirm + custom message), then stow |
-| `uva` | Activate `.venv/bin/activate` |
+| `uva` | Activate `.venv/bin/activate.fish` |
 | `reload` | Reload fish config (optional `--zellij` to reset zellij session) |
 
 ### Shell Integrations & Keybindings
 
 | Shortcut | Tool | Action |
 |----------|------|--------|
-| `Ctrl+T` | fzf | Fuzzy find files |
-| `Alt+C` | fzf | Fuzzy cd into directory |
-| `Ctrl+R` | Atuin | Fuzzy search shell history |
+| `Alt+T` | fzf + fd | Fuzzy find files with bat/eza preview (rebound from Ctrl+T for Zellij) |
+| `Alt+C` | fzf + fd | Fuzzy cd into directory with tree preview |
+| `Ctrl+/` | fzf | Toggle preview in any fzf picker |
+| `Ctrl+R` | Atuin | Fuzzy search shell history (directory-scoped on up-arrow, workspace-aware) |
 | `z <dir>` | zoxide | Jump to frecent directory |
-| `zi` | zoxide | Interactive directory picker |
+| `zi` | zoxide | Interactive directory picker (with tree preview) |
 
 ### Active Shell Integrations
 
@@ -340,7 +346,53 @@ The `ssh` function automatically rsyncs your neovim config to r2d2 before every 
 
 ## Yazi
 
-Terminal file manager with vim-style navigation. Launch with `y` (fish) or `Alt+Y` (zellij).
+Terminal file manager with vim-style navigation. Launch with `y` (fish) or `Alt+Y` (zellij). Theme: Catppuccin Mocha. Plugins: git status, smart-enter, smart-filter, mime-ext.
+
+### Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `h/l` | Parent / enter directory (l = smart-enter: opens files too) |
+| `j/k` | Move down / up |
+| `H/L` | Directory history back / forward |
+| `z` | fzf jump to any directory |
+| `Z` | Zoxide jump (uses your frecency database) |
+| `!` | Open fish shell in current directory |
+
+### Search & Filter
+
+| Shortcut | Action |
+|----------|--------|
+| `s` | **Search filenames** recursively (fd) |
+| `S` | **Search file contents** recursively (ripgrep) |
+| `f` | Smart filter (live filter as you type) |
+| `/` | Incremental find in current directory |
+
+### Selection & File Operations
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Toggle selection on hovered file |
+| `v` | Visual mode (select range by moving) |
+| `Ctrl+A` | Select all |
+| `y` / `x` | Yank (copy) / yank (cut) |
+| `p` / `P` | Paste / paste with overwrite |
+| `d` / `D` | Trash / permanent delete |
+| `a` | Create file (add `/` suffix for directory) |
+| `r` | Rename (bulk rename in editor when multiple selected) |
+| `cc` `cd` `cf` | Copy: full path / directory / filename |
+
+### Display
+
+| Shortcut | Action |
+|----------|--------|
+| `.` | Toggle hidden files |
+| `,m` `,s` `,e` | Sort by modified / size / extension |
+| `ms` `mp` `mm` | Linemode: show size / permissions / modified |
+| `K/J` | Scroll preview up / down |
+| `Tab` | Spot view (detailed file metadata) |
+| `t` | New tab, `[`/`]` to switch |
+| `w` | Task manager (background operations) |
 
 ### Bookmarks
 
@@ -352,13 +404,7 @@ Terminal file manager with vim-style navigation. Launch with `y` (fish) or `Alt+
 | `g D` | `~/Downloads` |
 | `g o` | `~/Documents` |
 
-### Keymaps
-
-| Shortcut | Action |
-|----------|--------|
-| `!` | Open fish shell in current directory |
-
-Config and code files (`.md`, `.json`, `.toml`, `.yaml`, `.kdl`, `.lua`, `.fish`, `.sh`) open directly in nvim.
+Config and code files (`.md`, `.json`, `.toml`, `.yaml`, `.kdl`, `.lua`, `.fish`, `.sh`) open directly in nvim. Git status indicators show inline next to filenames.
 
 ---
 
@@ -619,8 +665,10 @@ lazygit       # or just type 'g' in fish
 
 ```
 dotfiles/
-├── atuin/          # Shell history config
+├── atuin/          # Shell history config (fuzzy search, directory filtering, workspace mode)
 ├── bash/           # Bash config (~/.bashrc, stowed to ~)
+├── bat/            # bat config (style, syntax mappings, man pager)
+├── direnv/         # direnv config (whitelist, strict mode, hidden env-diff)
 ├── fish/           # Fish shell config, plugins, functions
 ├── ghostty/        # Terminal emulator config
 ├── lazygit/        # Git TUI config
@@ -629,9 +677,9 @@ dotfiles/
 │   └── lua/
 │       ├── custom/plugins/   # fzf-lua, snacks, noice, neogit, diffview, oil, flash, trouble, grug-far
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
-├── ripgrep/        # ripgrep config (smart-case, hidden files)
+├── ripgrep/        # ripgrep config (smart-case, hidden files, max-columns)
 ├── starship.toml   # Shell prompt config
-├── yazi/           # File manager config
+├── yazi/           # File manager config (catppuccin theme, git/smart-enter/smart-filter plugins)
 ├── zellij/         # Zellij config + layouts
 │   ├── config.kdl
 │   └── layouts/    # dev, fullstack, monitor, sics

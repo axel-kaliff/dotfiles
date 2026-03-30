@@ -3,6 +3,24 @@
 ## windows: %USERPROFILE%/.local/share/atuin/history.db
 # db_path = "~/.history.db"
 
+# ─── Active Settings ────────────────────────────────────────────────────────
+
+search_mode = "fuzzy"
+filter_mode = "global"
+filter_mode_shell_up_key_binding = "directory"
+workspaces = true
+style = "compact"
+show_preview = true
+max_preview_height = 4
+
+history_filter = [
+  "^export.*TOKEN",
+  "^export.*SECRET",
+  "^export.*PASSWORD",
+  "^export.*KEY=",
+  "^ ",
+]
+
 ## where to store your encryption key, default is your system data directory
 ## linux/mac: ~/.local/share/atuin/key
 ## windows: %USERPROFILE%/.local/share/atuin/key
@@ -162,37 +180,32 @@ enter_accept = true
 
 [stats]
 ## Set commands where we should consider the subcommand for statistics. Eg, kubectl get vs just kubectl
-# common_subcommands = [
-#   "apt",
-#   "cargo",
-#   "composer",
-#   "dnf",
-#   "docker",
-#   "git",
-#   "go",
-#   "ip",
-#   "kubectl",
-#   "nix",
-#   "nmcli",
-#   "npm",
-#   "pecl",
-#   "pnpm",
-#   "podman",
-#   "port",
-#   "systemctl",
-#   "tmux",
-#   "yarn",
-# ]
+common_subcommands = [
+  "git",
+  "docker",
+  "podman",
+  "just",
+  "mise",
+  "cargo",
+  "npm",
+  "pip",
+  "brew",
+  "systemctl",
+  "kubectl",
+]
 
 ## Set commands that should be totally stripped and ignored from stats
-# common_prefix = ["sudo"]
+common_prefix = ["sudo"]
 
 ## Set commands that will be completely ignored from stats
-# ignored_commands = [
-#   "cd",
-#   "ls",
-#   "vi"
-# ]
+ignored_commands = [
+  "cd",
+  "ls",
+  "ll",
+  "lt",
+  "clear",
+  "exit",
+]
 
 [keys]
 # Defaults to true. If disabled, using the up/down key won't exit the TUI when scrolled past the first/last entry.

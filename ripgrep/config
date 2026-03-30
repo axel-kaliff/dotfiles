@@ -3,3 +3,5 @@
 --glob=!.git
 --glob=!node_modules
 --glob=!.venv
+--max-columns=200
+--max-columns-preview

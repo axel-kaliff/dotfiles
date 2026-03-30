@@ -1,3 +1,23 @@
+[mgr]
+sort_dir_first = true
+show_symlink = true
+linemode = "size"
+scrolloff = 5
+
+[plugin]
+prepend_fetchers = [
+  { id = "git", name = "*", run = "git" },
+  { id = "git", name = "*/", run = "git" },
+]
+prepend_previewers = [
+  { name = "*", run = "mime-ext", prio = "high" },
+]
+
+[preview]
+max_width = 600
+max_height = 900
+image_filter = "lanczos3"
+
 [opener]
 edit = [
   { run = 'nvim "$@"', block = true, for = "unix" },

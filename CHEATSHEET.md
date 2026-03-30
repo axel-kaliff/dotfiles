@@ -15,6 +15,8 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 | `y` | yazi file manager (cd on exit) |
 | `up` | Update everything (topgrade) |
 | `help <cmd>` | tldr cheatsheet, falls back to man |
+| `cheat [term]` | Search cheatsheet (or render with glow) |
+| `abbrs` | Fuzzy search all abbreviations |
 | `stats` | Lines of code + disk usage |
 | `ai` | Chat with local LLM |
 | `pair` | Start aider AI pair programmer |
@@ -25,11 +27,12 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 | Command | What it does |
 |---------|-------------|
 | `z <dir>` | Jump to frecent directory (zoxide) |
-| `zi` | Interactive directory picker |
-| `zp` | Fuzzy project jumper (zoxide + fzf) |
-| `Ctrl+T` | Fuzzy find files (fzf) |
-| `Alt+C` | Fuzzy cd into directory (fzf) |
+| `zi` | Interactive directory picker (with tree preview) |
+| `zp` | Fuzzy project jumper (scored, with tree preview) |
+| `Alt+T` | Fuzzy find files with preview (fzf + fd + bat) |
+| `Alt+C` | Fuzzy cd into directory with preview (fzf + fd + eza) |
 | `Ctrl+R` | Search shell history (atuin) |
+| `Ctrl+/` | Toggle preview in any fzf picker |
 
 ### Git
 
@@ -64,13 +67,16 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 
 | Command | What it does |
 |---------|-------------|
-| `ls` | eza with icons |
-| `ll` | Long list with git status |
+| `ls` | eza with icons, dirs first |
+| `ll` | Long list with git status, relative times, clickable |
 | `lt` | Tree view (2 levels) |
-| `cat file` | Syntax-highlighted view (bat) |
+| `cat file` | Syntax-highlighted view (bat, with git change markers) |
 | `find pattern` | Fast file search (fd) |
 | `rg pattern` | Fast content search (ripgrep) |
+| `recent [dur]` | Files changed within duration (default: 1day) |
+| `bloat [size]` | Find files larger than size (default: 10MB) |
 | `rm file` | Move to trash (safe delete) |
+| `man cmd` | Syntax-highlighted man pages (bat) |
 
 ### Containers
 
@@ -124,6 +130,20 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 | Shortcut | What it does |
 |----------|-------------|
 | `Ctrl+S` | Toggle sudo on current command |
+| `Alt+T` | Fuzzy file finder with preview (fzf) |
+| `Alt+C` | Fuzzy cd with tree preview (fzf) |
+| `Ctrl+/` | Toggle preview in any fzf/zoxide picker |
+
+### Atuin (shell history TUI at Ctrl+R)
+
+| Shortcut | What it does |
+|----------|-------------|
+| `Ctrl+R` | Open atuin / cycle filter mode (global/host/session/dir/workspace) |
+| `Ctrl+S` | Cycle search mode (prefix/fulltext/fuzzy) |
+| `Ctrl+O` | Inspect selected command (exit code, duration, dir) |
+| `Tab` | Paste command into prompt for editing (don't execute) |
+| `Enter` | Execute selected command immediately |
+| `Ctrl+D` | Delete history entry (in inspector) |
 
 ---
 
@@ -186,10 +206,50 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 
 | Shortcut | What it does |
 |----------|-------------|
-| `h/l` | Parent / enter directory |
+| `h/l` | Parent / enter directory (l = smart-enter: opens files too) |
 | `j/k` | Move down / up |
+| `H/L` | Directory history back / forward |
 | `Enter` | Open file |
 | `!` | Open fish shell here |
+| `z` | fzf jump to directory |
+| `Z` | Zoxide jump (uses your frecency database) |
+| `Ctrl+U/D` | Half page up / down |
+
+### Search & Filter
+
+| Shortcut | What it does |
+|----------|-------------|
+| `s` | **Search filenames** recursively (fd) |
+| `S` | **Search file contents** recursively (ripgrep) |
+| `f` | Smart filter (live filter as you type) |
+| `/` | Incremental find in current directory |
+| `n/N` | Next / previous match |
+
+### Selection & Operations
+
+| Shortcut | What it does |
+|----------|-------------|
+| `Space` | Toggle selection on hovered file |
+| `v` | Visual mode (select range) |
+| `Ctrl+A` | Select all |
+| `y` / `x` | Yank (copy) / yank (cut) |
+| `p` / `P` | Paste / paste with overwrite |
+| `d` / `D` | Trash / permanent delete |
+| `a` | Create file (trailing `/` = directory) |
+| `r` | Rename (with multiple selected = bulk rename in editor) |
+
+### Display & Metadata
+
+| Shortcut | What it does |
+|----------|-------------|
+| `.` | Toggle hidden files |
+| `,m` `,s` `,e` `,n` | Sort by modified / size / extension / natural |
+| `ms` `mp` `mm` `mo` | Linemode: show size / permissions / modified / owner |
+| `cc` `cd` `cf` `cn` | Copy: full path / directory / filename / name without ext |
+| `K/J` | Scroll preview up / down |
+| `Tab` | Spot view (detailed file metadata) |
+| `t` | New tab, `[`/`]` switch tabs |
+| `w` | Task manager (background operations) |
 
 ### Bookmarks
 
