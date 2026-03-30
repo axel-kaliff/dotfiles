@@ -1,74 +1,35 @@
-set fish_greeting
+# ─── Greeting ────────────────────────────────────────────────────────────────
+# Run `set -U fish_greeting` once to persist across sessions, then this line
+# can be removed. Kept here for portability across machines via dotfile sync.
+set -g fish_greeting
 
-# ─── Aliases / Wrappers ──────────────────────────────────────────────────────
+# ─── Abbreviations (expand in-place, history records the real command) ───────
 
-function g
-    lazygit
-end
-
-function ld
-    lazydocker
-end
-
-function cat
-    bat $argv
-end
-
-function ls
-    eza --icons $argv
-end
-
-function ll
-    eza -la --icons --git $argv
-end
-
-function lt
-    eza --tree --icons --level=2 $argv
-end
-
-function vi -d 'nvim'
-    nvim $argv
-end
-
-function v -d 'nvim'
-    nvim $argv
-end
-
-function vim -d 'nvim'
-    nvim $argv
-end
-
-function diff
-    delta $argv
-end
-
-function ps
-    procs $argv
-end
-
-function du
-    dust $argv
-end
-
-function dig
-    doggo $argv
-end
-
-function top
-    btm $argv
-end
-
-function curl
-    xh $argv
-end
-
-function sed
-    sd $argv
-end
-
-function find
-    fd $argv
-end
+abbr --add g lazygit
+abbr --add ld lazydocker
+abbr --add cat bat
+abbr --add ls 'eza --icons'
+abbr --add ll 'eza -la --icons --git'
+abbr --add lt 'eza --tree --icons --level=2'
+abbr --add vi nvim
+abbr --add v nvim
+abbr --add vim nvim
+abbr --add diff delta
+abbr --add ps procs
+abbr --add du dust
+abbr --add dig doggo
+abbr --add top btm
+abbr --add curl xh
+abbr --add sed sd
+abbr --add find fd
+abbr --add watch watchexec
+abbr --add bench hyperfine
+abbr --add md glow
+abbr --add pair aider
+abbr --add up topgrade
+abbr --add rm trash
+abbr --add use 'mise use'
+abbr --add backup 'restic backup'
 
 # ─── Workflow Functions ──────────────────────────────────────────────────────
 
@@ -87,39 +48,37 @@ end
 # fzf-powered git branch switching
 function gbr -d 'Fuzzy switch git branch'
     set -l branch (git branch --all --sort=-committerdate | string trim | fzf --height 40% --preview 'git log --oneline -10 {1}')
-    if test -n "$branch"
-        # Strip remote prefix if selecting a remote branch
-        set branch (string replace -r '^\* ' '' -- $branch)
-        set branch (string replace -r '^remotes/origin/' '' -- $branch)
-        git checkout $branch
+    if test $pipestatus[2] -ne 0; or test -z "$branch"
+        return
     end
+    # Strip remote prefix if selecting a remote branch
+    set branch (string replace -r '^\* ' '' -- $branch)
+    set branch (string replace -r '^remotes/origin/' '' -- $branch)
+    git checkout $branch
 end
 
 # fzf-powered project jumper via zoxide
 function zp -d 'Fuzzy jump to a project directory'
     set -l dir (zoxide query -l | fzf --height 40% --preview 'eza --icons --tree --level=1 {1}')
-    if test -n "$dir"
-        cd $dir
+    if test $pipestatus[2] -ne 0; or test -z "$dir"
+        return
     end
+    cd $dir
 end
 
 # fzf-powered process killer
 function fkill -d 'Fuzzy find and kill a process'
     set -l pid (procs --no-header | fzf --height 40% --multi | awk '{print $1}')
-    if test -n "$pid"
-        echo "Killing PID(s): $pid"
-        echo $pid | xargs kill $argv
+    if test $pipestatus[2] -ne 0; or test -z "$pid"
+        return
     end
+    echo "Killing PID(s): $pid"
+    echo $pid | xargs kill $argv
 end
 
 # tldr with man fallback
 function help -d 'Quick help: tldr with man fallback'
     tldr $argv 2>/dev/null; or man $argv
-end
-
-# Update everything with topgrade
-function up -d 'Update all packages and tools'
-    topgrade
 end
 
 # Zellij layout launcher
@@ -214,21 +173,6 @@ function jqi -d 'Interactive jq on file or stdin'
     end
 end
 
-# Run command and re-run on file changes
-function watch -d 'Watch files and re-run command'
-    watchexec $argv
-end
-
-# Benchmark commands
-function bench -d 'Benchmark a command'
-    hyperfine $argv
-end
-
-# Render markdown in terminal
-function md -d 'Render markdown'
-    glow $argv
-end
-
 # Encrypt/decrypt files with age
 function encrypt -d 'Encrypt file with age'
     age -p -o "$argv[1].age" $argv[1]
@@ -246,11 +190,6 @@ function ai -d 'Chat with local LLM'
     else
         ollama run llama3
     end
-end
-
-# aider - AI pair programming
-function pair -d 'Start aider AI pair programmer'
-    aider $argv
 end
 
 # Quick container inspection
@@ -274,21 +213,6 @@ function box -d 'Enter or create distrobox'
     else
         distrobox enter $argv[1] 2>/dev/null; or distrobox create -i $argv[1] && distrobox enter $argv[1]
     end
-end
-
-# mise - activate for current shell
-function use -d 'Set tool version via mise'
-    mise use $argv
-end
-
-# Quick backup with restic
-function backup -d 'Backup directory with restic'
-    restic backup $argv
-end
-
-# Safe rm via trash
-function rm -d 'Move to trash instead of deleting'
-    trash $argv
 end
 
 # ─── Devcontainer Functions ──────────────────────────────────────────────────
@@ -354,6 +278,24 @@ function uva
     source .venv/bin/activate
 end
 
+# ─── Event Handlers ─────────────────────────────────────────────────────────
+
+# Desktop notification for commands that take longer than 10 seconds
+function __notify_long_command --on-event fish_postexec
+    if test $CMD_DURATION -gt 10000
+        set -l secs (math $CMD_DURATION / 1000)
+        notify-send --app-name=fish "Command finished ($secs""s)" "$argv[1]" 2>/dev/null
+    end
+end
+
+# ─── Transient Prompt ────────────────────────────────────────────────────────
+
+# Collapse the starship prompt to a simple marker for already-executed lines,
+# keeping scrollback clean while the full prompt shows on the current line.
+function fish_transient_prompt
+    printf '❯ '
+end
+
 # ─── Keybindings ─────────────────────────────────────────────────────────────
 
 bind \cs '__ethp_commandline_toggle_sudo'
@@ -361,11 +303,13 @@ bind \ee 'nvim; commandline -f repaint'
 
 # ─── Environment ─────────────────────────────────────────────────────────────
 
-export EDITOR=nvim
-export VISUAL=nvim
-export XDG_CONFIG_HOME="$HOME/.config/"
-export PATH="$PATH:$HOME/.local/bin"
-export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin/"
+set -gx EDITOR nvim
+set -gx VISUAL nvim
+set -gx XDG_CONFIG_HOME "$HOME/.config"
+set -gx CDPATH . ~ ~/projects
+
+fish_add_path --append ~/.local/bin
+fish_add_path --append /home/linuxbrew/.linuxbrew/bin
 
 # ─── Zellij Auto-Start ───────────────────────────────────────────────────────
 
