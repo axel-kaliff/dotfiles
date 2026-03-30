@@ -48,6 +48,55 @@ For each file with findings:
 
 Number each finding sequentially (matching the numbering in SCORED_FINDINGS.md).
 
+## Step 2b: Pre-compute source context and callers
+
+Before spawning agents, gather all the context they will need. This
+eliminates redundant file reads and greps across batches, and lets
+agents spend their full budget on analysis instead of discovery.
+
+### Pre-read containing functions
+
+For each unique file:function pair across all findings:
+
+1. Read the file using the Read tool
+2. Extract the **full containing function** (from `def`/`class` line
+   to the end of the function body) plus **30 lines above** for
+   imports, class context, and preceding logic
+3. Store as a text block keyed by `file:function_name`
+
+If the same function appears in multiple batches, read it once and
+include it in each batch's prompt.
+
+### Pre-grep callers
+
+For each unique function name across all findings:
+
+1. Run `grep -rn 'function_name(' --include='*.py' -l` to find files
+   that call this function
+2. For each calling file (max 5 files), run
+   `grep -n 'function_name(' <file>` to get the exact call sites with
+   line numbers
+3. For each call site, extract the calling function name from context
+   (the nearest `def` line above the call site)
+4. Store as a structured caller list:
+   ```
+   Callers of function_name:
+   - caller_func() at file.py:42
+   - other_func() at other.py:78
+   (no callers found)
+   ```
+
+**Deduplication:** If multiple findings share the same containing
+function, its callers are grepped once and reused across all batches
+that include findings in that function.
+
+**Hop 2 (optional):** For findings where the immediate caller is
+itself a thin wrapper (single call site, <5 lines), also pre-grep
+callers of the wrapper. This gives agents a 2-hop caller chain without
+requiring them to grep at all. Skip hop 2 if more than 3 callers exist
+at hop 1 (the function is widely called, further tracing is unlikely
+to converge on a single root cause).
+
 ## Step 3: Spawn parallel root-cause agents
 
 Launch all batches in the current wave **in parallel** (single message, multiple agent tool calls).
@@ -61,12 +110,28 @@ Each agent is a **general-purpose agent** with this prompt:
 > $FINDINGS_BLOCK
 > (paste each finding with: number, file:line, score, source, severity, description, proposed FIX)
 >
+> ## Pre-computed source context
+>
+> $SOURCE_CONTEXT
+> (for each finding: the full containing function source + 30 lines above,
+> keyed by file:function_name. This is already extracted — do NOT re-read
+> these files unless you need additional context beyond what is provided.)
+>
+> ## Pre-computed callers
+>
+> $CALLER_CONTEXT
+> (for each finding's function: list of callers with file:line and calling
+> function name. If hop 2 was computed, it is included. This is already
+> grepped — do NOT re-grep for these functions.)
+>
 > ## For EACH finding, follow this process:
 >
-> ### 1. Read the code context
-> - Read the **full containing function** at the finding location (not just +/-10 lines)
-> - Read +30 lines above the function for imports, class context, and preceding logic
-> - If the finding is about a value or type: trace where that value originates
+> ### 1. Review the provided context
+> - Read the pre-computed source context for the finding's function
+> - Read the pre-computed caller list
+> - If the finding is about a value or type: trace where that value
+>   originates using the provided source and callers. Only read
+>   additional files if the origin is not visible in the provided context.
 >
 > ### 2. Apply the compressed 5-why
 > Ask: **"If I apply this proposed FIX, does the entire class of problem go away, or just this instance?"**
@@ -78,9 +143,11 @@ Each agent is a **general-purpose agent** with this prompt:
 >
 > Stop when you reach the first incorrect thing — the point where fixing it prevents the entire class of problems. You do NOT need all 5 levels; stop as soon as you find the root.
 >
-> ### 3. Check callers and data origin
-> - Use `grep -rn 'function_name(' --include='*.py'` to find callers (max 2 hops upstream)
-> - If the finding is about a bad value/type, trace it to where it's first created or assigned
+> ### 3. Trace data origin if needed
+> - The pre-computed callers show who calls this function and from where
+> - If the callers list shows a clear data origin, use it directly
+> - Only grep or read additional files if the root cause appears to be
+>   beyond the pre-computed 1-2 hop caller chain
 > - Use `git diff $BASE..HEAD -- <file>` to check if the root cause was introduced by this branch
 >
 > ### 4. Classify the finding

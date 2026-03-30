@@ -190,6 +190,9 @@ vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Buffer Cy
 
 vim.keymap.set('n', 'gb', '<cmd>BufferLinePick<cr>', { desc = 'Pick Buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bp|bd #<cr>', { desc = 'Buffer Close' })
+vim.keymap.set('n', '<leader>bo', '<cmd>BufferLineCloseOthers<cr>', { desc = 'Buffer Close Others' })
+vim.keymap.set('n', '<leader>bl', '<cmd>BufferLineCloseLeft<cr>', { desc = 'Buffer Close Left' })
+vim.keymap.set('n', '<leader>br', '<cmd>BufferLineCloseRight<cr>', { desc = 'Buffer Close Right' })
 
 vim.keymap.set('n', '<leader>e', '<cmd>Oil<cr>', { desc = 'File explorer (Oil)' })
 
@@ -197,8 +200,29 @@ vim.keymap.set('n', '<leader>e', '<cmd>Oil<cr>', { desc = 'File explorer (Oil)' 
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
--- Diagnostic keymaps
--- vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+-- Move lines up/down
+vim.keymap.set('n', '<A-j>', '<cmd>move .+1<cr>==', { desc = 'Move line down' })
+vim.keymap.set('n', '<A-k>', '<cmd>move .-2<cr>==', { desc = 'Move line up' })
+vim.keymap.set('v', '<A-j>', ":move '>+1<cr>gv=gv", { desc = 'Move selection down' })
+vim.keymap.set('v', '<A-k>', ":move '<-2<cr>gv=gv", { desc = 'Move selection up' })
+
+-- Better indenting — keeps visual selection
+vim.keymap.set('v', '<', '<gv', { desc = 'Indent left' })
+vim.keymap.set('v', '>', '>gv', { desc = 'Indent right' })
+
+-- Paste over selection without yanking the replaced text
+vim.keymap.set('x', 'p', '"_dP', { desc = 'Paste without losing register' })
+
+-- Window splits
+vim.keymap.set('n', '<leader>w-', '<cmd>split<cr>', { desc = 'Split horizontal' })
+vim.keymap.set('n', '<leader>w|', '<cmd>vsplit<cr>', { desc = 'Split vertical' })
+vim.keymap.set('n', '<leader>wd', '<cmd>close<cr>', { desc = 'Close split' })
+
+-- Quickfix navigation
+vim.keymap.set('n', ']q', '<cmd>cnext<cr>zz', { desc = 'Next quickfix' })
+vim.keymap.set('n', '[q', '<cmd>cprev<cr>zz', { desc = 'Previous quickfix' })
+vim.keymap.set('n', ']l', '<cmd>lnext<cr>zz', { desc = 'Next loclist' })
+vim.keymap.set('n', '[l', '<cmd>lprev<cr>zz', { desc = 'Previous loclist' })
 
 -- SESSION MANAGEMENT
 vim.keymap.set('n', '<leader>qs', function()
@@ -217,30 +241,21 @@ vim.keymap.set('n', '<leader>qd', function()
   require('persistence').stop()
 end, { desc = 'Stop session auto-save' })
 
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
--- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
--- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('n', '<C-s>', ':w<CR>', { desc = 'Write buffer to file' })
-vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>:startinsert<CR>', { desc = 'Write buffer to file' })
+-- Terminal escape
+vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+-- Save
+vim.keymap.set('n', '<C-s>', '<cmd>w<cr>', { desc = 'Write buffer to file' })
+vim.keymap.set('i', '<C-s>', '<cmd>w<cr>', { desc = 'Write buffer to file' })
 
--- Keybinds
+-- Lazy plugin manager
+vim.keymap.set('n', '<leader>ul', '<cmd>Lazy<cr>', { desc = 'Lazy Plugin Manager' })
+
+-- Undo tree (built-in in nvim 0.12)
+vim.keymap.set('n', '<leader>uu', '<cmd>Undotree<cr>', { desc = 'Undo Tree' })
+
 -- CTRL+<hjkl> navigation is handled by zellij-nav.nvim plugin
 -- (navigates both neovim splits and zellij panes)
-
--- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -370,6 +385,7 @@ require('lazy').setup({
         { '<leader>u', group = '[U]I' },
         { '<leader>q', group = 'Session' },
         { '<leader>b', group = '[B]uffer' },
+        { '<leader>w', group = '[W]indow' },
       },
     },
   },
