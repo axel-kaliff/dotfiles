@@ -78,7 +78,7 @@ Add to ARCHITECTURE.md under "Notes for AI Agents":
 When you notice undocumented patterns:
 "I notice this codebase uses [pattern] for [purpose]. This isn't in ARCHITECTURE.md. Should I add it?"
 
-## Transition to Coordinate
+## Transition to Specify
 
 When the user seems ready:
-"Do you feel you understand the code well enough to write a specification? If so, let's run the coordination checklist with `/sdd coordinate` before you start writing."
+"Do you feel you understand the code well enough to write a specification? If so, let's move to `/sdd specify` to start defining what you want to build."

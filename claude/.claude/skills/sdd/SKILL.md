@@ -32,8 +32,6 @@ This workflow maintains specifications alongside code with enforcement via tests
 | `/sdd map [area]` | Generate structural overview of code area |
 | `/sdd trace [function]` | Trace function calls and dependencies |
 | `/sdd arch-note "[note]"` | Add note to ARCHITECTURE.md |
-| `/sdd coordinate` | Run coordination checklist |
-| `/sdd check-existing "[desc]"` | Search for existing work |
 | `/sdd specify` | Enter specification mode |
 | `/sdd review-spec` | Review spec for completeness |
 | `/sdd constitution-check` | Verify spec against CONSTITUTION.md |
@@ -53,7 +51,6 @@ Parse the argument string to determine which phase file to load:
 
 - No args or `status` → Run state assessment (below)
 - `explore`, `map`, `trace`, `arch-note` → Load `phases/explore.md`
-- `coordinate`, `check-existing` → Load `phases/coordinate.md`
 - `specify`, `review-spec`, `constitution-check` → Load `phases/specify.md`
 - `plan`, `replan` → Load `phases/plan.md`
 - `implement` → Load `phases/implement.md`
@@ -70,7 +67,7 @@ When `/sdd` is invoked without arguments, assess the task complexity:
 
 **Small** (<50 lines, single file): "This is a small change. I recommend a lightweight spec: write 3-5 bullets describing what you want, then we'll implement and verify."
 
-**Medium** (multiple files, defined scope): "This is a medium change. I recommend the standard workflow: Explore -> Coordinate -> Specify -> Plan -> Implement -> Validate -> Lessons."
+**Medium** (multiple files, defined scope): "This is a medium change. I recommend the standard workflow: Explore -> Specify -> Plan -> Implement -> Validate -> Lessons."
 
 **Large** (architectural, cross-cutting): "This is a large change with significant scope. I recommend the full workflow with extended exploration and possibly a design review before implementation."
 
@@ -80,7 +77,7 @@ Check for existing artifacts in the project root and `specs/` directory:
 
 - No CONSTITUTION.md → Offer to create from template (`templates/constitution-template.md`)
 - No ARCHITECTURE.md → Offer to create from template (`templates/architecture-template.md`)
-- No SPEC.md → Guide to explore/coordinate/specify
+- No SPEC.md → Guide to explore/specify
 - SPEC.md exists, no PLAN.md → Offer to generate plan
 - PLAN.md exists → Assess implementation progress
 - Implementation complete → Offer validation

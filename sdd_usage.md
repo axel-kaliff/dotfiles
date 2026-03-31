@@ -25,11 +25,11 @@ This single command assesses your project state and tells you what to do next. R
 
 `/sdd` will recommend the appropriate tier when you invoke it.
 
-## The Seven Phases
+## The Six Phases
 
 ```
-EXPLORE -> COORDINATE -> SPECIFY -> PLAN -> IMPLEMENT -> VALIDATE -> LESSONS
-  You        You          You      Claude    Claude       Claude      Both
+EXPLORE -> SPECIFY -> PLAN -> IMPLEMENT -> VALIDATE -> LESSONS
+  You        You      Claude    Claude       Claude      Both
 ```
 
 ### Phase 1: Explore
@@ -48,25 +48,7 @@ EXPLORE -> COORDINATE -> SPECIFY -> PLAN -> IMPLEMENT -> VALIDATE -> LESSONS
 
 **Move on when** you can answer: What code is involved? How does it work? What patterns does this codebase use? What tests exist?
 
-### Phase 2: Coordinate
-
-**What you do:** Check that nobody else is working on this and it aligns with priorities.
-
-```
-/sdd coordinate                        # Run the full checklist
-/sdd check-existing "user auth flow"   # Search for existing PRs/issues/branches
-```
-
-The checklist covers:
-- No existing PR or branch addresses this
-- No open issue already tracks this work
-- Aligns with roadmap
-- No one else is working in this area
-- Dependencies are available
-
-For solo projects this is lightweight — just check your own branches and confirm dependencies are ready.
-
-### Phase 3: Specify
+### Phase 2: Specify
 
 **What you do:** Write the specification. Claude helps you refine it but does not write it for you.
 
@@ -87,7 +69,7 @@ Claude will ask clarifying questions: "In REQ-003, you say 'handle errors gracef
 
 **Gate:** Claude will not proceed until you explicitly approve the spec.
 
-### Phase 4: Plan
+### Phase 3: Plan
 
 **What Claude does:** Transforms your approved spec into an ordered task list.
 
@@ -105,7 +87,7 @@ The plan (PLAN.md) contains:
 
 **Gate:** Claude presents the plan and waits for your explicit approval.
 
-### Phase 5: Implement
+### Phase 4: Implement
 
 **What Claude does:** Executes the plan one task at a time.
 
@@ -125,7 +107,7 @@ If Claude encounters something outside the spec, it stops and asks:
 
 Non-trivial implementation decisions are logged to `specs/DECISION_LOG.md`.
 
-### Phase 6: Validate
+### Phase 5: Validate
 
 **What Claude does:** Produces a Merge-Readiness Report checking five criteria.
 
@@ -143,7 +125,7 @@ The five criteria:
 
 The report includes a **False Confidence Warning**: it confirms implementation matches spec, but does not guarantee the spec was correct or that no subtle bugs exist. Human review remains essential.
 
-### Phase 7: Lessons
+### Phase 6: Lessons
 
 **What both of you do:** Capture what was learned.
 

@@ -7,7 +7,6 @@
 Verify:
 1. SPEC.md exists and is approved
 2. CONSTITUTION.md exists (or offer to create)
-3. Coordination phase completed
 
 If not: Guide to appropriate phase.
 
