@@ -297,7 +297,22 @@ load_plugins {
 default_shell "/home/linuxbrew/.linuxbrew/bin/fish"
 
 // r2d2-specific settings
-theme "nightfox"
+theme "terafox"
+themes {
+    terafox {
+        bg "#152528"
+        fg "#e6eaea"
+        black "#2f3239"
+        red "#e85c51"
+        green "#7aa4a1"
+        yellow "#fda47f"
+        blue "#5a93aa"
+        magenta "#ad5c7c"
+        cyan "#a1cdd8"
+        white "#eeeeee"
+        orange "#ff8349"
+    }
+}
 pane_frames true
 ui {
     pane_frames {

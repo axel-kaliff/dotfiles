@@ -59,47 +59,47 @@ disabled = false
 disabled = false
 symbol = "•  "
 format = '[${symbol}]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 
 [python]
 disabled = false
 pyenv_version_name= false
 python_binary = 'python'
 format = '[${symbol}(\($virtualenv\))]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 symbol = "• 󱔎 "
 
 [lua]
 disabled = false
 symbol = "• "
 format = '[${symbol}]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 
 [nodejs]
 disabled = false
 symbol = "• 󰎙 "
 format = '[${symbol}]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 
 [package]
 disabled = false
 symbol = "•  "
 display_private = false
 format = '[${symbol}]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 
 [docker_context]
 disabled = false
 symbol = "•  "
 only_with_files = true
 format = '[${symbol}]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 
 [golang]
 disabled = false
 symbol = "•  "
 format = '[${symbol}]($style)'
-style = "fg:#a48989"
+style = "fg:#7aa4a1"
 
 [c]
 symbol = " "
@@ -151,7 +151,7 @@ format = '[ $symbol ($version) ]($style)'
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-style = "bg:#33658A"
+style = "bg:#1e3a3a"
 format = '[ ♥ $time ]($style)'
 
 
@@ -160,7 +160,7 @@ format = '[ ♥ $time ]($style)'
 [git_branch]
 disabled = false
 symbol = " "
-style = "fg:#b79999"
+style = "fg:#5a93aa"
 truncation_length = 5   # length == ABCDE
 format = '[$symbol$branch(:$remote_branch)]($style) ' # this sets path ../../../../
 
@@ -180,7 +180,7 @@ am_or_rebase = "am/rebase"
 
 [git_status]
 disabled = false
-style= "fg:#5F8575"
+style= "fg:#a1cdd8"
 stashed = " ${count} "
 ahead = "󰞙 ${count} "
 behind = "󰞒 ${count} "
