@@ -40,7 +40,15 @@ function zj -d 'Zellij session helper'
                 # Usage: zj remote [host] [session]
                 set -l host (test -n "$argv[2]" && echo $argv[2] || echo r2d2)
                 set -l session (test -n "$argv[3]" && echo $argv[3] || echo main)
+                # Lock local zellij so keybinds pass through to remote
+                if test -n "$ZELLIJ"
+                    zellij action switch-mode locked
+                end
                 ssh $host -t '$HOME/.linuxbrew/bin/zellij attach -c '$session
+                # Unlock local zellij after disconnect
+                if test -n "$ZELLIJ"
+                    zellij action switch-mode normal
+                end
             case web
                 # Open SSH tunnel to remote Zellij web server
                 # Usage: zj web [host] [port]

@@ -13,4 +13,14 @@ if [ "$TERM" = "xterm-ghostty" ]; then
     fi
 fi
 
-exec ssh r2d2 -t '$HOME/.linuxbrew/bin/zellij attach -c main'
+# Lock local zellij so keybinds pass through to remote
+if [ -n "$ZELLIJ" ]; then
+    zellij action switch-mode locked
+fi
+
+ssh r2d2 -t '$HOME/.linuxbrew/bin/zellij attach -c main'
+
+# Unlock local zellij after disconnect
+if [ -n "$ZELLIJ" ]; then
+    zellij action switch-mode normal
+fi
