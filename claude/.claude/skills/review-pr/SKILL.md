@@ -27,7 +27,7 @@ gh pr view $PR_NUMBER --json title,headRefName,baseRefName,state,isDraft,body --
 
 ```bash
 git fetch origin $HEAD_BRANCH
-git worktree add $PROJECT_ROOT/.worktrees/pr-$PR_NUMBER origin/$HEAD_BRANCH
+git worktree add $PROJECT_ROOT/.worktrees/reviews/pr-$PR_NUMBER origin/$HEAD_BRANCH
 ```
 
 Where `$PROJECT_ROOT` is the root of the current git repo. If the worktree already exists, skip creation and use the existing one.
