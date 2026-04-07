@@ -1,5 +1,7 @@
+command_timeout = 300
+
 format = """
- $all 
+ $all
 """
 right_format = """$time"""# Disable the blank line at the start of the prompt
 # add_newline = false
@@ -179,8 +181,7 @@ am = "am'ing"
 am_or_rebase = "am/rebase"
 
 [git_status]
-disabled = false
-style= "fg:#a1cdd8"
+disabled = true
 stashed = " ${count} "
 ahead = "󰞙 ${count} "
 behind = "󰞒 ${count} "

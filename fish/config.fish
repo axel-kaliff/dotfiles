@@ -370,12 +370,17 @@ end
 
 # ─── Shell Integrations ──────────────────────────────────────────────────────
 
+# Core integrations (always load)
 zoxide init fish | source
-direnv hook fish | source
 fzf --fish | source
 atuin init fish | source
-mise activate fish | source
 starship init fish | source
+
+# Heavy integrations (skip in remote sessions to reduce latency)
+if not set -q SSH_TTY
+    direnv hook fish | source
+    mise activate fish | source
+end
 
 # ─── Post-Integration Keybinding Overrides ──────────────────────────────────
 

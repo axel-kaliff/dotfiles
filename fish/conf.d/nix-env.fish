@@ -1,4 +1,7 @@
-# Setup Nix
+# Setup Nix — skip if already initialized (e.g. inherited from parent shell)
+if set -q NIX_PATH
+    return
+end
 
 # We need to distinguish between single-user and multi-user installs.
 # This is difficult because there's no official way to do this.
