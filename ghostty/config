@@ -2,7 +2,7 @@ command = /home/linuxbrew/.linuxbrew/bin/fish
 
 #theme = Mariana
 #theme = Relaxed
-theme = terafox
+theme = control-room
 title = Ghostty 👻
 confirm-close-surface = false
 

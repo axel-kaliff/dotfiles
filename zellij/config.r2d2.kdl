@@ -304,9 +304,9 @@ load_plugins {
 default_shell "/space/personal/akaliff/.linuxbrew/bin/fish"
 
 // r2d2-specific settings
-theme "terafox"
+theme "terafox-custom"
 themes {
-    terafox {
+    terafox-custom {
         bg "#152528"
         fg "#e6eaea"
         black "#2f3239"

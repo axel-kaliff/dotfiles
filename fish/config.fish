@@ -387,7 +387,7 @@ end
 # fzf: rebind file finder from Ctrl+T (Zellij Tab mode) to Alt+T
 bind --erase \ct
 bind \et fzf-file-widget
-if bind -M insert \ct 2>/dev/null
+if bind -M insert \ct &>/dev/null
     bind -M insert --erase \ct
     bind -M insert \et fzf-file-widget
 end

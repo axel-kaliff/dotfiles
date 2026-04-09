@@ -200,6 +200,47 @@ shared {
         bind "Alt o" { MoveTab "right"; }
         bind "Alt p" { TogglePaneInGroup; }
         bind "Alt Shift p" { ToggleGroupMarking; }
+
+        // room — fuzzy tab switcher
+        bind "Ctrl y" {
+            LaunchOrFocusPlugin "file:~/.config/zellij/plugins/room.wasm" {
+                floating true
+                ignore_case true
+                quick_jump true
+            }
+        }
+
+        // zellij-forgot — keybind reminder
+        bind "Alt /" {
+            LaunchOrFocusPlugin "file:~/.config/zellij/plugins/zellij_forgot.wasm" {
+                floating true
+                "LOAD_ZELLIJ_BINDINGS" "true"
+            }
+        }
+
+        // harpoon — pane bookmarks
+        bind "Alt b" {
+            LaunchOrFocusPlugin "file:~/.config/zellij/plugins/harpoon.wasm" {
+                floating true
+                move_to_focused_tab true
+            }
+        }
+
+        // monocle — fuzzy file finder
+        bind "Alt m" {
+            LaunchOrFocusPlugin "file:~/.config/zellij/plugins/monocle.wasm" {
+                floating true
+            }
+            SwitchToMode "Normal"
+        }
+
+        // multitask — mini CI runner
+        bind "Alt t" {
+            LaunchOrFocusPlugin "file:~/.config/zellij/plugins/multitask.wasm" {
+                floating true
+            }
+            SwitchToMode "Normal"
+        }
     }
     shared_except "locked" "move" {
 	bind "Ctrl m" { SwitchToMode "move"; }
@@ -281,6 +322,12 @@ plugins {
         welcome_screen true
     }
 
+    room location="file:~/.config/zellij/plugins/room.wasm"
+    forgot location="file:~/.config/zellij/plugins/zellij_forgot.wasm"
+    harpoon location="file:~/.config/zellij/plugins/harpoon.wasm"
+    monocle location="file:~/.config/zellij/plugins/monocle.wasm"
+    multitask location="file:~/.config/zellij/plugins/multitask.wasm"
+
     autolock location="file:~/.config/zellij/plugins/zellij-autolock.wasm" {
         is_enabled true
         triggers "nvim|vim|git|fzf|zoxide|atuin"
@@ -297,20 +344,137 @@ load_plugins {
 default_shell "/home/linuxbrew/.linuxbrew/bin/fish"
 
 // r2d2-specific settings
-theme "terafox"
+theme "terafox-custom"
 themes {
-    terafox {
-        bg "#152528"
-        fg "#e6eaea"
-        black "#2f3239"
-        red "#e85c51"
-        green "#7aa4a1"
-        yellow "#fda47f"
-        blue "#5a93aa"
-        magenta "#ad5c7c"
-        cyan "#a1cdd8"
-        white "#eeeeee"
-        orange "#ff8349"
+    terafox-custom {
+        // Control room palette — research-backed
+        // bg #152528 (21,37,40) — L=0.016
+        // fg #D0CCC4 (208,204,196) — warm off-white, CR 9.9:1 (AAA), reduces halation
+        // accent0: desaturated teal #28C3A8 (40,195,168) — primary, CR 7.1:1
+        // accent1: medium cyan #56B6C2 (86,182,194) — secondary, CR 6.7:1
+        // accent2: sage #679A8E (103,154,142) — tertiary, CR 5.0:1
+        // accent3: muted teal #4C7874 (76,120,116) — hints, CR 3.2:1 (AA large)
+        // amber: #D2AA50 (210,170,80) — caution/warning, CR 7.2:1
+        // error: #C85F55 (200,95,85) — desaturated alarm red, CR 3.9:1
+        // selection bg: #254548 (37,69,72) — 3.1x base luminance
+        // inactive tab: #162E30 (22,46,48) — barely lifted surface
+        // active tab: #1A5550 (26,85,80) — lit instrument panel
+        text_unselected {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        text_selected {
+            base 208 204 196
+            background 37 69 72
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        ribbon_unselected {
+            base 208 204 196
+            background 22 46 48
+            emphasis_0 103 154 142
+            emphasis_1 76 120 116
+            emphasis_2 76 120 116
+            emphasis_3 76 120 116
+        }
+        ribbon_selected {
+            base 21 37 40
+            background 26 85 80
+            emphasis_0 208 204 196
+            emphasis_1 208 204 196
+            emphasis_2 208 204 196
+            emphasis_3 208 204 196
+        }
+        table_title {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        table_cell_unselected {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        table_cell_selected {
+            base 208 204 196
+            background 37 69 72
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        list_unselected {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        list_selected {
+            base 208 204 196
+            background 37 69 72
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        frame_selected {
+            base 52 90 88
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        frame_highlight {
+            base 40 195 168
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        exit_code_success {
+            base 40 195 168
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 40 195 168
+            emphasis_2 40 195 168
+            emphasis_3 40 195 168
+        }
+        exit_code_error {
+            base 200 95 85
+            background 21 37 40
+            emphasis_0 200 95 85
+            emphasis_1 200 95 85
+            emphasis_2 200 95 85
+            emphasis_3 200 95 85
+        }
+        multiplayer_user_colors {
+            player_1 40 195 168
+            player_2 86 182 194
+            player_3 103 154 142
+            player_4 210 170 80
+            player_5 200 95 85
+            player_6 208 204 196
+            player_7 76 120 116
+            player_8 52 90 88
+            player_9 26 85 80
+            player_10 37 69 72
+        }
     }
 }
 pane_frames true

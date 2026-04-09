@@ -61,99 +61,99 @@ disabled = false
 disabled = false
 symbol = "•  "
 format = '[${symbol}]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 
 [python]
 disabled = false
 pyenv_version_name= false
 python_binary = 'python'
 format = '[${symbol}(\($virtualenv\))]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 symbol = "• 󱔎 "
 
 [lua]
 disabled = false
 symbol = "• "
 format = '[${symbol}]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 
 [nodejs]
 disabled = false
 symbol = "• 󰎙 "
 format = '[${symbol}]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 
 [package]
 disabled = false
 symbol = "•  "
 display_private = false
 format = '[${symbol}]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 
 [docker_context]
 disabled = false
 symbol = "•  "
 only_with_files = true
 format = '[${symbol}]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 
 [golang]
 disabled = false
 symbol = "•  "
 format = '[${symbol}]($style)'
-style = "fg:#7aa4a1"
+style = "fg:#28c3a8"
 
 [c]
 symbol = " "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 
 [elixir]
 symbol = " "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 [elm]
 symbol = " "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 
 [gradle]
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 [haskell]
 symbol = " "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 
 [julia]
 symbol = " "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 [nim]
 symbol = "󰆥 "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 [rust]
 symbol = ""
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 [scala]
 symbol = " "
-style = "bg:#86BBD8"
+style = "bg:#254548"
 format = '[ $symbol ($version) ]($style)'
 
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-style = "bg:#1e3a3a"
+style = "bg:#254548"
 format = '[ ♥ $time ]($style)'
 
 
@@ -162,7 +162,7 @@ format = '[ ♥ $time ]($style)'
 [git_branch]
 disabled = false
 symbol = " "
-style = "fg:#5a93aa"
+style = "fg:#56b6c2"
 truncation_length = 5   # length == ABCDE
 format = '[$symbol$branch(:$remote_branch)]($style) ' # this sets path ../../../../
 
