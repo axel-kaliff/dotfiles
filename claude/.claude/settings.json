@@ -35,7 +35,8 @@
     "context7-plugin@context7-marketplace": true,
     "pyright-lsp@claude-plugins-official": true,
     "grade@sics-cc-plugin-local": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
