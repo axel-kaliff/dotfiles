@@ -15,17 +15,21 @@ vim.o.showmode = false
 vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
 
-  -- Zellij: force OSC 52 (zellij-org/zellij#3951)
+  -- Zellij: force OSC 52 for copy (zellij-org/zellij#3951)
+  -- Paste uses empty handler to avoid "Waiting for OSC 52 response" hang —
+  -- most terminals block OSC 52 paste for security. Neovim falls back to
+  -- its internal registers, so p/P still work with previously yanked text.
   if vim.env.ZELLIJ then
+    local osc52 = require('vim.ui.clipboard.osc52')
     vim.g.clipboard = {
       name = 'OSC 52',
       copy = {
-        ['+'] = require('vim.ui.clipboard.osc52').copy('+'),
-        ['*'] = require('vim.ui.clipboard.osc52').copy('*'),
+        ['+'] = osc52.copy('+'),
+        ['*'] = osc52.copy('*'),
       },
       paste = {
-        ['+'] = require('vim.ui.clipboard.osc52').paste('+'),
-        ['*'] = require('vim.ui.clipboard.osc52').paste('*'),
+        ['+'] = function() return vim.fn.getreg('+', true, true) end,
+        ['*'] = function() return vim.fn.getreg('*', true, true) end,
       },
     }
   end
