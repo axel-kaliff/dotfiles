@@ -21,15 +21,16 @@ vim.schedule(function()
   -- its internal registers, so p/P still work with previously yanked text.
   if vim.env.ZELLIJ then
     local osc52 = require('vim.ui.clipboard.osc52')
+    local cache = { ['+'] = {}, ['*'] = {} }
     vim.g.clipboard = {
       name = 'OSC 52',
       copy = {
-        ['+'] = osc52.copy('+'),
-        ['*'] = osc52.copy('*'),
+        ['+'] = function(lines) cache['+'] = lines; osc52.copy('+')(lines) end,
+        ['*'] = function(lines) cache['*'] = lines; osc52.copy('*')(lines) end,
       },
       paste = {
-        ['+'] = function() return vim.fn.getreg('+', true, true) end,
-        ['*'] = function() return vim.fn.getreg('*', true, true) end,
+        ['+'] = function() return cache['+'] end,
+        ['*'] = function() return cache['*'] end,
       },
     }
   end
