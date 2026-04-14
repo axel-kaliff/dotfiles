@@ -320,22 +320,81 @@ require('lazy').setup({
       }
 
       local capabilities = require('blink.cmp').get_lsp_capabilities()
+
+      -- Find the real project root for Python monorepos and worktrees.
+      -- In monorepos with per-package pyproject.toml files, the default
+      -- root_pattern finds the nearest (sub-package) pyproject.toml.
+      -- We walk all the way up to find a parent with pyproject.toml + .venv,
+      -- which is the actual project root with the virtualenv.
+      local function find_python_root(fname)
+        local util = require 'lspconfig.util'
+        local dir = vim.fn.fnamemodify(fname, ':p:h')
+        local best = nil
+        -- Walk up from the file, looking for the outermost pyproject.toml that
+        -- sits next to a .venv directory (the monorepo / project root).
+        while dir and dir ~= '' do
+          if vim.uv.fs_stat(dir .. '/pyproject.toml') and vim.uv.fs_stat(dir .. '/.venv') then
+            best = dir
+          end
+          local parent = vim.fn.fnamemodify(dir, ':h')
+          if parent == dir then
+            break
+          end
+          dir = parent
+        end
+        if best then
+          return best
+        end
+        -- Fallback: nearest pyproject.toml or git ancestor
+        return util.root_pattern('pyproject.toml', 'setup.py', 'setup.cfg', 'pyrightconfig.json')(fname)
+          or util.find_git_ancestor(fname)
+      end
+
+      -- Find the venv python path relative to a project root
+      local function find_venv_python(root)
+        if not root then
+          return nil
+        end
+        local candidates = {
+          root .. '/.venv/bin/python',
+          root .. '/venv/bin/python',
+          root .. '/.venv/bin/python3',
+        }
+        for _, path in ipairs(candidates) do
+          if vim.uv.fs_stat(path) then
+            return path
+          end
+        end
+        return nil
+      end
+
+      local python_root = find_python_root(vim.fn.getcwd())
+      local python_path = find_venv_python(python_root)
+
+      local pyright_settings = {
+        pyright = {
+          disableOrganizeImports = true, -- Ruff handles imports
+        },
+        python = {
+          analysis = {
+            ignore = { '*' }, -- Ruff handles linting
+          },
+        },
+      }
+      if python_path then
+        pyright_settings.python.pythonPath = python_path
+      end
+
       local servers = {
         gopls = {},
         ts_ls = {},
         rust_analyzer = {},
-        ruff = {},
+        ruff = {
+          root_dir = find_python_root,
+        },
         pyright = {
-          settings = {
-            pyright = {
-              disableOrganizeImports = true, -- Ruff handles imports
-            },
-            python = {
-              analysis = {
-                ignore = { '*' }, -- Ruff handles linting
-              },
-            },
-          },
+          root_dir = find_python_root,
+          settings = pyright_settings,
         },
         lua_ls = {
           settings = {
