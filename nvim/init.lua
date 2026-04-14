@@ -321,17 +321,18 @@ require('lazy').setup({
 
       local capabilities = require('blink.cmp').get_lsp_capabilities()
 
-      -- Find the real project root for Python monorepos and worktrees.
-      -- In monorepos with per-package pyproject.toml files, the default
-      -- root_pattern finds the nearest (sub-package) pyproject.toml.
-      -- We walk all the way up to find a parent with pyproject.toml + .venv,
-      -- which is the actual project root with the virtualenv.
-      local function find_python_root(fname)
-        local util = require 'lspconfig.util'
+      -- Shared capabilities for all servers
+      vim.lsp.config('*', {
+        capabilities = capabilities,
+      })
+
+      -- Python root detection for monorepos: walk up from the buffer to find
+      -- the outermost directory with pyproject.toml + .venv. This avoids
+      -- locking onto a sub-package's pyproject.toml in monorepos.
+      local function python_root_dir(bufnr, on_dir)
+        local fname = vim.api.nvim_buf_get_name(bufnr)
         local dir = vim.fn.fnamemodify(fname, ':p:h')
         local best = nil
-        -- Walk up from the file, looking for the outermost pyproject.toml that
-        -- sits next to a .venv directory (the monorepo / project root).
         while dir and dir ~= '' do
           if vim.uv.fs_stat(dir .. '/pyproject.toml') and vim.uv.fs_stat(dir .. '/.venv') then
             best = dir
@@ -343,24 +344,20 @@ require('lazy').setup({
           dir = parent
         end
         if best then
-          return best
+          on_dir(best)
+          return
         end
-        -- Fallback: nearest pyproject.toml or git ancestor
-        return util.root_pattern('pyproject.toml', 'setup.py', 'setup.cfg', 'pyrightconfig.json')(fname)
-          or util.find_git_ancestor(fname)
+        -- Fallback: nearest pyproject.toml, setup.py, or git root
+        local fallback = vim.fs.root(bufnr, { 'pyproject.toml', 'setup.py', 'setup.cfg', 'pyrightconfig.json', '.git' })
+        if fallback then
+          on_dir(fallback)
+        end
       end
 
-      -- Find the venv python path relative to a project root
+      -- Find venv python for a given root
       local function find_venv_python(root)
-        if not root then
-          return nil
-        end
-        local candidates = {
-          root .. '/.venv/bin/python',
-          root .. '/venv/bin/python',
-          root .. '/.venv/bin/python3',
-        }
-        for _, path in ipairs(candidates) do
+        for _, rel in ipairs { '.venv/bin/python', 'venv/bin/python', '.venv/bin/python3' } do
+          local path = root .. '/' .. rel
           if vim.uv.fs_stat(path) then
             return path
           end
@@ -368,61 +365,47 @@ require('lazy').setup({
         return nil
       end
 
-      local python_root = find_python_root(vim.fn.getcwd())
-      local python_path = find_venv_python(python_root)
-
+      -- Build pyright settings with pythonPath if a venv is found at cwd
       local pyright_settings = {
-        pyright = {
-          disableOrganizeImports = true, -- Ruff handles imports
-        },
-        python = {
-          analysis = {
-            ignore = { '*' }, -- Ruff handles linting
-          },
-        },
+        pyright = { disableOrganizeImports = true },
+        python = { analysis = { ignore = { '*' } } },
       }
+      local cwd_root = vim.fn.getcwd()
+      local python_path = find_venv_python(cwd_root)
       if python_path then
         pyright_settings.python.pythonPath = python_path
       end
 
-      local servers = {
-        gopls = {},
-        ts_ls = {},
-        rust_analyzer = {},
-        ruff = {
-          root_dir = find_python_root,
+      vim.lsp.config('pyright', {
+        root_dir = python_root_dir,
+        settings = pyright_settings,
+      })
+
+      vim.lsp.config('ruff', {
+        root_dir = python_root_dir,
+      })
+
+      vim.lsp.config('lua_ls', {
+        settings = {
+          Lua = { completion = { callSnippet = 'Replace' } },
         },
-        pyright = {
-          root_dir = find_python_root,
-          settings = pyright_settings,
-        },
-        lua_ls = {
-          settings = {
-            Lua = {
-              completion = { callSnippet = 'Replace' },
-            },
-          },
+      })
+
+      require('mason-tool-installer').setup {
+        ensure_installed = {
+          'gopls',
+          'ts_ls',
+          'rust_analyzer',
+          'ruff',
+          'pyright',
+          'lua_ls',
+          'stylua',
+          'shellcheck',
         },
       }
 
-      local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        'stylua',
-        'shellcheck',
-        'ruff',
-      })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
       require('mason-lspconfig').setup {
         ensure_installed = {},
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
       }
     end,
   },
