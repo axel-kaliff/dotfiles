@@ -307,17 +307,122 @@ default_shell "/space/personal/akaliff/.linuxbrew/bin/fish"
 theme "terafox-custom"
 themes {
     terafox-custom {
-        bg "#152528"
-        fg "#e6eaea"
-        black "#2f3239"
-        red "#e85c51"
-        green "#7aa4a1"
-        yellow "#fda47f"
-        blue "#5a93aa"
-        magenta "#ad5c7c"
-        cyan "#a1cdd8"
-        white "#eeeeee"
-        orange "#ff8349"
+        text_unselected {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        text_selected {
+            base 208 204 196
+            background 37 69 72
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        ribbon_unselected {
+            base 208 204 196
+            background 22 46 48
+            emphasis_0 103 154 142
+            emphasis_1 76 120 116
+            emphasis_2 76 120 116
+            emphasis_3 76 120 116
+        }
+        ribbon_selected {
+            base 21 37 40
+            background 26 85 80
+            emphasis_0 208 204 196
+            emphasis_1 208 204 196
+            emphasis_2 208 204 196
+            emphasis_3 208 204 196
+        }
+        table_title {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        table_cell_unselected {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        table_cell_selected {
+            base 208 204 196
+            background 37 69 72
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        list_unselected {
+            base 208 204 196
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        list_selected {
+            base 208 204 196
+            background 37 69 72
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        frame_selected {
+            base 52 90 88
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        frame_highlight {
+            base 40 195 168
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 86 182 194
+            emphasis_2 103 154 142
+            emphasis_3 76 120 116
+        }
+        exit_code_success {
+            base 40 195 168
+            background 21 37 40
+            emphasis_0 40 195 168
+            emphasis_1 40 195 168
+            emphasis_2 40 195 168
+            emphasis_3 40 195 168
+        }
+        exit_code_error {
+            base 200 95 85
+            background 21 37 40
+            emphasis_0 200 95 85
+            emphasis_1 200 95 85
+            emphasis_2 200 95 85
+            emphasis_3 200 95 85
+        }
+        multiplayer_user_colors {
+            player_1 40 195 168
+            player_2 86 182 194
+            player_3 103 154 142
+            player_4 210 170 80
+            player_5 200 95 85
+            player_6 208 204 196
+            player_7 76 120 116
+            player_8 52 90 88
+            player_9 26 85 80
+            player_10 37 69 72
+        }
     }
 }
 pane_frames true
