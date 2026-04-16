@@ -36,7 +36,8 @@
     "pyright-lsp@claude-plugins-official": true,
     "grade@sics-cc-plugin-local": true,
     "superpowers@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "sics@zombiesnack-plugins": true
   },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
@@ -49,6 +50,12 @@
       "source": {
         "source": "directory",
         "path": "/home/akaliff/sics-cc-plugin"
+      }
+    },
+    "zombiesnack-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "/space/personal/akaliff/zombiesnack/.claude/plugins"
       }
     }
   }
