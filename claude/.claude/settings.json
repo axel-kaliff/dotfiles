@@ -58,5 +58,6 @@
         "path": "/space/personal/akaliff/zombiesnack/.claude/plugins"
       }
     }
-  }
+  },
+  "skipAutoPermissionPrompt": true
 }
