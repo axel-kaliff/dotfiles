@@ -44,7 +44,7 @@ function zj -d 'Zellij session helper'
                 if test -n "$ZELLIJ"
                     zellij action switch-mode locked
                 end
-                ssh $host -t '$HOME/.linuxbrew/bin/zellij attach -c '$session
+                ssh $host -t 'for z in "$HOME/.linuxbrew/bin/zellij" /home/linuxbrew/.linuxbrew/bin/zellij; do [ -x "$z" ] && exec "$z" attach -c '$session'; done; command -v zellij >/dev/null && exec zellij attach -c '$session'; echo "zellij not found on '$host'" >&2; exit 1'
                 # Unlock local zellij after disconnect
                 if test -n "$ZELLIJ"
                     zellij action switch-mode normal
