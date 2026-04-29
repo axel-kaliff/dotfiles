@@ -530,6 +530,38 @@ require('lazy').setup({
       statusline.section_location = function()
         return '%2l:%-2v'
       end
+
+      -- Miller-columns explorer for browsing multiple directories at once.
+      -- Oil stays the default explorer (<leader>e); mini.files is for exploration (<leader>E).
+      require('mini.files').setup {
+        windows = { preview = true, width_focus = 30, width_preview = 50 },
+        options = { use_as_default_explorer = false },
+      }
+      local MiniFiles = require 'mini.files'
+      local show_dotfiles = true
+      local filter_show = function(_)
+        return true
+      end
+      local filter_hide = function(entry)
+        return not vim.startswith(entry.name, '.')
+      end
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'MiniFilesBufferCreate',
+        callback = function(args)
+          vim.keymap.set('n', 'g.', function()
+            show_dotfiles = not show_dotfiles
+            MiniFiles.refresh { content = { filter = show_dotfiles and filter_show or filter_hide } }
+          end, { buffer = args.data.buf_id, desc = 'Toggle dotfiles' })
+        end,
+      })
+      vim.keymap.set('n', '<leader>E', function()
+        local path = vim.api.nvim_buf_get_name(0)
+        if path == '' or vim.fn.filereadable(path) == 0 then
+          MiniFiles.open()
+        else
+          MiniFiles.open(path)
+        end
+      end, { desc = 'File explorer (mini.files, miller columns)' })
     end,
   },
   {
