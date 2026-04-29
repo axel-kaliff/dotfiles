@@ -37,7 +37,10 @@
     "grade@sics-cc-plugin-local": true,
     "superpowers@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
-    "sics@zombiesnack-plugins": true
+    "sics@zombiesnack-plugins": true,
+    "ai-dev@sicsai-plugins": true,
+    "hyperstar@sicsai-plugins": true,
+    "sicsai@sicsai-plugins": true
   },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
