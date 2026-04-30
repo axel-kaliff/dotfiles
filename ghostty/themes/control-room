@@ -1,11 +1,11 @@
-// Control Room — research-backed terminal palette
-// Warm off-white fg reduces halation (Piepenbrock 2013, PMC 2024)
-// Desaturated accents prevent bleed on dark bg (Material Design guidance)
-// Teal-dominant hue range validated for sustained focus (Mehta & Zhu 2009)
-// Amber caution + red alarm only (ISA-101 / NUREG-0700 alarm doctrine)
-// Max 6 semantic hues (NASA Ames color usage guidelines)
+# Control Room — research-backed terminal palette
+# Warm off-white fg reduces halation (Piepenbrock 2013, PMC 2024)
+# Desaturated accents prevent bleed on dark bg (Material Design guidance)
+# Teal-dominant hue range validated for sustained focus (Mehta & Zhu 2009)
+# Amber caution + red alarm only (ISA-101 / NUREG-0700 alarm doctrine)
+# Max 6 semantic hues (NASA Ames color usage guidelines)
 
-// ANSI normal colors (0-7)
+# ANSI normal colors (0-7)
 palette = 0=#1e3e3a
 palette = 1=#c85f55
 palette = 2=#28c3a8
@@ -15,7 +15,7 @@ palette = 5=#679a8e
 palette = 6=#4c7874
 palette = 7=#d0ccc4
 
-// ANSI bright colors (8-15)
+# ANSI bright colors (8-15)
 palette = 8=#345a58
 palette = 9=#d4786e
 palette = 10=#45d0b8
