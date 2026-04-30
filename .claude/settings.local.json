@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:zellij.dev)",
+      "WebFetch(domain:rosmur.github.io)",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:dotfyle.com)",
+      "WebFetch(domain:ghostty.org)"
+    ]
+  }
+}

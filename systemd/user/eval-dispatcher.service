@@ -1,0 +1,18 @@
+[Unit]
+Description=Hyperstar eval service dispatcher
+Documentation=file:%h/eval-service/zombiesnack/devops/systemd/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/eval-service/zombiesnack
+Environment=PYTHONPATH=%h/eval-service/zombiesnack/src
+ExecStart=/home/linuxbrew/.linuxbrew/bin/uv run python -m hyperstar.eval_service.dispatcher_main
+Restart=always
+RestartSec=5s
+# Inherit user env (SSH keys, gcloud auth, git config) — this is a user unit,
+# so no User= override. The service runs as whoever enabled it.
+
+[Install]
+WantedBy=default.target
