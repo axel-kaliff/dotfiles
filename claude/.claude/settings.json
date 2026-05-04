@@ -64,5 +64,6 @@
   },
   "editorMode": "vim",
   "remoteControlAtStartup": false,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "effortLevel": "xhigh"
 }
