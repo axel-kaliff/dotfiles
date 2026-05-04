@@ -36,10 +36,11 @@
       "over_mocked_tests",
       "low_assertion_tests",
       "duplicate_code_blocks",
-      "low_reusability_functions"
+      "low_reusability_functions",
+      "dead_code_functions"
     ],
     "dimension_count": 8,
-    "offender_category_count": 21
+    "offender_category_count": 22
   },
   "modules": [],
   "base_branch": "origin/main"
