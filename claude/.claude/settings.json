@@ -34,8 +34,7 @@
   "enabledPlugins": {
     "context7-plugin@context7-marketplace": true,
     "pyright-lsp@claude-plugins-official": true,
-    "grade@sics-cc-plugin-local": true,
-    "superpowers@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": false,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "sics@zombiesnack-plugins": true,
     "ai-dev@sicsai-plugins": true,
@@ -49,12 +48,6 @@
         "repo": "upstash/context7"
       }
     },
-    "sics-cc-plugin-local": {
-      "source": {
-        "source": "directory",
-        "path": "/home/akaliff/sics-cc-plugin"
-      }
-    },
     "zombiesnack-plugins": {
       "source": {
         "source": "directory",
@@ -62,8 +55,8 @@
       }
     }
   },
+  "effortLevel": "xhigh",
   "editorMode": "vim",
   "remoteControlAtStartup": false,
-  "agentPushNotifEnabled": true,
-  "effortLevel": "xhigh"
+  "agentPushNotifEnabled": true
 }
