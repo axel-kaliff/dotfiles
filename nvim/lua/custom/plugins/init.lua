@@ -251,7 +251,7 @@ return {
     lazy = false,
     config = function()
       require('nightfox').setup {}
-      vim.cmd.colorscheme 'terafox'
+      vim.cmd.colorscheme 'nordfox'
     end,
   },
 
