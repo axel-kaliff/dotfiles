@@ -39,7 +39,8 @@
     "sics@zombiesnack-plugins": true,
     "ai-dev@sicsai-plugins": true,
     "hyperstar@sicsai-plugins": true,
-    "sicsai@sicsai-plugins": true
+    "sicsai@sicsai-plugins": true,
+    "clangd-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
