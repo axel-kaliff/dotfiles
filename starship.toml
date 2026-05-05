@@ -1,194 +1,289 @@
-command_timeout = 300
+"$schema" = 'https://starship.rs/config-schema.json'
+
+command_timeout = 500
+scan_timeout = 30
 
 format = """
- $all
-"""
-right_format = """$time"""# Disable the blank line at the start of the prompt
-# add_newline = false
+[](red)\
+$os\
+$username\
+$hostname\
+[](fg:red bg:peach)\
+$directory\
+[](fg:peach bg:yellow)\
+$git_branch\
+$git_status\
+[](fg:yellow bg:green)\
+$nodejs\
+$python\
+$rust\
+$golang\
+$java\
+$lua\
+$c\
+$package\
+[](fg:green bg:sapphire)\
+$docker_context\
+$container\
+$kubernetes\
+$conda\
+[](fg:sapphire bg:mauve)\
+$shlvl\
+$sudo\
+[](fg:mauve)\
+$line_break\
+$character"""
 
-# You can also replace your username with a neat symbol like   or disable this
-# and use the os module below
+right_format = """$cmd_duration$status$jobs$time"""
+
+palette = 'catppuccin_mocha'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  IDENTITY (red)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[os]
+disabled = false
+style = "bg:red fg:crust"
+format = '[ $symbol ]($style)'
+
+[os.symbols]
+Macos = "󰀵"
+Linux = "󰌽"
+Fedora = "󰣛"
+CentOS = "󰣛"
+Redhat = "󱄛"
+RedHatEnterprise = "󱄛"
+Ubuntu = "󰕈"
+Arch = "󰣇"
+Debian = "󰣚"
+Alpine = ""
+NixOS = ""
+Manjaro = ""
+Mint = "󰣭"
+Pop = ""
+Windows = ""
+
 [username]
 show_always = false
-# style_user = "bg:#9A348E"
-# style_root = "bg:#9A348E"
-format = '[$user ]($style)'
-disabled = false
+style_user = "bg:red fg:crust"
+style_root = "bg:red fg:crust bold"
+format = '[ $user]($style)'
 
-# An alternative to the username module which displays a symbol that
-# represents the current operating system
-# [os]
-# style = "bg:#9A348E"
-# disabled = true # Disabled by default
+[hostname]
+ssh_only = true
+ssh_symbol = " "
+style = "bg:red fg:crust"
+format = '[ $ssh_symbol$hostname]($style)'
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  DIRECTORY (peach)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [directory]
-# style= "fg:#6A8AEA"
+style = "bg:peach fg:crust"
+format = '[ $path$read_only ]($style)'
 truncation_length = 4
 truncate_to_repo = true
-fish_style_pwd_dir_length = 3
-# truncation_symbol = "…/"
+truncation_symbol = "…/"
+fish_style_pwd_dir_length = 1
+read_only = " 󰌾"
+read_only_style = "bg:peach fg:crust"
 
-# Here is how you can shorten some long paths by text replacement
-# similar to mapped_locations in Oh My Posh:
 [directory.substitutions]
-"Documents" = " 󰧮 "
-"Music" = "  "
-"Movies" = " 󰿏 "
-"Pictures" =  " "
-"Sources" = "  "
-"Downloads" = "  "
-"~" = "  "
-"/" = "  "
-# Keep in mind that the order matters. For example:
-# "Important Documents" = " 󰈙 "
-# will not be replaced, because "Documents" was already substituted before.
-# So either put "Important Documents" before "Documents" or use the substituted version:
-# "Important 󰈙 " = " 󰈙 "
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+"Movies" = "󰿏 "
+"Sources" = " "
+"~" = " "
 
-[line_break]
-disabled = true # leave as TRUE  
-
-[character]
-success_symbol = " [󰁔]() "
-# error_symbol =   " [ ](fg:#d56767)[ ](fg:#d56767) "
-error_symbol =   " [ ]()[ ]() "
-format = "$symbol"
-disabled = false
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~     LANGUAGES     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-[java]
-disabled = false
-symbol = "•  "
-format = '[${symbol}]($style)'
-style = "fg:#28c3a8"
-
-[python]
-disabled = false
-pyenv_version_name= false
-python_binary = 'python'
-format = '[${symbol}(\($virtualenv\))]($style)'
-style = "fg:#28c3a8"
-symbol = "• 󱔎 "
-
-[lua]
-disabled = false
-symbol = "• "
-format = '[${symbol}]($style)'
-style = "fg:#28c3a8"
-
-[nodejs]
-disabled = false
-symbol = "• 󰎙 "
-format = '[${symbol}]($style)'
-style = "fg:#28c3a8"
-
-[package]
-disabled = false
-symbol = "•  "
-display_private = false
-format = '[${symbol}]($style)'
-style = "fg:#28c3a8"
-
-[docker_context]
-disabled = false
-symbol = "•  "
-only_with_files = true
-format = '[${symbol}]($style)'
-style = "fg:#28c3a8"
-
-[golang]
-disabled = false
-symbol = "•  "
-format = '[${symbol}]($style)'
-style = "fg:#28c3a8"
-
-[c]
-symbol = " "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-
-[elixir]
-symbol = " "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-[elm]
-symbol = " "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-
-[gradle]
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-[haskell]
-symbol = " "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-
-[julia]
-symbol = " "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-[nim]
-symbol = "󰆥 "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-[rust]
-symbol = ""
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-[scala]
-symbol = " "
-style = "bg:#254548"
-format = '[ $symbol ($version) ]($style)'
-
-[time]
-disabled = false
-time_format = "%R" # Hour:Minute Format
-style = "bg:#254548"
-format = '[ ♥ $time ]($style)'
-
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~ GIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  GIT (yellow)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [git_branch]
-disabled = false
-symbol = " "
-style = "fg:#56b6c2"
-truncation_length = 5   # length == ABCDE
-format = '[$symbol$branch(:$remote_branch)]($style) ' # this sets path ../../../../
+symbol = ""
+style = "bg:yellow"
+format = '[[ $symbol $branch ](fg:crust bg:yellow)]($style)'
+truncation_length = 24
+truncation_symbol = "…"
 
-[git_commit]
+[git_status]
 disabled = false
-commit_hash_length = 1
+style = "bg:yellow"
+format = '[[($all_status$ahead_behind )](fg:crust bg:yellow)]($style)'
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇡${ahead_count}⇣${behind_count}"
+conflicted = "="
+deleted = "✘"
+renamed = "»"
+modified = "!"
+staged = "+"
+untracked = "?"
+stashed = "≡"
 
 [git_state]
 disabled = false
-rebase = "rebasing"
-merge = "merging"
-revert = "reverting"
-cherry_pick = " picking"
-bisect = "bisecting"
-am = "am'ing"
-am_or_rebase = "am/rebase"
+style = "bg:yellow"
+format = '[[\($state( $progress_current/$progress_total)\) ](fg:crust bg:yellow)]($style)'
+rebase = "REBASE"
+merge = "MERGE"
+revert = "REVERT"
+cherry_pick = "PICK"
+bisect = "BISECT"
+am = "AM"
+am_or_rebase = "AM/REBASE"
 
-[git_status]
-disabled = true
-stashed = " ${count} "
-ahead = "󰞙 ${count} "
-behind = "󰞒 ${count} "
-diverged = "󰵉 ${ahead_count} ${behind_count} "
-conflicted = " ${count} "
-deleted = " ${count} "
-renamed = " ${count} "
-modified = " ${count} "
-staged = " ${count} "
-untracked = "󱅘 ${count}"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  LANGUAGES (green)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[nodejs]
+symbol = "󰎙"
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+
+[python]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol $version( \($virtualenv\)) ](fg:crust bg:green)]($style)'
+pyenv_version_name = false
+python_binary = "python"
+
+[rust]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+
+[golang]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+
+[java]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+
+[lua]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+
+[c]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+
+[package]
+disabled = false
+symbol = "󰏗"
+style = "bg:green"
+format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+display_private = false
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  CONTEXT (sapphire)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[docker_context]
+symbol = ""
+style = "bg:sapphire"
+format = '[[ $symbol $context ](fg:crust bg:sapphire)]($style)'
+only_with_files = true
+
+[container]
+style = "bg:sapphire"
+format = '[[ 󰡨 $name ](fg:crust bg:sapphire)]($style)'
+
+[kubernetes]
+disabled = false
+symbol = "󱃾"
+style = "bg:sapphire"
+format = '[[ $symbol $context( \($namespace\)) ](fg:crust bg:sapphire)]($style)'
+
+[conda]
+symbol = ""
+style = "bg:sapphire"
+format = '[[ $symbol $environment ](fg:crust bg:sapphire)]($style)'
+ignore_base = true
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  STATE (mauve)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[shlvl]
+disabled = false
+threshold = 2
+symbol = ""
+style = "bg:mauve"
+format = '[[ $symbol $shlvl ](fg:crust bg:mauve)]($style)'
+repeat = false
+
+[sudo]
+disabled = false
+symbol = ""
+style = "bg:mauve"
+format = '[[ $symbol ](fg:crust bg:mauve)]($style)'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  RIGHT SIDE  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[cmd_duration]
+min_time = 2000
+show_milliseconds = false
+style = "fg:peach"
+format = '[ took $duration ]($style)'
+disabled = false
+show_notifications = true
+min_time_to_notify = 60000
+
+[status]
+disabled = false
+style = "fg:red bold"
+symbol = "✘"
+success_symbol = ""
+format = '[ $symbol $status ]($style)'
+recognize_signal_code = true
+map_symbol = true
+pipestatus = true
+
+[jobs]
+disabled = false
+threshold = 1
+symbol_threshold = 1
+number_threshold = 2
+symbol = ""
+style = "fg:yellow"
+format = '[ $symbol $number ]($style)'
+
+[time]
+disabled = false
+time_format = "%R"
+style = "fg:lavender"
+format = '[ 󰥔 $time ]($style)'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  PROMPT  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[line_break]
+disabled = false
+
+[character]
+disabled = false
+success_symbol = '[❯](bold fg:green)'
+error_symbol = '[❯](bold fg:red)'
+vimcmd_symbol = '[❮](bold fg:green)'
+vimcmd_replace_one_symbol = '[❮](bold fg:lavender)'
+vimcmd_replace_symbol = '[❮](bold fg:lavender)'
+vimcmd_visual_symbol = '[❮](bold fg:yellow)'
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~  PALETTE  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"
