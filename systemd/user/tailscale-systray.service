@@ -1,9 +1,6 @@
 [Unit]
 Description=Tailscale System Tray
-Documentation=https://tailscale.com/kb/1597/linux-systray
-Requires=dbus.service
-After=dbus.service
-PartOf=default.target
+After=graphical.target
 
 [Service]
 Type=simple
