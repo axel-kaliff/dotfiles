@@ -475,7 +475,7 @@ return {
         org = 'any',
         gitcommit = 'any',
       },
-      hl_group_value = { bold = true },
+      hl_group_value = { bold = true, fg = '#ECEFF4' },
     },
   },
 }
