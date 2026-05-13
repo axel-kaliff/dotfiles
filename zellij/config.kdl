@@ -487,6 +487,6 @@ ui {
 show_startup_tips false
 focus_follows_mouse true
 mouse_click_through true
-scrollback_editor "nvim +G"
+scrollback_editor "/home/akaliff/dotfiles/zellij/scripts/scrollback-editor"
 copy_on_select true
 copy_clipboard "system"

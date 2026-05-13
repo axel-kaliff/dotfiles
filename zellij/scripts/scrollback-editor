@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Wrapper for zellij `scrollback_editor` — opens nvim at the last line and
+# silences the DSR-warning hit-enter prompt that triggers inside zellij panes.
+exec /home/linuxbrew/.linuxbrew/bin/nvim \
+  --cmd 'lua vim.notify = function() end' \
+  +'$' \
+  "$@"
