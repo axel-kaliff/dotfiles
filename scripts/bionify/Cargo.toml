@@ -1,0 +1,21 @@
+[package]
+name = "bionify"
+version = "0.1.0"
+edition = "2021"
+description = "ANSI-aware bionic reading filter"
+license = "MIT"
+
+[dependencies]
+
+[[bin]]
+name = "bionify"
+path = "src/main.rs"
+
+[lib]
+name = "bionify"
+path = "src/lib.rs"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

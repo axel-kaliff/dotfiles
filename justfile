@@ -32,7 +32,7 @@ update:
   @echo "Updating everything..."
   @brew update && brew upgrade && brew bundle
   @fish -c 'fisher update'
-  @if command -v cargo &> /dev/null; then cargo install bieye; fi
+  @if command -v cargo &> /dev/null; then cargo install --path ~/dotfiles/scripts/bionify; fi
   @echo "Update complete"
 
 doctor:
@@ -55,7 +55,9 @@ doctor:
   @command -v gitleaks &>/dev/null && echo "  gitleaks ........ ok" || echo "  gitleaks ........ MISSING"
   @command -v pre-commit &>/dev/null && echo "  pre-commit ...... ok" || echo "  pre-commit ...... MISSING"
   @command -v cargo &>/dev/null && echo "  cargo ........... ok" || echo "  cargo ........... MISSING (install rustup)"
-  @command -v bieye &>/dev/null && echo "  bieye ........... ok" || echo "  bieye ........... MISSING"
+  @command -v bionify &>/dev/null && echo "  bionify ......... ok" || echo "  bionify ......... MISSING"
+  @command -v mdcat &>/dev/null && echo "  mdcat ........... ok" || echo "  mdcat ........... MISSING"
+  @command -v glow &>/dev/null && echo "  glow ............ ok" || echo "  glow ............ MISSING"
   @echo "Done."
 
 setup-hooks:
@@ -178,5 +180,5 @@ setup-cargo-tools:
     echo "  Skipping cargo tools."; \
     exit 0; \
   fi; \
-  cargo install bieye; \
+  cargo install --path ~/dotfiles/scripts/bionify; \
   echo "Cargo tools installed."

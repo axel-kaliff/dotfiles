@@ -3,10 +3,10 @@ function bman --description "View man pages in bionic reading format"
         echo "usage: bman <topic>" >&2
         return 2
     end
-    if not command -q bieye
-        echo "bman: bieye not installed — run: cargo install bieye" >&2
+    if not command -q bionify
+        echo "bman: bionify not installed — run: cargo install --path ~/dotfiles/scripts/bionify" >&2
         return 127
     end
 
-    man $argv | CLICOLOR_FORCE=1 bieye --dim --color | less -RFX
+    man $argv | bionify | less -RFX
 end
