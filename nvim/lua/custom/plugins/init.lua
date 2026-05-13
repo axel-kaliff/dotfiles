@@ -541,9 +541,8 @@ return {
         bash = 'any',
         fish = 'any',
       },
-      -- No `fg` here so treesitter's syntax color is preserved; bold+underline
-      -- stays visible even when the terminal renders the bold weight subtly.
-      hl_group_value = { bold = true, underline = true },
+      -- No `fg` here so treesitter's syntax color is preserved.
+      hl_group_value = { bold = true },
     },
   },
 }
