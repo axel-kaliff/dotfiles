@@ -25,13 +25,14 @@ configure-zellij:
     echo "Applied default zellij config"; \
   fi
 
-bootstrap: setup-brew stow-dotfiles setup-hooks setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-atuin enable-tailscale-systray enable-wireguard
+bootstrap: setup-brew stow-dotfiles setup-hooks setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-cargo-tools setup-atuin enable-tailscale-systray enable-wireguard
   @echo 'Bootstrap complete!'
 
 update:
   @echo "Updating everything..."
   @brew update && brew upgrade && brew bundle
   @fish -c 'fisher update'
+  @if command -v cargo &> /dev/null; then cargo install bieye; fi
   @echo "Update complete"
 
 doctor:
@@ -53,6 +54,8 @@ doctor:
   @fish -c 'type -q fisher' 2>/dev/null && echo "  fisher .......... ok" || echo "  fisher .......... MISSING"
   @command -v gitleaks &>/dev/null && echo "  gitleaks ........ ok" || echo "  gitleaks ........ MISSING"
   @command -v pre-commit &>/dev/null && echo "  pre-commit ...... ok" || echo "  pre-commit ...... MISSING"
+  @command -v cargo &>/dev/null && echo "  cargo ........... ok" || echo "  cargo ........... MISSING (install rustup)"
+  @command -v bieye &>/dev/null && echo "  bieye ........... ok" || echo "  bieye ........... MISSING"
   @echo "Done."
 
 setup-hooks:
@@ -167,3 +170,13 @@ enable-wireguard:
 
 install-bbrew:
   @/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Valkyrie00/bold-brew/main/install.sh)"
+
+setup-cargo-tools:
+  @echo "Installing Cargo-based tools..."
+  @if ! command -v cargo &> /dev/null; then \
+    echo "  cargo not found — install rustup from https://rustup.rs and re-run"; \
+    echo "  Skipping cargo tools."; \
+    exit 0; \
+  fi; \
+  cargo install bieye; \
+  echo "Cargo tools installed."
