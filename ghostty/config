@@ -13,9 +13,7 @@ confirm-close-surface = false
 # custom-shader-animation = true
 
 # --- Font ---
-# NOTE: Lexend is proportional (variable-width). Column alignment in nvim,
-# lazygit, fzf previews, etc. will be off. Remove this top line to revert.
-font-family = Lexend
+font-family = Illinois Mono
 font-family = JetBrains Mono
 font-family = Symbols Nerd Font
 font-size = 13
