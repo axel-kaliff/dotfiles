@@ -454,4 +454,28 @@ return {
     ft = { 'markdown' },
     opts = {},
   },
+
+  -- bionic-reading.nvim: highlight first syllable of each word (matches the
+  -- behaviour of the `bionic`/`bman` fish helpers via the bieye CLI).
+  {
+    'FluxxField/bionic-reading.nvim',
+    cmd = { 'BRToggle', 'BRToggleAutoHighlight', 'BRToggleUpdateInsertMode' },
+    keys = {
+      { '<leader>tb', '<cmd>BRToggle<cr>', desc = 'Toggle Bionic Reading' },
+    },
+    opts = {
+      auto_highlight = false,
+      update_in_insert_mode = false,
+      prompt_user = false,
+      file_types = {
+        text = 'any',
+        markdown = 'any',
+        help = 'any',
+        norg = 'any',
+        org = 'any',
+        gitcommit = 'any',
+      },
+      hl_group_value = { bold = true },
+    },
+  },
 }
