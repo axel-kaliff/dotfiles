@@ -467,6 +467,8 @@ return {
       auto_highlight = false,
       update_in_insert_mode = false,
       prompt_user = false,
+      -- 'any' = bionic-format the whole buffer (matches the bieye CLI helpers);
+      -- swap to e.g. { 'comment' } for code files to bionic comments only.
       file_types = {
         text = 'any',
         markdown = 'any',
@@ -474,8 +476,19 @@ return {
         norg = 'any',
         org = 'any',
         gitcommit = 'any',
+        python = 'any',
+        toml = 'any',
+        yaml = 'any',
+        json = 'any',
+        lua = 'any',
+        rust = 'any',
+        sh = 'any',
+        bash = 'any',
+        fish = 'any',
       },
-      hl_group_value = { bold = true, fg = '#ECEFF4' },
+      -- No `fg` here so treesitter's syntax color is preserved; bold+underline
+      -- stays visible even when the terminal renders the bold weight subtly.
+      hl_group_value = { bold = true, underline = true },
     },
   },
 }
