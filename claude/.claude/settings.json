@@ -59,5 +59,6 @@
   "effortLevel": "xhigh",
   "editorMode": "vim",
   "remoteControlAtStartup": false,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
