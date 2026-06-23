@@ -47,12 +47,12 @@ fi
 
 Compare against the handoff's `## Session` block:
 - **Branch mismatch** → ask before switching; don't assume.
-- **HEAD moved** (current sha ≠ the handoff's, or commits landed since it was written) → the handoff may be partly stale. Read the new commits before trusting the Next Steps.
+- **HEAD moved** (current sha ≠ the handoff's, or commits landed since it was written) → the handoff may be partly stale. Read the new commits first. If they already satisfy the Next Steps, the handoff is spent — offer to archive it (Step 5) instead of redoing the work.
 - **Clean match** → proceed.
 
 ### Step 3: Load the key files
 
-Read every file listed under **Key Files**, plus any file named in **In Progress** — in parallel, up front. This is what makes pickup more than a summary: you arrive oriented.
+Read every file listed under **Key Files**, plus any file named in **In Progress** — in parallel, up front. If the handoff reports **Uncommitted Changes**, read the live `git diff` too: the half-finished edits are the real state, more reliable than the prose describing them. This is what makes pickup more than a summary: you arrive oriented.
 
 ### Step 4: Orient and continue
 
@@ -66,18 +66,21 @@ Picked up from <path> (written <when>):
 <+ a one-line drift warning if Step 2 found any>
 ```
 
-If git state matches and the Next Steps are unambiguous, **continue**. Only stop to confirm when there's drift, a branch mismatch, or the plan is ambiguous — don't add friction when the user already said "continue."
+If git state matches and the Next Steps are unambiguous, **continue** — don't add friction when the user already said "continue." Only stop to confirm when there's drift, a branch mismatch, an ambiguous plan, or a destructive/hard-to-reverse first step.
 
-### Step 5: Archive when done — not now
+### Step 5: Archive when its work is done
 
-Leave the handoff in place while you work: if this session dies, the next pickup still finds it. Archive it only once its work is committed or the session wraps up.
+Leave the handoff active while you work — moving it now gains nothing (archive/ is recoverable) and a later pickup can still find it if the session dies. Archive it at a natural, memorable end:
+- the work it described lands in a commit, **or**
+- you write a *new* handoff (the handoff skill rotates the old one for you), **or**
+- the user says you're moving on.
 
 ```bash
 mkdir -p claude_session/handoffs/archive
 mv "<handoff-path>" claude_session/handoffs/archive/
 ```
 
-(If you found a legacy root `HANDOFF.md`, move it under `claude_session/handoffs/archive/` too, so future sessions don't trip over it.)
+(Legacy root `HANDOFF.md`: move it into `claude_session/handoffs/archive/` too, so future sessions don't trip over it. This cleanup is best-effort by nature — if you want archiving *guaranteed*, a SessionEnd hook in settings.json can do it automatically.)
 
 ## Common Mistakes
 
@@ -97,8 +100,13 @@ mv "<handoff-path>" claude_session/handoffs/archive/
 - Problem: re-asking "should I continue?" when the user already said to.
 - Fix: proceed on a clean match; confirm only on drift or ambiguity.
 
+**Trusting prose over the diff**
+- Problem: orienting from the handoff's *description* of half-done work instead of the edits themselves.
+- Fix: when there are uncommitted changes, read `git diff` — it can't drift from reality.
+
 ## Red Flags
 
 - Reported the plan without reading the Key Files → read them
 - Branch ≠ handoff branch → ask before switching
+- Acted on Next Steps the new commits already completed → should have archived instead
 - Deleted the handoff before doing the work → should have archived at the end
