@@ -27,7 +27,7 @@
       "Bash(git push:*)"
     ]
   },
-  "model": "opus",
+  "model": "fable",
   "statusLine": {
     "type": "command",
     "command": "bash /home/akaliff/.claude/statusline-command.sh"
