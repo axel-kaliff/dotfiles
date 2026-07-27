@@ -5,3 +5,6 @@ Description=Sync dotfiles from git
 Type=oneshot
 ExecStart=%h/dotfiles/scripts/dotfiles-sync.sh
 Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
+# The script waits up to 60s for the network after a resume; cap the unit well
+# above that so a hung git or stow can still be reaped.
+TimeoutStartSec=300
