@@ -461,7 +461,7 @@ return {
     'FluxxField/bionic-reading.nvim',
     cmd = { 'BRToggle', 'BRToggleAutoHighlight', 'BRToggleUpdateInsertMode' },
     keys = {
-      { '<leader>tb', '<cmd>BRToggle<cr>', desc = 'Toggle Bionic Reading' },
+      { '<leader>tB', '<cmd>BRToggle<cr>', desc = 'Toggle Bionic Reading' },
     },
     opts = {
       auto_highlight = false,

@@ -602,6 +602,8 @@ require('lazy').setup({
 
   { import = 'custom.plugins' },
 }, {
+  -- No plugin needs luarocks; disabling stops checkhealth asking for Lua 5.1
+  rocks = { enabled = false },
   ui = {
     icons = vim.g.have_nerd_font and {} or {
       cmd = '⌘',
