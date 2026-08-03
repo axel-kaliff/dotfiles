@@ -88,8 +88,8 @@ vim.keymap.set('v', '>', '>gv', { desc = 'Indent right' })
 vim.keymap.set('x', 'p', '"_dP', { desc = 'Paste without losing register' })
 
 -- Window splits
-vim.keymap.set('n', '<leader>w-', '<cmd>split<cr>', { desc = 'Split horizontal' })
-vim.keymap.set('n', '<leader>w|', '<cmd>vsplit<cr>', { desc = 'Split vertical' })
+vim.keymap.set('n', '<leader>wh', '<cmd>split<cr>', { desc = 'Split horizontal' })
+vim.keymap.set('n', '<leader>ws', '<cmd>vsplit<cr>', { desc = 'Split vertical' })
 vim.keymap.set('n', '<leader>wd', '<cmd>close<cr>', { desc = 'Close split' })
 vim.keymap.set('n', '<leader>w=', '<C-w>=', { desc = 'Equalize splits' })
 

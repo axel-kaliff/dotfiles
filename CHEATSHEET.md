@@ -272,7 +272,11 @@ Leader: `Space`
 | Shortcut | What it does |
 |----------|-------------|
 | `Ctrl+H/J/K/L` | Move between splits (crosses into zellij) |
-| `Ctrl+M` / `Ctrl+N` | Next / previous buffer |
+| `Shift+H` / `Shift+L` | Previous / next buffer |
+| `[b` / `]b` | Previous / next buffer |
+| `Space ws` / `Space wh` | Split vertical / horizontal |
+| `Space wd` | Close split |
+| `Space w=` | Equalize splits |
 | `gb` | Pick buffer |
 | `Space bd` | Close buffer |
 | `s` | Flash jump |
