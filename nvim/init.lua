@@ -343,6 +343,9 @@ require('lazy').setup({
           if vim.uv.fs_stat(dir .. '/pyproject.toml') and vim.uv.fs_stat(dir .. '/.venv') then
             best = dir
           end
+          if vim.uv.fs_stat(dir .. '/.git') then
+            break -- repo boundary: don't escape into an enclosing checkout (worktrees live inside the main repo)
+          end
           local parent = vim.fn.fnamemodify(dir, ':h')
           if parent == dir then
             break
