@@ -61,7 +61,7 @@ return {
       },
       indent = { enabled = true },
       notifier = { enabled = true },
-      scroll = { enabled = true },
+      scroll = { enabled = false },
       bigfile = { enabled = true },
       words = { enabled = true },
       zen = {
