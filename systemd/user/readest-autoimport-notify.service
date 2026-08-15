@@ -1,0 +1,7 @@
+[Unit]
+Description=Desktop notification when Readest auto-import fails
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/notify-send --urgency=critical "Readest import failed" \
+    "journalctl --user -u readest-autoimport for details"

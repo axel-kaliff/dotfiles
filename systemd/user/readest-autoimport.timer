@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily catch-up Readest import (subdir drops, offline retries)
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target

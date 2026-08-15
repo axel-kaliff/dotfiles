@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch ~/Documents/books for new ebooks
+
+[Path]
+PathChanged=%h/Documents/books
+Unit=readest-autoimport.service
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=ActivityWatch bundle (aw-server-rust + COSMIC window/AFK watchers)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/awatcher
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

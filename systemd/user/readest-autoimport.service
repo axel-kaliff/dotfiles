@@ -1,0 +1,10 @@
+[Unit]
+Description=Import new ebooks from ~/Documents/books into self-hosted Readest
+Wants=network-online.target
+After=network-online.target
+OnFailure=readest-autoimport-notify.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/readest-autoimport
+TimeoutStartSec=2h
