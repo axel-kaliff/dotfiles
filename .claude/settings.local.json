@@ -7,7 +7,8 @@
       "WebFetch(domain:rosmur.github.io)",
       "WebFetch(domain:www.reddit.com)",
       "WebFetch(domain:dotfyle.com)",
-      "WebFetch(domain:ghostty.org)"
+      "WebFetch(domain:ghostty.org)",
+      "Skill(ai-dev:preflight)"
     ]
   }
 }
