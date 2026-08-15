@@ -28,10 +28,10 @@ State: "Diff adds N lines. Gun-to-the-head target: 40–50% = X–Y lines." For 
 
 ## Hunt order — cheapest cuts first
 
-1. **Wholesale deletions (free):** dead code and unreferenced symbols; output nobody consumes (log/telemetry/trace fields with no reader, diagnostics no workflow ingests); docs restating what code/comments already say; tutorials teaching general concepts; infrastructure heavier than its problem (a framework where a function would do, a registry with one entrant).
+1. **Wholesale deletions (free):** dead code and symbols with no production consumer — tests are NOT consumers: a symbol referenced only by its own tests is dead no matter how good those tests are, and the tests go with it (count both in `−lines`); output nobody consumes (log/telemetry/trace fields with no reader, diagnostics no workflow ingests); docs restating what code/comments already say; tutorials teaching general concepts; infrastructure heavier than its problem (a framework where a function would do, a registry with one entrant).
 2. **Test-suite fat (near-free):** tautological tests (would pass with the behavior deleted — name the mutation they'd miss), language/framework tests (dataclass fields exist, mock called with what you just wired), duplicate pins (N tests failing for one reason — keep the sharpest), implementation-detail tests that break on refactor and catch nothing.
 3. **Unearned abstraction (cheap):** single-implementation interfaces, single-use helpers, forwarding layers, distinctions with one consumer (a 3-value enum read as a bool IS a bool), classes where functions would do.
-4. **Speculative generality (cheap):** parameters no caller varies, defaults nothing overrides, hooks nothing hooks, "for later" plumbing, compat shims for callers that don't exist.
+4. **Speculative generality (cheap):** parameters no caller varies, defaults nothing overrides, hooks nothing hooks, "for later" plumbing, compat shims for callers that don't exist, docstrings that assign obligations to a caller no grep can find ("the caller validates X" — what caller?).
 5. **Line-level shrink (cheap):** comments/docstrings restating the line below, drive-by edits outside the change's purpose, boilerplate a stdlib call replaces, verbose prose in surviving docs.
 6. **Costed cuts (the forced zone):** features/coverage with real but marginal value — a convenience API with one caller, a nice-to-have doc, redundant-but-not-duplicate test angles, defensive handling for far-fetched-but-reachable paths. Propose them ONLY as needed to reach the target, each with its exact cost.
 
@@ -42,7 +42,7 @@ State: "Diff adds N lines. Gun-to-the-head target: 40–50% = X–Y lines." For 
 The orchestrator verifies your list and WILL reject sloppy entries. Make verification fast:
 
 - **file:line**, the exact cut, `−N` lines
-- Evidence: the grep proving zero consumers, the sibling test pinning the same behavior, the code comment the doc restates. Grep NAMES, not just imports — dynamic references (config module paths, `getattr`/string dispatch, entry points, CLI registration) are where careless cutters die.
+- Evidence: the grep proving zero consumers, the sibling test pinning the same behavior, the code comment the doc restates. Grep NAMES, not just imports — dynamic references (config module paths, `getattr`/string dispatch, entry points, CLI registration) are where careless cutters die. Classify every hit as definition / own test / production — only production hits keep a symbol alive.
 - **Cost, honestly stated:** `cost: none` / `cost: <exactly what is lost>` (a duplicate pin, a doc, a convenience) / `cost: BREAKS <what>`
 
 ## Constraints
@@ -56,7 +56,7 @@ The orchestrator verifies your list and WILL reject sloppy entries. Make verific
 1. Size the diff (Step 0 above), state the target.
 2. Read the full files, not just hunks — necessity is invisible in a diff window.
 3. Comprehension: 2–3 sentences on what this change does and for whom.
-4. Consumer-trace everything added; test-fat pass (what mutation would each test catch?).
+4. Consumer-trace everything added — every new public symbol must name a production caller (file:line) or it goes on the list; test-fat pass (what mutation would each test catch?).
 5. Build the ranked list, running total until the target lands in 40–50%.
 
 ### Output format
@@ -71,7 +71,7 @@ Diff adds N lines. Target: X–Y. My list reaches: Z (~P%).
 ## The cut list — cheapest first, running total
 | # | Cut | −lines | Σ | Cost | Evidence |
 |---|-----|--------|---|------|----------|
-| 1 | file:line — delete <what> | 40 | 40 | none | zero consumers (grep '<name>' = 0 hits) |
+| 1 | file:line — delete <what> | 40 | 40 | none | no production consumers (grep '<name>': only def + own tests) |
 | 2 | ... | | | | |
 
 ## Where the free cuts ran out
