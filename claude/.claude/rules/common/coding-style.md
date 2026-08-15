@@ -6,6 +6,13 @@
 - Single responsibility per module
 - Descriptive naming over comments
 
+## Simplicity & Minimal Diffs
+
+- Code must be as simple as possible while still achieving the desired functionality — readable and maintainable beat clever
+- Complexity must be earned: no new abstraction until the second concrete consumer exists; no config knobs, plumbing, or generality "for later"
+- PRs minimal in line diffs — before committing, ask "could the same functionality land in fewer lines, fewer layers, fewer new names?" and collapse single-use helpers
+- Apply this as an explicit lens when REVIEWING too: flag unearned complexity and over-engineering, not just defects
+
 ## Performance & Memory
 
 - Never load an entire file or dataset into memory when streaming/chunked processing is possible
