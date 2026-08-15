@@ -40,6 +40,7 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 |---------|-------------|
 | `g` | lazygit |
 | `gbr` | Fuzzy branch switcher (fzf, sorted by recent) |
+| `gwt [branch]` | Jump to the worktree holding a branch, even mid-rebase (fzf when ambiguous) |
 | `udot` | Interactive dotfile commit + push + stow |
 
 ### Development
@@ -322,6 +323,96 @@ Leader: `Space`
 | `Space gn` | Neogit |
 | `Space gd` | Diffview |
 | `Space gh` | File history |
+
+### Neogit (magit-style git)
+
+Entry points: `Space gn` status buffer, `Space gc` commit popup, `Space gp` push popup.
+Inside any Neogit buffer, `?` opens the help popup listing every binding — when in doubt, press it.
+
+**The loop:** `Space gn` → move to a file or hunk → `s` to stage → `c c` to commit → write the
+message → `Ctrl+C Ctrl+C` to save it → `P p` to push. `q` closes the status buffer.
+
+Everything is positional: `s`, `u`, and `x` act on whatever the cursor is on — a whole section, a
+file, a single hunk, or (in visual mode) just the selected lines. Fold with `Tab` to see files,
+unfold to see hunks.
+
+#### Status buffer
+
+| Shortcut | What it does |
+|----------|-------------|
+| `Tab` | Fold / unfold item under cursor |
+| `1` / `2` / `3` / `4` | Set fold depth for the whole buffer |
+| `s` / `u` | Stage / unstage item under cursor (or visual selection) |
+| `S` / `U` | Stage all unstaged / unstage all staged |
+| `Ctrl+S` | Stage everything, untracked included |
+| `x` | Discard item under cursor (destructive) |
+| `K` | Untrack file (keeps it on disk) |
+| `Enter` | Open the file under cursor |
+| `Shift+Enter` | Peek file without leaving the status buffer |
+| `Ctrl+V` / `Ctrl+X` / `Ctrl+T` | Open in vsplit / split / tab |
+| `{` / `}` | Previous / next hunk header |
+| `Ctrl+P` / `Ctrl+N` | Previous / next section |
+| `y` | Show refs (branches, tags, remotes) |
+| `Y` | Yank the hash/path under cursor |
+| `$` | Git command history + output |
+| `Ctrl+R` | Refresh buffer |
+| `q` | Close |
+
+#### Popups
+
+Each popup is a menu: press its key from the status buffer, then pick an action inside it.
+
+| Key | Popup | Common actions inside |
+|-----|-------|----------------------|
+| `?` | Help | Lists everything below |
+| `c` | Commit | `c` commit, `a` amend, `e` extend (amend, keep message), `w` reword, `f` fixup, `s` squash |
+| `P` | Push | `p` to pushRemote, `u` to upstream, `e` elsewhere, `T` a tag |
+| `p` | Pull | `p` from pushRemote, `u` from upstream, `e` elsewhere |
+| `f` | Fetch | `p` pushRemote, `u` upstream, `a` all remotes |
+| `b` | Branch | `b` checkout branch, `l` local branch, `c` checkout new branch, `n` create (stay put), `m` rename, `D` delete |
+| `r` | Rebase | `u` onto upstream, `b` onto base branch, `i` interactively, `w` reword a commit, `d` drop a commit, `f` autosquash |
+| `m` | Merge | Merge a branch into the current one |
+| `l` | Log | `l` current branch, `b` all branches, `r` reflog |
+| `d` | Diff | `d` this, `u` unstaged, `s` staged, `w` worktree, `r` range (opens diffview) |
+| `Z` | Stash | `z` stash both, `i` index only, `p` pop, `a` apply, `d` drop |
+| `A` | Cherry-pick | Pick commits onto the current branch |
+| `v` | Revert | Revert a commit |
+| `X` | Reset | `s` soft, `m` mixed, `h` hard, `k` keep, `f` a file, `b` a branch |
+| `t` | Tag | Create, delete, or push tags |
+| `w` | Worktree | Create, checkout, or delete worktrees |
+| `i` | Ignore | Add path under cursor to `.gitignore` |
+| `B` | Bisect | Start / good / bad / reset |
+
+Inside a popup, `-<key>` toggles a switch and `=<key>` sets an option before you run the action —
+e.g. in the push popup `-f` arms `--force-with-lease`, then `p` pushes with it. In the rebase popup
+`-i` arms interactive. Switches stick between sessions unless marked otherwise.
+
+#### Commit editor
+
+| Shortcut | What it does |
+|----------|-------------|
+| `Ctrl+C Ctrl+C` | Save the message and commit (`:wq` also works) |
+| `Ctrl+C Ctrl+K` | Abort the commit |
+| `Alt+P` / `Alt+N` | Cycle through previous commit messages |
+| `Alt+R` | Reset the message back to its original |
+| `q` | Close |
+
+#### Interactive rebase editor
+
+Opened by `r i`. One line per commit — mark each, then submit.
+
+| Shortcut | What it does |
+|----------|-------------|
+| `p` / `r` / `e` | Pick / reword / edit |
+| `s` / `f` | Squash / fixup into the commit above |
+| `x` / `b` / `d` | Execute a shell command / break / drop |
+| `gj` / `gk` | Move the commit under cursor down / up |
+| `Enter` | Open the commit under cursor |
+| `Ctrl+C Ctrl+C` | Run the rebase |
+| `Ctrl+C Ctrl+K` | Abort |
+
+While a rebase is in progress, `r` in the status buffer offers `r` continue, `s` skip, `e` edit,
+`a` abort. Conflicts are easiest to resolve with `Space gd` (diffview).
 
 ### Diagnostics & Debug
 
