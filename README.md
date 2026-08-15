@@ -262,7 +262,7 @@ These activate automatically in every fish session:
 
 ## Zellij
 
-Leader-free navigation. Autolock engages when nvim/vim/git/fzf/zoxide/atuin are running.
+Leader-free navigation. Autolock engages when nvim/vim/claude/git/fzf/zoxide/atuin are running.
 
 ### Sessions
 
@@ -276,6 +276,8 @@ The `zj` function manages sessions:
 | `zj kill <name>` | Kill a session |
 | `zj layout <name> <layout>` | Attach with a specific layout (remembers layout for reset) |
 | `zj reset <name>` | Kill session and restart with its original layout |
+| `zj ide [name]` | IDE session in `.worktrees/<name>` (creates branch + worktree if missing; no arg = fzf over existing worktrees) |
+| `zj ide done <name>` | Tear down: kill session, remove worktree, delete branch (refuses dirty/unmerged) |
 
 ### Global (all modes except locked)
 
@@ -321,8 +323,18 @@ Start zellij with a layout: `zellij layout dev`
 |--------|-------------|
 | `dev` | Editor (70%) + terminal + lazygit sidebar |
 | `fullstack` | Editor + frontend/backend panes + logs tab |
+| `ide` | Claude Code (58%) + Neogit overview + shell, for branch worktrees (via `zj ide`) |
 | `monitor` | 4-pane grid for monitoring |
 | `sics` | Remote development on r2d2 (2 remote shells + remote neovim editor) |
+
+#### ide layout (Claude Code on a worktree)
+
+`zj ide <name>` pairs a branch worktree with a session: Claude Code left (58%),
+Neogit right (auto-refreshing every 2s via `nvim/lua/custom/neogit_watch.lua` —
+Neogit's own watcher only sees `.git/`, not edits Claude makes), small shell
+below it. Claude Code hooks label the claude pane with its state: 🤖 working,
+💬 waiting for input, ✅ done. The claude pane autolocks zellij so Claude's
+Ctrl chords work; leave it with the mouse or `Alt+Z` then a nav key.
 
 #### sics layout (remote development)
 
@@ -683,7 +695,7 @@ dotfiles/
 ├── yazi/           # File manager config (catppuccin theme, git/smart-enter/smart-filter plugins)
 ├── zellij/         # Zellij config + layouts
 │   ├── config.kdl
-│   └── layouts/    # dev, fullstack, monitor, sics
+│   └── layouts/    # dev, fullstack, ide, monitor, sics
 ├── Brewfile        # Homebrew packages
 └── justfile        # Setup/install recipes
 ```

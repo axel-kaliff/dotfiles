@@ -1,0 +1,23 @@
+layout {
+    pane split_direction="vertical" {
+        // Claude gets the wide side — its TUI reflows badly when narrow.
+        // Frame stays on (not borderless): the claude-status hook renders
+        // the agent state icon in the pane title.
+        pane size="58%" name="claude" focus=true {
+            command "claude"
+        }
+        pane size="42%" split_direction="horizontal" {
+            pane size="70%" name="git" {
+                command "nvim"
+                args "-c" "Neogit kind=replace" "-c" "lua require('custom.neogit_watch').start()"
+            }
+            pane size="30%" name="shell"
+        }
+    }
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="zellij:compact-bar"
+        }
+    }
+}

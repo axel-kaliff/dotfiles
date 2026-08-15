@@ -198,6 +198,17 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 | `zl fullstack` | Start session with fullstack layout |
 | `zl monitor` | Start session with monitor layout |
 | `zj reset <name>` | Kill + restart with original layout |
+| `zj ide <name>` | Claude IDE session on worktree `.worktrees/<name>` (creates branch + worktree if missing) |
+| `zj ide` | Same, but fzf-pick an existing worktree |
+| `zj ide done <name>` | Kill session + remove worktree + delete branch (refuses dirty/unmerged) |
+
+#### Claude IDE session (`zj ide`)
+
+Claude Code 58% left · Neogit top-right (live, 2s poll) · shell bottom-right.
+Pane icons via Claude hooks: 🤖 working · 💬 waiting for input · ✅ done.
+The claude pane autolocks zellij (its Ctrl keys reach Claude) — leave it with
+the mouse or `Alt+Z` + nav key within 1s. Rerunning `zj ide <name>` just
+re-attaches; use it instead of `zj reset` (reset loses the worktree cwd).
 
 ---
 
