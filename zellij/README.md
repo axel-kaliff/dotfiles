@@ -7,7 +7,7 @@ Zellij config for r2d2, using the **terafox** theme with rounded pane frames.
 | Plugin | Description | Keybind |
 |--------|-------------|---------|
 | [zjstatus](https://github.com/dj95/zjstatus) | Custom status bar | Loaded via layout |
-| [zellij-autolock](https://github.com/fresh2dev/zellij-autolock) | Auto-locks when nvim/git/fzf/zoxide/atuin detected | Automatic |
+| [zellij-autolock](https://github.com/fresh2dev/zellij-autolock) | Auto-locks when nvim/claude/git/fzf/zoxide/atuin detected | Automatic (`Alt h/j/k/l`, `Alt w` still work) |
 | [room](https://github.com/rvcas/room) | Fuzzy tab switcher | `Ctrl y` |
 | [zellij-forgot](https://github.com/karimould/zellij-forgot) | Keybind reminder overlay | `Alt /` |
 | [harpoon](https://github.com/Nacho114/harpoon) | Bookmark and jump between panes | `Alt b` |

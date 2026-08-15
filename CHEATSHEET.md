@@ -155,7 +155,8 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 | Shortcut | What it does |
 |----------|-------------|
 | `Ctrl+H/J/K/L` | Move between panes (crosses into nvim) |
-| `Alt+H/J/K/L` | Move focus / tab |
+| `Alt+H/J/K/L` | Move focus / tab — **also works while locked** |
+| `Alt+W` | Session manager — **also works while locked** |
 | `Alt+F` | Toggle floating panes |
 | `Alt+N` | New pane |
 | `Alt+E` | Activate venv + open nvim |
@@ -167,11 +168,16 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 
 ### Lock / Unlock
 
+Autolock locks the session whenever the focused pane runs `nvim`, `claude`,
+`git`, `fzf`, `zoxide` or `atuin`, so their `Ctrl` chords reach the TUI instead
+of Zellij. `Alt+H/J/K/L` and `Alt+W` stay live while locked — use those to get
+out of a locked pane rather than unlocking.
+
 | Shortcut | What it does |
 |----------|-------------|
 | `Alt+Z` | Toggle lock |
 | `Alt+Shift+Z` | Re-enable autolock |
-| `Ctrl+G` | Unlock |
+| `Ctrl+G` | Unlock (autolock re-locks ~1s later) |
 
 ### Mode Switches
 
@@ -206,9 +212,10 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 
 Claude Code 58% left · Neogit top-right (live, 2s poll) · shell bottom-right.
 Pane icons via Claude hooks: 🤖 working · 💬 waiting for input · ✅ done.
-The claude pane autolocks zellij (its Ctrl keys reach Claude) — leave it with
-the mouse or `Alt+Z` + nav key within 1s. Rerunning `zj ide <name>` just
-re-attaches; use it instead of `zj reset` (reset loses the worktree cwd).
+The claude and neogit panes autolock zellij so their `Ctrl` keys reach the TUI —
+navigate with `Alt+H/J/K/L` and open the session manager with `Alt+W`, both of
+which stay live while locked. Rerunning `zj ide <name>` just re-attaches; use it
+instead of `zj reset` (reset loses the worktree cwd).
 
 ---
 

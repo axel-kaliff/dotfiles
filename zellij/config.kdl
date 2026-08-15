@@ -21,6 +21,21 @@ shared {
         bind "Alt Shift z" {
             MessagePlugin "autolock" {payload "enable";};
         }
+
+        // Autolock locks the session while a claude/nvim pane is focused so
+        // their Ctrl chords reach the TUI. These live in `shared`, not
+        // `shared_except "locked"`, so the session stays navigable from
+        // inside one — Alt is free in both TUIs, Ctrl is not.
+        bind "Alt h" { MoveFocusOrTab "left"; }
+        bind "Alt j" { MoveFocus "down"; }
+        bind "Alt k" { MoveFocus "up"; }
+        bind "Alt l" { MoveFocusOrTab "right"; }
+        bind "Alt w" {
+            LaunchOrFocusPlugin "session-manager" {
+                floating true
+                move_to_focused_tab true
+            }
+        }
     }
 
     shared_except "locked" {
@@ -193,11 +208,7 @@ shared {
         bind "Alt ]" { NextSwapLayout; }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Ctrl g" { SwitchToMode "locked"; }
-        bind "Alt h" { MoveFocusOrTab "left"; }
         bind "Alt i" { MoveTab "left"; }
-        bind "Alt j" { MoveFocus "down"; }
-        bind "Alt k" { MoveFocus "up"; }
-        bind "Alt l" { MoveFocusOrTab "right"; }
         bind "Alt n" { NewPane; }
         bind "Alt o" { MoveTab "right"; }
         bind "Alt p" { TogglePaneInGroup; }
