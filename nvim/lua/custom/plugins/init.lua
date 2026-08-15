@@ -150,9 +150,41 @@ return {
         fzf_lua = true,
         diffview = true,
       },
+      mappings = {
+        status = {
+          -- <cr> opens the file beside the status buffer instead of replacing
+          -- it. Two cases fall back to GoToFile: commits and refs, which
+          -- VSplitOpen cannot open at all, and kind="replace" — the zj ide
+          -- pane, where Neogit owns a window too narrow to halve.
+          ['<cr>'] = function()
+            local status = require('neogit.buffers.status').instance()
+            local item = status.buffer.ui:get_item_under_cursor()
+            local beside = item and item.absolute_path and status.buffer.kind ~= 'replace'
+            require('neogit.buffers.status.actions')[beside and 'n_vertical_split_open' or 'n_goto_file'](status)()
+          end,
+          -- The old <cr>: close Neogit and take over its window. Displaces the
+          -- default PeekFile binding.
+          ['<s-cr>'] = 'GoToFile',
+        },
+      },
     },
     keys = {
-      { '<leader>gn', '<cmd>Neogit<cr>', desc = 'Neogit' },
+      {
+        '<leader>gn',
+        function()
+          if require('neogit.buffers.status').is_open() then
+            require('neogit').close()
+          else
+            -- The zj ide pane is too narrow to split, so Neogit takes it whole.
+            -- vsplit_left is implemented and validated upstream, but missing
+            -- from :Neogit kind= completion — hence the Lua API, not the command.
+            local ide = require('custom.neogit_watch').is_ide_pane
+            require('neogit').open { kind = ide and 'replace' or 'vsplit_left' }
+          end
+        end,
+        desc = 'Neogit Toggle (left split)',
+      },
+      { '<leader>gf', '<cmd>Neogit kind=tab<cr>', desc = 'Neogit Fullscreen' },
       { '<leader>gc', '<cmd>Neogit commit<cr>', desc = 'Neogit Commit' },
       { '<leader>gp', '<cmd>Neogit push<cr>', desc = 'Neogit Push' },
     },

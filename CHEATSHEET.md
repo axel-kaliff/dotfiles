@@ -217,6 +217,11 @@ navigate with `Alt+H/J/K/L` and open the session manager with `Alt+W`, both of
 which stay live while locked. Rerunning `zj ide <name>` just re-attaches; use it
 instead of `zj reset` (reset loses the worktree cwd).
 
+That Neogit pane runs `kind=replace`, so `Enter` there opens the file over the
+whole pane rather than splitting it — the pane is too narrow to halve. `Space gn`
+toggles Neogit back, also full-pane. Everywhere else `Enter` splits beside the
+status buffer and `Space gn` opens a left split.
+
 ---
 
 ## Yazi
@@ -338,17 +343,19 @@ Leader: `Space`
 | `Space hp` | Preview hunk |
 | `Space hb` | Blame line |
 | `Space gg` | Lazygit |
-| `Space gn` | Neogit |
+| `Space gn` | Neogit toggle (left split; full-pane in a `zj ide` session) |
+| `Space gf` | Neogit fullscreen (own tab) |
 | `Space gd` | Diffview |
 | `Space gh` | File history |
 
 ### Neogit (magit-style git)
 
-Entry points: `Space gn` status buffer, `Space gc` commit popup, `Space gp` push popup.
+Entry points: `Space gn` toggles the status buffer in a left-hand split, `Space gf` opens it
+fullscreen in its own tab, `Space gc` commit popup, `Space gp` push popup.
 Inside any Neogit buffer, `?` opens the help popup listing every binding — when in doubt, press it.
 
 **The loop:** `Space gn` → move to a file or hunk → `s` to stage → `c c` to commit → write the
-message → `Ctrl+C Ctrl+C` to save it → `P p` to push. `q` closes the status buffer.
+message → `Ctrl+C Ctrl+C` to save it → `P p` to push. `Space gn` again (or `q`) closes it.
 
 Everything is positional: `s`, `u`, and `x` act on whatever the cursor is on — a whole section, a
 file, a single hunk, or (in visual mode) just the selected lines. Fold with `Tab` to see files,
@@ -365,8 +372,8 @@ unfold to see hunks.
 | `Ctrl+S` | Stage everything, untracked included |
 | `x` | Discard item under cursor (destructive) |
 | `K` | Untrack file (keeps it on disk) |
-| `Enter` | Open the file under cursor |
-| `Shift+Enter` | Peek file without leaving the status buffer |
+| `Enter` | Open file in a split beside the status buffer (commits open the commit view; takes over the window in the `zj ide` pane) |
+| `Shift+Enter` | Open file fullscreen — closes the status buffer |
 | `Ctrl+V` / `Ctrl+X` / `Ctrl+T` | Open in vsplit / split / tab |
 | `{` / `}` | Previous / next hunk header |
 | `Ctrl+P` / `Ctrl+N` | Previous / next section |
