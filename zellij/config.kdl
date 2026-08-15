@@ -22,10 +22,10 @@ shared {
             MessagePlugin "autolock" {payload "enable";};
         }
 
-        // Autolock locks the session while a claude/nvim pane is focused so
-        // their Ctrl chords reach the TUI. These live in `shared`, not
+        // Autolock locks the session while an nvim pane is focused so its
+        // Ctrl chords reach the TUI. These live in `shared`, not
         // `shared_except "locked"`, so the session stays navigable from
-        // inside one — Alt is free in both TUIs, Ctrl is not.
+        // inside one — Alt is free in the TUI, Ctrl is not.
         bind "Alt h" { MoveFocusOrTab "left"; }
         bind "Alt j" { MoveFocus "down"; }
         bind "Alt k" { MoveFocus "up"; }
@@ -343,7 +343,7 @@ plugins {
 
     autolock location="file:~/.config/zellij/plugins/zellij-autolock.wasm" {
         is_enabled true
-        triggers "nvim|vim|claude|git|fzf|zoxide|atuin"
+        triggers "nvim|vim|git|fzf|zoxide|atuin"
         reaction_seconds "1.0"
         print_to_log true
     }
