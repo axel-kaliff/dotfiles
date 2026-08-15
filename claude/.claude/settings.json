@@ -27,45 +27,7 @@
       "Bash(git push:*)"
     ]
   },
-  "model": "opus",
-  "statusLine": {
-    "type": "command",
-    "command": "bash /home/akaliff/.claude/statusline-command.sh"
-  },
-  "enabledPlugins": {
-    "context7-plugin@context7-marketplace": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": false,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "sics@zombiesnack-plugins": true,
-    "ai-dev@sicsai-plugins": true,
-    "hyperstar@sicsai-plugins": true,
-    "sicsai@sicsai-plugins": true,
-    "clangd-lsp@claude-plugins-official": true,
-    "mattpocock-skills@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "context7-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "upstash/context7"
-      }
-    },
-    "zombiesnack-plugins": {
-      "source": {
-        "source": "directory",
-        "path": "/space/personal/akaliff/zombiesnack/.claude/plugins"
-      }
-    }
-  },
-  "effortLevel": "xhigh",
-  "tui": "fullscreen",
-  "skipWorkflowUsageWarning": true,
-  "theme": "dark",
-  "editorMode": "vim",
-  "remoteControlAtStartup": false,
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
+  "model": "fable",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -112,5 +74,43 @@
         ]
       }
     ]
-  }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/akaliff/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "context7-plugin@context7-marketplace": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": false,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "sics@zombiesnack-plugins": true,
+    "ai-dev@sicsai-plugins": true,
+    "hyperstar@sicsai-plugins": true,
+    "sicsai@sicsai-plugins": true,
+    "clangd-lsp@claude-plugins-official": true,
+    "mattpocock-skills@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "context7-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "upstash/context7"
+      }
+    },
+    "zombiesnack-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "/space/personal/akaliff/zombiesnack/.claude/plugins"
+      }
+    }
+  },
+  "effortLevel": "xhigh",
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "editorMode": "vim",
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
