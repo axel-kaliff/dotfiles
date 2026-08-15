@@ -57,6 +57,51 @@ function gbr -d 'Fuzzy switch git branch'
     git checkout $branch
 end
 
+# Worktree-aware sibling of gbr: gbr's `git checkout` refuses a branch that is
+# already checked out elsewhere, so jump to that worktree instead.
+function gwt -d 'Jump to the git worktree for a branch'
+    set -l tab (printf '\t')
+    set -l rows (git worktree list | string replace -r '^(\S+) +\S+ +[\[(](.+)[\])]$' "\$2$tab\$1")
+    if test -z "$rows"
+        echo "gwt: not in a git repository" >&2
+        return 1
+    end
+
+    # A worktree mid-rebase is detached, so its branch lives only in the rebase
+    # state; relabel those rows so the branch name still finds them.
+    set -l common (path resolve (git rev-parse --git-common-dir))
+    set -l admins $common
+    if test -d $common/worktrees
+        set -a admins $common/worktrees/*
+    end
+    for admin in $admins
+        set -l state (path filter -f $admin/rebase-merge/head-name $admin/rebase-apply/head-name)
+        test -n "$state"; or continue
+        set -l wt (string split -f2 $tab -- $rows[1]) # main worktree is listed first
+        if test -f $admin/gitdir
+            set wt (path dirname (cat $admin/gitdir))
+        end
+        set -l branch (string replace 'refs/heads/' '' -- (cat $state[1]))
+        set rows (string replace -- "detached HEAD$tab$wt" "$branch (rebasing)$tab$wt" $rows)
+    end
+
+    if test (count $argv) -gt 0
+        set rows (string match -i -- "*$argv[1]*" $rows)
+    end
+
+    set -l pick $rows[1]
+    if test (count $rows) -eq 0
+        echo "gwt: no worktree matching '$argv[1]'" >&2
+        return 1
+    else if test (count $rows) -gt 1
+        set pick (printf '%s\n' $rows | fzf --height 40% --reverse --delimiter $tab \
+            --preview 'git -C {2} log --oneline -10')
+        or return
+    end
+
+    cd (string split -f2 $tab -- $pick)
+end
+
 # fzf-powered project jumper via zoxide (scored, with tree preview)
 function zp -d 'Fuzzy jump to a project directory'
     set -l dir (zoxide query -ls | fzf --height 50% --layout=reverse \

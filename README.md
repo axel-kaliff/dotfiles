@@ -185,6 +185,7 @@ These replace standard commands — just use them as normal, the better version 
 |---------|--------|
 | `tdd py -- pytest` | Watch files and re-run tests on change |
 | `gbr` | Fuzzy switch git branch (sorted by recent, with log preview) |
+| `gwt [branch]` | Jump to the worktree holding a branch, even mid-rebase (fzf when ambiguous) |
 | `zp` | Fuzzy jump to a project directory (scored, with tree preview) |
 | `recent [dur]` | Find files changed within duration (default: 1day, uses fd) |
 | `bloat [size]` | Find files larger than size (default: 10MB, uses fd) |
