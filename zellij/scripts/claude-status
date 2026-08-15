@@ -1,12 +1,13 @@
 #!/bin/sh
 # Claude Code hook target: shows agent state on the claude pane frame.
-# rename-pane from inside a pane targets the calling pane, so this labels
-# the pane claude runs in regardless of where focus is. No-op outside zellij.
-[ -n "$ZELLIJ" ] || exit 0
+# rename-pane targets the *focused* pane by default — whichever pane the
+# user happens to be in when the hook fires — so pass the calling pane's
+# own id explicitly. No-op outside zellij.
+[ -n "$ZELLIJ" ] && [ -n "$ZELLIJ_PANE_ID" ] || exit 0
 case "$1" in
     working) icon="🤖" ;;
     waiting) icon="💬" ;;
     done)    icon="✅" ;;
     *)       exit 0 ;;
 esac
-zellij action rename-pane "claude $icon"
+zellij action rename-pane --pane-id "$ZELLIJ_PANE_ID" "claude $icon"
