@@ -446,7 +446,9 @@ themes {
             emphasis_3 180 142 173
         }
         frame_selected {
-            base 68 76 94
+            // neon pink (#ff10f0) override — not in the nordfox palette; makes
+            // the focused pane frame unmistakable
+            base 255 16 240
             background 46 52 64
             emphasis_0 129 161 193
             emphasis_1 136 192 208
