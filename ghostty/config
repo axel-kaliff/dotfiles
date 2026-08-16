@@ -15,6 +15,9 @@ confirm-close-surface = false
 # --- Font ---
 font-family = Illinois Mono
 font-family = JetBrains Mono
+# Lateralus ships JetBrainsMono only as the Nerd Font family (distinct
+# fontconfig name) — without this fallback ghostty lands on Noto Serif there.
+font-family = JetBrainsMono Nerd Font
 font-family = Symbols Nerd Font
 font-size = 13
 adjust-cell-height = 3
