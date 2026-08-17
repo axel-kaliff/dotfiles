@@ -20,3 +20,4 @@ zellij/config\.kdl
 \.pre-commit-config\.yaml
 claude_todo\.md
 claude_readme\.md
+.*\.target\.wants
