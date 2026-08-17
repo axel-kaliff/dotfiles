@@ -32,7 +32,30 @@ return {
       map('n', '<leader>s.', fzf.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       map('n', '<leader>sc', fzf.commands, { desc = '[S]earch [C]ommands' })
       map('n', '<leader><leader>', fzf.buffers, { desc = '[ ] Find existing buffers' })
-      map('n', '<leader>/', fzf.grep_curbuf, { desc = '[/] Fuzzily search in current buffer' })
+      map('n', '<leader>/', function()
+        local name = vim.api.nvim_buf_get_name(0)
+        if name ~= '' and vim.fn.filereadable(name) == 1 then
+          return fzf.grep_curbuf()
+        end
+        -- rg needs a file on disk; scratch buffers (neogit, oil) search buffer lines
+        -- instead. Their entries have no real path, so jump by line number in the
+        -- window we started from rather than letting fzf-lua resolve a file.
+        local win = vim.api.nvim_get_current_win()
+        fzf.blines {
+          actions = {
+            enter = function(selected, opts)
+              local entry = require('fzf-lua.path').entry_to_file(selected[1], opts)
+              if not entry.line or entry.line < 1 then
+                return
+              end
+              pcall(vim.api.nvim_win_call, win, function()
+                vim.api.nvim_win_set_cursor(win, { entry.line, 0 })
+                vim.cmd 'normal! zvzz'
+              end)
+            end,
+          },
+        }
+      end, { desc = '[/] Fuzzily search in current buffer' })
       map('n', '<leader>s/', function()
         fzf.live_grep { grep_open_buffers = true }
       end, { desc = '[S]earch [/] in Open Files' })
