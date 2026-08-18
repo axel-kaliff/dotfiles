@@ -96,6 +96,7 @@
 
 | Key | Action |
 |-----|--------|
+| `d` | Detach (drops back to the plain shell) |
 | `w` | Session manager |
 | `c` | Configuration |
 | `l` | Layout manager |

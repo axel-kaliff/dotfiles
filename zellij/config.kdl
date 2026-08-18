@@ -173,6 +173,7 @@ shared {
             }
             SwitchToMode "normal"
         }
+        bind "d" { Detach; }
         bind "l" {
             LaunchOrFocusPlugin "layout-manager" {
                 floating true
