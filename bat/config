@@ -1,0 +1,6 @@
+--style=numbers,changes,header
+--italic-text=always
+--map-syntax "*.conf:INI"
+--map-syntax "Makefile.*:Makefile"
+--map-syntax "*.kdl:JavaScript"
+--pager="less -RFK"

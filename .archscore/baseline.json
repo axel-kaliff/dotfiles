@@ -1,0 +1,46 @@
+{
+  "archscore_version": "0.2.0",
+  "mode": "diff",
+  "analyzed_path": "/home/akaliff/dotfiles/.",
+  "module_count": 0,
+  "file_count": 0,
+  "manifest": {
+    "dimensions": [
+      "complexity",
+      "size_structure",
+      "type_coverage",
+      "doc_coverage",
+      "solid_indicators",
+      "naming",
+      "architecture",
+      "code_reuse"
+    ],
+    "offender_categories": [
+      "longest_functions",
+      "highest_cc_functions",
+      "highest_cognitive_complexity",
+      "largest_classes",
+      "lowest_mi_files",
+      "deepest_nesting",
+      "static_method_candidates",
+      "long_parameter_lists",
+      "sequential_blobs",
+      "high_external_coupling",
+      "impure_module_functions",
+      "vague_function_names",
+      "single_letter_variables",
+      "boolean_naming_violations",
+      "reused_variables",
+      "untested_public_functions",
+      "untested_complex_functions",
+      "over_mocked_tests",
+      "low_assertion_tests",
+      "duplicate_code_blocks",
+      "low_reusability_functions"
+    ],
+    "dimension_count": 8,
+    "offender_category_count": 21
+  },
+  "modules": [],
+  "base_branch": "origin/main"
+}

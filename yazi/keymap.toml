@@ -1,0 +1,41 @@
+[[mgr.prepend_keymap]]
+on   = "l"
+run  = "plugin smart-enter"
+desc = "Enter directory or open file"
+
+[[mgr.prepend_keymap]]
+on   = ["f"]
+run  = "plugin smart-filter"
+desc = "Smart filter"
+
+[[mgr.prepend_keymap]]
+on   = "!"
+for  = "unix"
+run  = 'shell "fish" --block'
+desc = "Open fish here"
+
+# Bookmarks
+[[mgr.prepend_keymap]]
+on   = ["g", "d"]
+run  = "cd ~/dotfiles"
+desc = "Go to dotfiles"
+
+[[mgr.prepend_keymap]]
+on   = ["g", "p"]
+run  = "cd ~/Projects"
+desc = "Go to projects"
+
+[[mgr.prepend_keymap]]
+on   = ["g", "c"]
+run  = "cd ~/.config"
+desc = "Go to config"
+
+[[mgr.prepend_keymap]]
+on   = ["g", "D"]
+run  = "cd ~/Downloads"
+desc = "Go to downloads"
+
+[[mgr.prepend_keymap]]
+on   = ["g", "o"]
+run  = "cd ~/Documents"
+desc = "Go to documents"
