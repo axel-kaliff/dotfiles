@@ -409,8 +409,12 @@ set -gx DIRENV_LOG_FORMAT (printf '\033[2mdirenv: %%s\033[0m')
 
 # ─── Zellij Auto-Start ───────────────────────────────────────────────────────
 
+# Every ghostty window lands in the one shared "main" session rather than the
+# fresh random-named session `zellij setup --generate-auto-start` would spawn.
+# `attach -c` creates it on first use and attaches to it thereafter; detaching
+# (Ctrl+O D) drops back to this fish shell instead of closing the window.
 if status is-interactive; and test "$TERM" = "xterm-ghostty"; and not set -q ZELLIJ
-    eval (zellij setup --generate-auto-start fish | string collect)
+    zellij attach --create main
 end
 
 # ─── Shell Integrations ──────────────────────────────────────────────────────

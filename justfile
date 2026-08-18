@@ -15,14 +15,22 @@ sync: && deploy
 deploy: stow-dotfiles configure-zellij
   @echo "Deploy complete for {{hostname}}"
 
-# Symlink the correct zellij config for this machine
+# Symlink the correct zellij config for this machine.
+# When stow folds ~/.config/zellij into a single symlink to ~/dotfiles/zellij the
+# destination *is* the source, and a bare `ln -sf` replaces the repo's config.kdl
+# with a link to itself. Resolve both sides first and refuse to write into the
+# package.
 configure-zellij:
-  @if [ "{{hostname}}" = "r2d2" ]; then \
-    ln -sf "$HOME/dotfiles/zellij/config.r2d2.kdl" "$HOME/.config/zellij/config.kdl"; \
-    echo "Applied r2d2 zellij config"; \
+  @src="$HOME/dotfiles/zellij/config.kdl"; \
+  if [ "{{hostname}}" = "r2d2" ]; then src="$HOME/dotfiles/zellij/config.r2d2.kdl"; fi; \
+  dest="$HOME/.config/zellij/config.kdl"; \
+  if [ "$(readlink -f "$dest")" = "$(readlink -f "$src")" ]; then \
+    echo "Zellij config already resolves to $(basename "$src")"; \
+  elif [ -L "$HOME/.config/zellij" ]; then \
+    echo "WARNING: ~/.config/zellij is a folded stow symlink -- refusing to pin $(basename "$src") (needs --no-folding)"; \
   else \
-    ln -sf "$HOME/dotfiles/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"; \
-    echo "Applied default zellij config"; \
+    ln -sfn "$src" "$dest"; \
+    echo "Applied $(basename "$src") zellij config"; \
   fi
 
 bootstrap: setup-brew stow-dotfiles setup-hooks setup-git-config generate-ssh-key setup-fish setup-fisher install-fonts setup-cargo-tools setup-atuin enable-tailscale-systray enable-wireguard

@@ -42,6 +42,18 @@ if ! wait_for_network; then
     exit 0
 fi
 
+# Tripwire: a wiped working tree (a bad stow/deploy, a half-restored home) must
+# never be auto-committed and pushed — that is how one broken machine takes the
+# dotfiles out everywhere else. Bulk deletions need a human.
+MAX_AUTO_DELETIONS=25
+deleted_count=$(git diff HEAD --diff-filter=D --name-only | wc -l)
+if ((deleted_count > MAX_AUTO_DELETIONS)); then
+    log "ABORT: $deleted_count deletions in the working tree (limit $MAX_AUTO_DELETIONS) — refusing to auto-commit."
+    log "       Inspect: git -C $DOTFILES_DIR status"
+    log "       Restore: git -C $DOTFILES_DIR restore ."
+    exit 1
+fi
+
 # Auto-commit any local changes
 if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
     git add -A
