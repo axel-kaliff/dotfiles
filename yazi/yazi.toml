@@ -28,14 +28,17 @@ image_filter = "lanczos3"
 image_delay = 100
 
 [opener]
+# Placeholders are %s (all selected paths) and %d1 (dirname of the first).
+# Shell-style "$@" / "$0" are NOT expanded by yazi -- they reach `sh` with no
+# positional args and vanish, launching the command with no file at all.
 edit = [
-  { run = 'nvim "$@"', block = true, for = "unix" },
+  { run = 'nvim %s', block = true, for = "unix" },
 ]
 reveal = [
-  { run = 'xdg-open "$(dirname "$0")"', for = "linux" },
+  { run = 'xdg-open %d1', for = "linux" },
 ]
 play = [
-  { run = 'mpv "$@"', orphan = true, for = "unix" },
+  { run = 'mpv %s', orphan = true, for = "unix" },
 ]
 
 [open]
