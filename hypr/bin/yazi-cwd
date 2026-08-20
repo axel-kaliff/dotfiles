@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Launch yazi in the active terminal's current directory.
+# Mirrors omarchy-launch-nautilus-cwd, but for the TUI file manager.
+
+exec omarchy-launch-tui --app-id=org.omarchy.yazi yazi "$(omarchy-cmd-terminal-cwd)"
