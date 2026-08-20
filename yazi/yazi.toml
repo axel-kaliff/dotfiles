@@ -14,6 +14,12 @@ prepend_fetchers = [
   { url = "remote://*", run = "mime-ext.remote", prio = "high", group = "mime" },
 ]
 
+# Scrubbing preview for video: cycles 10 frames across the timeline.
+# Vendored from nbaud/yazi-video-timeline -- NOT tracked by `ya pkg upgrade`.
+prepend_previewers = [
+  { mime = "video/*", run = "video-timeline" },
+]
+
 [preview]
 max_width = 600
 max_height = 900
