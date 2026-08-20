@@ -63,3 +63,7 @@ hl.config({
     kb_options = "compose:caps,shift:both_capslock_cancel,grp:alts_toggle",
   },
 })
+
+-- Navigate workspaces by swiping horizontally with either three or four fingers.
+hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
