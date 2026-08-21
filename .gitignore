@@ -54,3 +54,4 @@ gsconnect/*.pem
 /copr
 *.rpm
 *.deb
+.worktrees/
