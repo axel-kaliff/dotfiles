@@ -1,0 +1,10 @@
+[Unit]
+Description=Mirror Documents/Music/Pictures to the homeserver
+Wants=network-online.target
+After=network-online.target
+OnFailure=workstation-backup-notify.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rsync -a --delete --stats %h/Documents %h/Music %h/Pictures core@192.168.0.14:/var/bulk/workstation/
+TimeoutStartSec=12h

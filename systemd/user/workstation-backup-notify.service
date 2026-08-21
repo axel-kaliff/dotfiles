@@ -1,0 +1,7 @@
+[Unit]
+Description=Desktop notification when the workstation backup fails
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/notify-send --urgency=critical "Workstation backup failed" \
+    "journalctl --user -u workstation-backup for details"
