@@ -77,7 +77,21 @@ BarWidget {
     onTriggered: root.adoptCurrent()
   }
 
-  Component.onCompleted: syncShown()
+  // The strip is the only importer of the native Lateralus.ProjectM module.
+  // Probing it once at startup (instead of letting the Loader fail on first
+  // open) reserves the strip's popup space before the card maps, and turns a
+  // missing plugin — older image, non-lateralus machine — into a single log
+  // line with the popup byte-identical to the pre-visualizer layout.
+  property var visualizerComponent: null
+  readonly property bool visualizerAvailable: visualizerComponent !== null
+    && visualizerComponent.status === Component.Ready
+
+  Component.onCompleted: {
+    syncShown()
+    var comp = Qt.createComponent("VisualizerStrip.qml", Component.PreferSynchronous)
+    if (comp.status === Component.Ready) visualizerComponent = comp
+    else console.log("media: projectM visualizer unavailable: " + comp.errorString())
+  }
   onHasMediaChanged: syncShown()
   onTitleChanged: syncShown()
   onArtistChanged: syncShown()
@@ -296,6 +310,23 @@ BarWidget {
             width: parent.width
             visible: text !== ""
           }
+        }
+      }
+
+      Loader {
+        id: visualizerLoader
+        width: parent.width
+        height: Style.space(root.setting("visualizerHeight", 130))
+        // popup.visible, not root.popupOpen: the card keeps fading for 140ms
+        // after open flips false, and unloading then leaves a hole mid-fade.
+        active: popup.visible && root.visualizerAvailable && root.setting("visualizer", true)
+        visible: active
+        asynchronous: true
+        sourceComponent: root.visualizerComponent
+        onLoaded: {
+          item.bar = Qt.binding(function() { return root.bar })
+          item.playing = Qt.binding(function() { return root.activePlayer !== null && root.activePlayer.isPlaying })
+          item.presetDuration = root.setting("presetDuration", 30)
         }
       }
 
