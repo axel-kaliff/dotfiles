@@ -36,12 +36,14 @@
 | `r` | New pane right |
 | `s` | New stacked pane |
 | `f` | Toggle fullscreen |
+| `F` | Toggle fullscreen incl. UI bars (zen) |
 | `e` | Toggle embed/floating |
 | `w` | Toggle floating panes |
 | `c` | Rename pane |
 | `i` | Toggle pane pinned |
 | `z` | Toggle pane frames |
 | `p` | Switch focus |
+| `;` | Focus last pane |
 
 ## Tab Mode (`Ctrl t`)
 
@@ -80,6 +82,9 @@
 | `j/k` | Scroll down/up |
 | `d/u` | Half page down/up |
 | `Ctrl f/b` | Page down/up |
+| `[` / `]` | Jump to previous/next prompt (OSC 133) |
+| `m` | Select command + its output |
+| `c` | Copy last command output |
 | `e` | Edit scrollback in nvim |
 | `s` | Enter search mode |
 
@@ -102,6 +107,9 @@
 | `l` | Layout manager |
 | `p` | Plugin manager |
 | `a` | About |
+| `[` | Descend into nested (guest) session |
+| `]` | Ascend back to host session |
+| `f` | Toggle nested-session fullscreen |
 
 ## Harpoon (inside `Alt b` panel)
 

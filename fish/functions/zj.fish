@@ -40,17 +40,13 @@ function zj -d 'Zellij session helper'
             case remote
                 # Connect to a remote Zellij session over SSH
                 # Usage: zj remote [host] [session]
+                # Zellij ≥0.45 on both ends handles the nesting: the remote
+                # announces itself over the pty, the local host descends into it
+                # (nested_session_handling "descend") — ascend with Ctrl o ].
+                # Remotes still on <0.45 need a manual Ctrl g lock instead.
                 set -l host (test -n "$argv[2]" && echo $argv[2] || echo r2d2)
                 set -l session (test -n "$argv[3]" && echo $argv[3] || echo main)
-                # Lock local zellij so keybinds pass through to remote
-                if test -n "$ZELLIJ"
-                    zellij action switch-mode locked
-                end
                 ssh $host -t 'for z in "$HOME/.linuxbrew/bin/zellij" /home/linuxbrew/.linuxbrew/bin/zellij; do [ -x "$z" ] && exec "$z" attach -c '$session'; done; command -v zellij >/dev/null && exec zellij attach -c '$session'; echo "zellij not found on '$host'" >&2; exit 1'
-                # Unlock local zellij after disconnect
-                if test -n "$ZELLIJ"
-                    zellij action switch-mode normal
-                end
             case web
                 # Open SSH tunnel to remote Zellij web server
                 # Usage: zj web [host] [port]

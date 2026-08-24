@@ -69,6 +69,22 @@ Enter a mode with its prefix key, then use mode-specific keys. Press `Esc` to re
 | Scroll | `Ctrl s` | `Ctrl s` / `Esc` |
 | Session | `Ctrl o` | `Ctrl o` / `Esc` |
 
+## Remote Sessions (`zj remote`)
+
+Since zellij 0.45, nested sessions are built in: `zj remote [host] [session]`
+just ssh-attaches, the remote session announces itself over the pty, and the
+local host descends into it automatically (`nested_session_handling "descend"`).
+Ascend back with `Ctrl o ]`, or zoom the guest fullscreen with `Ctrl o f`.
+The old lock-the-outer-session workaround is gone.
+
+Requirements: zellij ≥ 0.45 on **both** ends. Against an older remote, lock
+manually with `Ctrl g` like before. Note that a 0.45 client cannot attach to
+sessions still running under a 0.44 server — after upgrading a remote, each
+session needs a kill/re-create to pick up the new version.
+
+`zj web [host] [port]` (SSH tunnel to the remote web server) still works and is
+still the way in from a browser; 0.45 adds a touch UI and PWA install on mobile.
+
 ## Installation
 
 Symlink to `~/.config/zellij/`:
