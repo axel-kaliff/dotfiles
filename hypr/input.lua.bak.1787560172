@@ -60,7 +60,7 @@
 hl.config({
   input = {
     kb_layout = "us,se",
-    kb_options = "compose:caps,shift:both_capslock_cancel,grp:alts_toggle,altwin:swap_lalt_lwin",
+    kb_options = "compose:caps,shift:both_capslock_cancel,grp:alts_toggle",
   },
 })
 
