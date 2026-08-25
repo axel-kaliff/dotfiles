@@ -49,19 +49,19 @@
 --   },
 -- })
 
--- Material 3 motion, borrowed from caelestia-dots. Entering surfaces
--- decelerate softly over ~500ms while exits accelerate away in ~300ms; that
--- in/out asymmetry, plus the special workspace drifting only 15% of the
--- screen while it fades, is what reads as "floating".
+-- Material 3 motion, borrowed from caelestia-dots but paced twice as fast:
+-- entering surfaces decelerate softly over ~250ms while exits accelerate
+-- away in ~150ms; that in/out asymmetry, plus the special workspace drifting
+-- only 15% of the screen while it fades, is what reads as "floating".
+-- Workspace switching stays instant (the Omarchy default).
 hl.curve("emphasizedDecel", { type = "bezier", points = { { 0.05, 0.7 }, { 0.1, 1 } } })
 hl.curve("emphasizedAccel", { type = "bezier", points = { { 0.3, 0 }, { 0.8, 0.15 } } })
 hl.curve("md3Standard", { type = "bezier", points = { { 0.2, 0 }, { 0, 1 } } })
 
-hl.animation({ leaf = "windows", enabled = true, speed = 6, bezier = "md3Standard" })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 5, bezier = "emphasizedDecel", style = "popin 87%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "emphasizedAccel", style = "popin 87%" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 5, bezier = "md3Standard", style = "slide" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "emphasizedDecel", style = "slidefadevert 15%" })
+hl.animation({ leaf = "windows", enabled = true, speed = 3, bezier = "md3Standard" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 2.5, bezier = "emphasizedDecel", style = "popin 87%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "emphasizedAccel", style = "popin 87%" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2, bezier = "emphasizedDecel", style = "slidefadevert 15%" })
 
 -- Caelestia's soft-surface tier: rounded corners, blur behind translucent
 -- surfaces, and a shadow faint enough (alpha 0x10) to ground windows without

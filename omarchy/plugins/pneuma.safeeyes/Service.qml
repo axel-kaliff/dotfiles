@@ -237,7 +237,7 @@ Item {
 
         Behavior on offsetScale {
           NumberAnimation {
-            duration: root.breakActive ? 500 : 250
+            duration: root.breakActive ? 250 : 125
             easing.type: Easing.BezierSpline
             easing.bezierCurve: root.breakActive
               ? [0.38, 1.21, 0.22, 1, 1, 1]
