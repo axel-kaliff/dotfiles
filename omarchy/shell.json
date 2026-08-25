@@ -71,6 +71,9 @@
   "plugins": [
     {
       "id": "akaliff.notifications"
+    },
+    {
+      "id": "pneuma.safeeyes"
     }
   ],
   "disabledPlugins": [

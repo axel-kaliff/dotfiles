@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.safeeyes",
+  "name": "Safe Eyes",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Periodic eye-break overlays: a short look-away break every 15 minutes, a long break every hour",
+  "kinds": [
+    "service"
+  ],
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}
