@@ -62,3 +62,27 @@ hl.animation({ leaf = "windowsIn", enabled = true, speed = 5, bezier = "emphasiz
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "emphasizedAccel", style = "popin 87%" })
 hl.animation({ leaf = "workspaces", enabled = true, speed = 5, bezier = "md3Standard", style = "slide" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "emphasizedDecel", style = "slidefadevert 15%" })
+
+-- Caelestia's soft-surface tier: rounded corners, blur behind translucent
+-- surfaces, and a shadow faint enough (alpha 0x10) to ground windows without
+-- drawing outlines. Omarchy's default gaps (5 in / 10 out) already match
+-- caelestia's, so only decoration changes here.
+hl.config({
+  decoration = {
+    rounding = 15,
+
+    shadow = {
+      enabled = true,
+      range = 15,
+      render_power = 4,
+      color = "rgba(00000010)",
+    },
+
+    blur = {
+      enabled = true,
+      size = 8,
+      passes = 2,
+      popups = true,
+    },
+  },
+})
