@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.clipboard",
+  "name": "Clipboard",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Bar entry point for the Omarchy clipboard manager",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Clipboard",
+    "description": "Opens the clipboard history picker",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
