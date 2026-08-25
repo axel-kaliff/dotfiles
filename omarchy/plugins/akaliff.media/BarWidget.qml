@@ -521,6 +521,19 @@ BarWidget {
           }
         }
       }
+
+      // Bongocat from caelestia-dots/shell (soramanew), bopping while music
+      // plays; AnimatedImage freezes on the current frame when playback stops.
+      // The asset already ships as a white cat on transparency, so it sits on
+      // the dark popup untouched.
+      AnimatedImage {
+        width: parent.width
+        height: Style.space(72)
+        source: Qt.resolvedUrl("bongocat.gif")
+        playing: root.activePlayer !== null && root.activePlayer.isPlaying === true
+        asynchronous: true
+        fillMode: AnimatedImage.PreserveAspectFit
+      }
     }
   }
 }
