@@ -7,9 +7,18 @@
   "license": "MIT",
   "description": "Periodic eye-break overlays: a short look-away break every 15 minutes, a long break every hour",
   "kinds": [
-    "service"
+    "service",
+    "bar-widget"
   ],
   "entryPoints": {
-    "service": "Service.qml"
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Safe Eyes",
+    "description": "Pause/resume eye breaks, styled as an indicator toggle",
+    "category": "Status",
+    "allowMultiple": false,
+    "defaultSection": "center"
   }
 }

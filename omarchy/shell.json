@@ -22,6 +22,9 @@
           "id": "omarchy.indicators"
         },
         {
+          "id": "pneuma.safeeyes"
+        },
+        {
           "id": "omarchy.clock",
           "format": "ddd d MMM h:mm AP",
           "formatAlt": "d MMMM 'W'ww yyyy",
