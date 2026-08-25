@@ -206,9 +206,9 @@ BarWidget {
       if (mouse.button === Qt.MiddleButton) {
         if (root.mediaService) root.mediaService.runAction("next", false)
       } else if (mouse.button === Qt.RightButton) {
-        root.popupOpen = !root.popupOpen
-      } else {
         if (root.mediaService) root.mediaService.runAction("playPause", false)
+      } else {
+        root.popupOpen = !root.popupOpen
       }
     }
     onWheel: function(wheel) {
