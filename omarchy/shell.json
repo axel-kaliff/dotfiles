@@ -45,9 +45,7 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "pneuma.pomodoro",
-          "workMinutes": 25,
-          "breakMinutes": 5
+          "id": "pneuma.pomodoro"
         },
         {
           "id": "omarchy.agents"
