@@ -49,6 +49,12 @@ o.bind("SUPER + SHIFT + J", "Swap window down", hl.dsp.window.swap({ direction =
 o.bind("SUPER + SHIFT + K", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
 o.bind("SUPER + SHIFT + L", "Swap window to the right", hl.dsp.window.swap({ direction = "r" }))
 
+-- Input language switching on SUPER + SHIFT + SPACE (cycles kb_layout, see
+-- input.lua); the top-bar toggle it displaces moves to SUPER + SHIFT + T.
+hl.unbind("SUPER + SHIFT + SPACE") -- was: Toggle top bar
+o.bind_toggle("SUPER + SHIFT + T", "Toggle top bar", "bar")
+o.bind("SUPER + SHIFT + SPACE", "Next keyboard layout", "hyprctl switchxkblayout all next")
+
 -- File manager: yazi (TUI) instead of Nautilus.
 -- Nautilus stays installed as the GUI fallback -- it is still the xdg handler
 -- for inode/directory, so "open containing folder" from other apps uses it.
