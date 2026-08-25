@@ -69,7 +69,7 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2, bezier = "e
 -- caelestia's, so only decoration changes here.
 hl.config({
   decoration = {
-    rounding = 15,
+    rounding = 8,
 
     shadow = {
       enabled = true,
