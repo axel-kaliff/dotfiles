@@ -26,7 +26,7 @@
         },
         {
           "id": "omarchy.clock",
-          "format": "ddd d MMM h:mm AP",
+          "format": "yyyy-MM-dd HH:mm",
           "formatAlt": "d MMMM 'W'ww yyyy",
           "verticalFormat": "HH\n—\nmm"
         },
