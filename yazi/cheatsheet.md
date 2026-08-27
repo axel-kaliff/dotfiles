@@ -14,6 +14,8 @@ Press `q` (or `Ctrl-c` in this pager) to close. Full searchable list: `~` or `F1
 | `g c` | Go to ~/.config |
 | `g D` | Go to ~/Downloads |
 | `g o` | Go to ~/Documents |
+| `P s` / `P l` | Save / load named session (projects) |
+| `P P` | Restore last session (auto-saved on quit) |
 
 ## Navigation
 
@@ -28,7 +30,8 @@ Press `q` (or `Ctrl-c` in this pager) to close. Full searchable list: `~` or `F1
 | `g Space` | Jump interactively (cd prompt) |
 | `g f` | Follow hovered symlink |
 | `g t` | Go to trash bin |
-| `z` / `Z` | Jump via fzf / zoxide |
+| `z` | Jump via fzf (files in cwd) |
+| `Z` | fzf over directory history (zoxide, all sessions) |
 | `J` / `K` | Scroll the **preview** down / up |
 | `Tab` | Spot (file info popup) |
 

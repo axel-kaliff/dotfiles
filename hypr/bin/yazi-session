@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Persistent-session yazi: restore the tabs from the last quit instance.
+# Saving happens on quit via projects.yazi (last.update_before_quit).
+# The DDS emit needs a moment for yazi to start listening on the client id.
+
+id=$RANDOM
+(sleep 0.2 && YAZI_ID=$id ya emit plugin projects load_last) &
+
+exec yazi --client-id "$id"

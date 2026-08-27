@@ -61,6 +61,10 @@ o.bind("SUPER + SHIFT + SPACE", "Next keyboard layout", "hyprctl switchxkblayout
 hl.unbind("SUPER + SHIFT + F")       -- was: File manager (nautilus)
 hl.unbind("SUPER + ALT + SHIFT + F") -- was: File manager cwd (nautilus-cwd)
 
-o.bind("SUPER + SHIFT + F", "File manager", { tui = "yazi", focus = true })
+-- Persistent session: yazi-session restores the last instance's tabs
+-- (auto-saved on quit by the projects.yazi plugin, see yazi/init.lua).
+o.bind("SUPER + SHIFT + F", "File manager",
+  "omarchy-launch-or-focus-tui --app-id=org.omarchy.yazi "
+  .. os.getenv("HOME") .. "/.config/hypr/bin/yazi-session")
 o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
   os.getenv("HOME") .. "/.config/hypr/bin/yazi-cwd")
