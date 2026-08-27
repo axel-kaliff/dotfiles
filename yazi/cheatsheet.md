@@ -75,7 +75,8 @@ Press `q` (or `Ctrl-c` in this pager) to close. Full searchable list: `~` or `F1
 
 | Key | Action |
 |-----|--------|
-| `f` | Filter file list (smart-filter) |
+| `f` | Smart filter (jump/open as you type) |
+| `F` | Persistent filter — act on the filtered set (Esc clears) |
 | `/` | Find next in list |
 | `n` / `N` | Next / previous match |
 | `s` | Search recursively by name (fd) |

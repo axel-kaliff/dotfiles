@@ -8,6 +8,14 @@ on   = ["f"]
 run  = "plugin smart-filter"
 desc = "Smart filter"
 
+# Persistent filter: narrows the list and stays applied, so selections and
+# file operations act on the filtered set (unlike smart-filter, which is
+# for jumping/opening). Esc clears it.
+[[mgr.prepend_keymap]]
+on   = "F"
+run  = "filter --smart"
+desc = "Filter directory (persistent)"
+
 [[mgr.prepend_keymap]]
 on   = "!"
 for  = "unix"
