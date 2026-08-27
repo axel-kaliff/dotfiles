@@ -73,11 +73,18 @@ doctor:
   @command -v zoxide &>/dev/null && echo "  zoxide .......... ok" || echo "  zoxide .......... MISSING"
   @command -v zellij &>/dev/null && echo "  zellij .......... ok" || echo "  zellij .......... MISSING"
   @command -v ghostty &>/dev/null && echo "  ghostty ......... ok" || echo "  ghostty ......... MISSING (install manually)"
-  @fc-list | grep -qi "JetBrainsMono Nerd" && echo "  nerd font ....... ok" || echo "  nerd font ....... MISSING"
+  @# Explicit /usr/bin: Homebrew's fontconfig has its own font path and does not
+  @# see ~/.local/share/fonts, so the brew copy reports a false MISSING here.
+  @FC=$(command -v /usr/bin/fc-list || command -v fc-list); \
+    $FC | grep -qi "JetBrainsMono Nerd" && echo "  nerd font ....... ok" || echo "  nerd font ....... MISSING"
   @[ -f ~/.ssh/id_ed25519 ] && echo "  ssh key ......... ok" || echo "  ssh key ......... MISSING"
   @fish -c 'type -q fisher' 2>/dev/null && echo "  fisher .......... ok" || echo "  fisher .......... MISSING"
   @command -v gitleaks &>/dev/null && echo "  gitleaks ........ ok" || echo "  gitleaks ........ MISSING"
   @command -v pre-commit &>/dev/null && echo "  pre-commit ...... ok" || echo "  pre-commit ...... MISSING"
+  @# The two controls that keep a public, auto-pushed repo from leaking secrets.
+  @# gitleaks missing is fail-closed in dotfiles-sync.sh, so sync stops dead.
+  @[ -f ~/dotfiles/.gitleaks.toml ] && echo "  gitleaks cfg .... ok" || echo "  gitleaks cfg .... MISSING"
+  @[ -f ~/dotfiles/.git/hooks/pre-commit ] && echo "  pre-commit hook . ok" || echo "  pre-commit hook . MISSING (run: just setup-hooks)"
   @command -v cargo &>/dev/null && echo "  cargo ........... ok" || echo "  cargo ........... MISSING (install rustup)"
   @command -v bionify &>/dev/null && echo "  bionify ......... ok" || echo "  bionify ......... MISSING"
   @command -v mdcat &>/dev/null && echo "  mdcat ........... ok" || echo "  mdcat ........... MISSING"
@@ -101,14 +108,31 @@ setup-brew:
   @brew bundle
   @brew update
 
+# Deploy repo -> ~. Deliberately NOT --adopt: adopt reverses the data flow,
+# overwriting the repo with whatever happens to be on disk, and the 15-minute
+# sync timer would then commit and push that. It is how the tracked nvim config
+# was clobbered in March 2026. On a conflict stow now fails loudly; resolve it
+# by hand, or run `just adopt` if pulling the on-disk file in really is intended.
 stow-dotfiles:
   @echo "Stowing dotfiles to ~/.config..."
-  @stow -d ~ -t ~/.config --restow --adopt dotfiles
+  @stow -d ~ -t ~/.config --restow dotfiles
   @echo "Stowing bash config to ~..."
-  @stow -d ~/dotfiles -t ~ --restow --adopt bash
+  @stow -d ~/dotfiles -t ~ --restow bash
   @echo "Stowing claude config to ~..."
-  @stow -d ~/dotfiles -t ~ --restow --adopt claude
+  @stow -d ~/dotfiles -t ~ --restow claude
   @echo "Dotfiles stowed."
+
+# Explicit, interactive counterpart to stow-dotfiles: pulls conflicting on-disk
+# files INTO the repo. Never run from the sync timer — always review the diff.
+adopt:
+  @echo "Adopting on-disk files into the repo (this rewrites tracked files)..."
+  @stow -d ~ -t ~/.config --restow --adopt dotfiles
+  @stow -d ~/dotfiles -t ~ --restow --adopt bash
+  @stow -d ~/dotfiles -t ~ --restow --adopt claude
+  @echo ""
+  @git -C ~/dotfiles status --short
+  @echo ""
+  @echo "Review the diff above before committing: git -C ~/dotfiles diff"
 
 unstow-dotfiles:
   @stow -d ~ -t ~/.config -D dotfiles
