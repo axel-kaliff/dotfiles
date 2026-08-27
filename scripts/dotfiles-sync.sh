@@ -57,6 +57,28 @@ fi
 # Auto-commit any local changes
 if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
     git add -A
+
+    # The only secret scan in this path. The commit below is --no-verify (an
+    # unattended timer cannot answer a hook prompt), and GitHub's free push
+    # protection on public repos matches provider-prefixed tokens only — it
+    # would not stop a config-style credential. Fails closed on purpose: a
+    # machine without gitleaks must not auto-push to a public repo.
+    if ! command -v gitleaks &>/dev/null; then
+        git reset >/dev/null
+        log "ABORT: gitleaks not installed — refusing to auto-commit to a public repo."
+        log "       Install: brew install gitleaks"
+        exit 1
+    fi
+    if ! scan_output=$(gitleaks git --pre-commit --staged --no-banner --redact \
+        -c "$DOTFILES_DIR/.gitleaks.toml" 2>&1); then
+        # Unstage only — the working tree is left exactly as the user left it.
+        git reset >/dev/null
+        printf '%s\n' "$scan_output" >> "$LOGFILE"
+        log "ABORT: gitleaks flagged staged content — nothing committed or pushed."
+        log "       Review: git -C $DOTFILES_DIR status"
+        exit 1
+    fi
+
     git commit -m "auto-sync from $(hostname) at $(date -Is)" --no-gpg-sign --no-verify
     log "OK: auto-committed local changes"
 fi

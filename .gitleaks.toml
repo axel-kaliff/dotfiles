@@ -1,0 +1,38 @@
+# Extends the bundled ruleset rather than replacing it — the provider patterns
+# (AWS, GitHub, Slack, OpenAI, private keys) all still apply.
+[extend]
+useDefault = true
+
+# The default `generic-api-key` rule misses INI/conf-style assignments whose
+# value is a bare unquoted lowercase string — verified 2026-08-27 against the
+# copr-cli token this repo used to stow into ~/.config/copr, which scanned
+# clean. That is exactly the credential shape this repo is known to carry, so
+# match it explicitly instead of trusting entropy heuristics.
+[[rules]]
+id = "config-file-credential-assignment"
+description = "Credential assigned in an INI/conf-style key = value line"
+# (?m) is load-bearing: gitleaks matches against whole-file content, so without
+# it the ^ and $ anchors only ever see the first and last line of the file.
+regex = '''(?im)^[ \t]*(?:api[_-]?key|auth[_-]?token|access[_-]?token|token|login|secret|password|passwd)[ \t]*=[ \t]*["']?([A-Za-z0-9+/=_#-]{20,})["']?[ \t]*$'''
+secretGroup = 1
+keywords = [
+  "api_key",
+  "apikey",
+  "auth_token",
+  "access_token",
+  "token",
+  "login",
+  "secret",
+  "password",
+  "passwd",
+]
+
+  [rules.allowlist]
+  regexTarget = "line"
+  regexes = [
+    # Placeholders and references, not literals.
+    '''(?i)=[ \t]*["']?(?:your|my|example|changeme|placeholder|redacted|xxx+|<)''',
+    # Shell/template indirection: the value is resolved at runtime.
+    '''=[ \t]*["']?\$[({]?[A-Za-z_]''',
+    '''=[ \t]*["']?\{\{''',
+  ]
