@@ -1,16 +1,24 @@
 # dotfiles
 
-Personal dotfiles for a terminal-first workflow on [Lateralus](https://github.com/axel-kaliff/lateralus) — a custom Bluefin image with COSMIC Desktop, Ghostty, and an Evergreen theme. Managed with `just` and symlinked to `~/.config/` via GNU Stow.
+Personal dotfiles for a terminal-first workflow on **pneuma** — a custom Fedora
+Atomic image (`ghcr.io/axel-kaliff/pneuma`) running Omarchy on Hyprland, with
+Ghostty as the terminal. Managed with `just` and symlinked to `~/.config/` via
+GNU Stow. A second machine, the **r2d2** homeserver, syncs the same repo and
+takes the `*.r2d2.*` config variants.
+
+> This repo is **public** and a systemd timer commits and pushes it every 15
+> minutes. Secrets must never land in the working tree — see
+> [Secret handling](#secret-handling).
 
 ## Setup
 
-On a fresh Lateralus install, everything is pre-configured. For manual setup or other systems:
+On a fresh pneuma install everything is pre-configured. For manual setup, or on another machine:
 
 ```bash
 # Full bootstrap (Homebrew, Stow, dotfiles, git, fish, fonts, Atuin, Tailscale)
 just bootstrap
 
-# Or use the ujust first-time setup on Lateralus
+# Or use the ujust first-time setup on pneuma
 ujust setup
 
 # Symlink dotfiles to ~/.config/ via stow (idempotent, safe to re-run)
@@ -35,9 +43,10 @@ ujust update-all
 
 | Tool | Purpose |
 |------|---------|
-| **Ghostty** | Terminal emulator (default terminal in COSMIC) |
+| **Ghostty** | Terminal emulator |
+| **Hyprland / Omarchy** | Wayland compositor and desktop shell — Omarchy defaults with personal overrides in `hypr/*.lua`, bar layout in `omarchy/shell.json` |
 | **Zellij** | Terminal multiplexer |
-| **Fish** | Shell (with zoxide, direnv, fzf, atuin integrations) |
+| **Fish** | Shell (with zoxide, mise, fzf, atuin integrations) |
 | **Neovim** | Editor (Kickstart-based config) |
 | **Starship** | Shell prompt |
 | **Atuin** | Shell history (synced, fuzzy search, directory/workspace filtering) |
@@ -67,8 +76,7 @@ ujust update-all
 
 | Tool | Purpose | Usage |
 |------|---------|-------|
-| **mise** | Polyglot version manager | `mise use node@20` — replaces nvm/pyenv/rbenv |
-| **direnv** | Per-project env vars | Auto-loads `.envrc` when entering a directory |
+| **mise** | Polyglot version manager + per-directory env | `mise use node@20`; `[env]` in `mise.toml` replaces direnv/`.envrc` |
 | **devcontainer** | Dev containers | `dn project` — create devcontainer project |
 | **just** | Command runner | `just recipe` — project-specific task runner |
 | **watchexec** | File watcher | `watchexec -e rs cargo test` — re-run on file changes |
@@ -79,10 +87,10 @@ ujust update-all
 
 ### AI/LLM
 
-| Tool | Purpose | Usage |
-|------|---------|-------|
-| **ollama** | Local LLM runtime | `ollama run llama3` — run models locally |
-| **aider** | AI pair programmer | `aider` — AI coding agent in terminal (works with ollama + cloud APIs) |
+Claude Code is the agent in use; it is installed via `mise` (`~/.config/mise/config.toml`),
+not Homebrew. `zj ide` pairs it with a git worktree — see [Zellij](#zellij).
+ollama and aider were removed in Aug 2026: neither was installed, and aider
+upstream has been dormant since Aug 2025.
 
 ### Container & Cloud
 
@@ -118,7 +126,7 @@ ujust update-all
 | Tool | Purpose | Usage |
 |------|---------|-------|
 | **glow** | Markdown viewer | `glow README.md` — render markdown in terminal |
-| **slides** | Presentations | `slides deck.md` — terminal presentations from markdown |
+| **presenterm** | Presentations | `presenterm deck.md` — terminal slides from markdown |
 | **fzf** | Fuzzy finder | `Alt+T` files (with preview), `Alt+C` cd (with tree preview), `Ctrl+R` history |
 | **jq** | JSON processor | `curl api | jq '.data'` — query/transform JSON |
 | **jnv** | JSON explorer | `jnv file.json` — interactive jq filter builder |
@@ -202,9 +210,6 @@ These replace standard commands — just use them as normal, the better version 
 
 | Command | Action |
 |---------|--------|
-| `ai` | Chat with local LLM (ollama) |
-| `ai "question"` | One-shot question to local LLM |
-| `pair` | Start aider AI pair programmer |
 | `api GET url` | HTTP request with auto-formatted JSON output |
 | `jqi file.json` | Interactive JSON explorer (jnv) |
 | `md README.md` | Render markdown in terminal |
@@ -252,8 +257,7 @@ These replace standard commands — just use them as normal, the better version 
 These activate automatically in every fish session:
 
 - **zoxide** — `z` / `zi` directory jumping
-- **direnv** — auto-loads `.envrc` per project
-- **fzf** — `Ctrl+T`, `Alt+C`, `Ctrl+R` keybindings
+- **fzf** — `Alt+T` (files), `Alt+C` (cd), `Ctrl+R` (history via atuin)
 - **atuin** — shell history sync and search
 - **mise** — auto-activates tool versions per project (`.mise.toml`)
 - **starship** — cross-shell prompt
@@ -658,7 +662,50 @@ just stow-dotfiles
 udot
 ```
 
-The `bash` package is stowed separately to `~` (for `~/.bashrc`).
+The `bash` and `claude` packages are stowed separately to `~` (for `~/.bashrc`
+and `~/.claude/`).
+
+Stow runs **without** `--adopt`. Adopt reverses the data flow — it pulls
+whatever is on disk back into the repo, and with the sync timer running that
+gets committed and pushed automatically. That is how the tracked nvim config
+was clobbered in March 2026. If pulling on-disk files in really is what you
+want, run `just adopt`, which does it explicitly and then shows you the diff.
+
+### Automatic sync
+
+`dotfiles-sync.timer` runs every 15 minutes and:
+
+1. waits for the network (the timer fires the moment the user slice thaws after suspend),
+2. **aborts if more than 25 files are deleted** — a wiped tree must never propagate,
+3. **scans staged content with gitleaks and aborts on any finding**,
+4. commits, rebases onto origin, pushes,
+5. runs `just deploy` (stow + per-machine zellij config + omarchy skill link).
+
+Failures surface in the next shell via the greeting in
+`fish/conf.d/dotfiles-sync-check.fish`; the log is
+`~/.local/state/dotfiles-sync.log`.
+
+### Secret handling
+
+The repo is public and pushed unattended, so **nothing secret may live in the
+working tree** — not even gitignored. `.gitignore` is a convenience, not a
+security control: one careless edit and the next tick publishes the file.
+
+Three layers, in order of how much they actually catch:
+
+| Layer | Covers | Limits |
+|-------|--------|--------|
+| Keep secrets out of the tree | Everything | Requires discipline; the copr API token lives at `~/.config/copr` as a real 0600 file, deliberately *not* stowed |
+| `gitleaks` in `dotfiles-sync.sh` | The automated commit path | Fails closed — no gitleaks, no sync |
+| `gitleaks` via pre-commit hook | Hand-made commits and `udot` | Bypassed by `--no-verify` |
+
+GitHub secret scanning and push protection are enabled, but on a free public
+repo they match **provider-prefixed** tokens only (`ghp_`, `AKIA`, `sk-`…).
+They would not have caught the copr token — which is why `.gitleaks.toml` adds
+a rule for config-style `token = …` assignments that the default ruleset misses.
+
+Run `just doctor` to confirm both scanners are present; the fish greeting does
+this weekly.
 
 ---
 
@@ -679,23 +726,32 @@ lazygit       # or just type 'g' in fish
 ```
 dotfiles/
 ├── atuin/          # Shell history config (fuzzy search, directory filtering, workspace mode)
-├── bash/           # Bash config (~/.bashrc, stowed to ~)
+├── bash/           # Bash config (~/.bashrc, stowed to ~) — fallback shell only
 ├── bat/            # bat config (style, syntax mappings, man pager)
-├── direnv/         # direnv config (whitelist, strict mode, hidden env-diff)
+├── claude/         # Claude Code config (stowed to ~): settings, hooks, agents, rules, skills
+├── docs/           # Notes and proposals — not config, never stowed
 ├── fish/           # Fish shell config, plugins, functions
 ├── ghostty/        # Terminal emulator config
+├── hypr/           # Hyprland overrides on top of Omarchy (bindings, input, monitors, looknfeel)
 ├── lazygit/        # Git TUI config
 ├── nvim/           # Neovim config (Kickstart-based)
 │   ├── init.lua    # Main config (keymaps, LSP, plugins)
 │   └── lua/
 │       ├── custom/plugins/   # fzf-lua, snacks, noice, neogit, diffview, oil, flash, trouble, grug-far
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
+├── omarchy/        # Desktop shell: bar layout (shell.json) + custom QML bar plugins
 ├── ripgrep/        # ripgrep config (smart-case, hidden files, max-columns)
-├── starship.toml   # Shell prompt config
-├── yazi/           # File manager config (catppuccin theme, git/smart-enter/smart-filter plugins)
+├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers
+├── server/         # Podman quadlets for the homeserver (plex, sonarr, radarr)
+├── starship.toml   # Shell prompt config (nordfox palette)
+├── systemd/        # User units: dotfiles-sync, backup, awatcher, readest
+├── yazi/           # File manager config (catppuccin flavor, git/smart-enter/smart-filter plugins)
 ├── zellij/         # Zellij config + layouts
-│   ├── config.kdl
-│   └── layouts/    # dev, fullstack, ide, monitor, sics
+│   ├── config.kdl        # pneuma
+│   ├── config.r2d2.kdl   # homeserver variant, selected by `just configure-zellij`
+│   ├── themes/           # nordfox.kdl — shared by both configs
+│   └── layouts/          # dev, fullstack, ide, monitor, sics
+├── .gitleaks.toml  # Secret-scanning rules for the sync gate and pre-commit hook
 ├── Brewfile        # Homebrew packages
-└── justfile        # Setup/install recipes
+└── justfile        # Setup/install/deploy recipes
 ```
