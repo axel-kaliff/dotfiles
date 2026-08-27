@@ -1,23 +1,38 @@
+# Paths stow must NOT link into ~/.config. Anything here is either repo
+# machinery, a separately-stowed package, or documentation — none of it is
+# XDG config. Entries are regexes matched against the path.
+
+# Repo machinery
 \.git
 \.gitignore
+\.gitleaks\.toml
 \.stignore
 \.stfolder
 \.claude
+\.pre-commit-config\.yaml
 Brewfile
 Brewfile\.lock\.json
 justfile
+
+# Documentation (README is rendered on GitHub, CHEATSHEET is read via `cheat`)
 README\.md
+CHEATSHEET\.md
+docs
+
+# Packages stowed separately, to ~ rather than ~/.config
+bash
+claude
+
+# Not XDG config: helper scripts, container/server definitions, editor state
+scripts
 devcontainer
 server
 Code
 gsconnect
-bash
-claude
-scripts
-CHEATSHEET\.md
+
+# Machine-selected at deploy time by `just configure-zellij`, not linked wholesale
 zellij/config\.r2d2\.kdl
 zellij/config\.kdl
-\.pre-commit-config\.yaml
-claude_todo\.md
-claude_readme\.md
+
+# systemd enablement state is machine-local — stowing it broke deploy in 2026
 .*\.target\.wants

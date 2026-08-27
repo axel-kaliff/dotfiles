@@ -36,7 +36,7 @@ $character"""
 
 right_format = """$cmd_duration$status$jobs$time"""
 
-palette = 'catppuccin_mocha'
+palette = 'nordfox'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  IDENTITY (red)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [os]
@@ -260,30 +260,37 @@ vimcmd_replace_symbol = '[❮](bold fg:lavender)'
 vimcmd_visual_symbol = '[❮](bold fg:yellow)'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  PALETTE  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
-[palettes.catppuccin_mocha]
-rosewater = "#f5e0dc"
-flamingo = "#f2cdcd"
-pink = "#f5c2e7"
-mauve = "#cba6f7"
-red = "#f38ba8"
-maroon = "#eba0ac"
-peach = "#fab387"
-yellow = "#f9e2af"
-green = "#a6e3a1"
-teal = "#94e2d5"
-sky = "#89dceb"
-sapphire = "#74c7ec"
-blue = "#89b4fa"
-lavender = "#b4befe"
-text = "#cdd6f4"
-subtext1 = "#bac2de"
-subtext0 = "#a6adc8"
-overlay2 = "#9399b2"
-overlay1 = "#7f849c"
-overlay0 = "#6c7086"
-surface2 = "#585b70"
-surface1 = "#45475a"
-surface0 = "#313244"
-base = "#1e1e2e"
-mantle = "#181825"
-crust = "#11111b"
+# Nordfox (EdenEast/nightfox.nvim), matching the nvim, zellij and fish themes —
+# the prompt was the odd one out on Catppuccin Mocha. The catppuccin key names
+# are kept deliberately so every format string above works unchanged; only the
+# values differ. yazi is still Catppuccin: its theme is a packaged flavor.
+[palettes.nordfox]
+# Accents
+red = "#bf616a"
+peach = "#c9826b"      # nordfox orange
+yellow = "#ebcb8b"
+green = "#a3be8c"
+teal = "#8fbcbb"
+sky = "#88c0d0"
+sapphire = "#88c0d0"   # nordfox cyan
+blue = "#81a1c1"
+lavender = "#81a1c1"   # nordfox blue
+mauve = "#b48ead"      # nordfox magenta
+pink = "#bf88bc"
+rosewater = "#d8dee9"
+flamingo = "#e5e9f0"
+maroon = "#b1626b"
+# Text
+text = "#cdcecf"       # fg1
+subtext1 = "#abb1bb"   # fg2
+subtext0 = "#8f96a3"
+overlay2 = "#7b8494"
+overlay1 = "#6b7688"
+overlay0 = "#60728a"   # comment
+# Surfaces (darkest last — `crust` is the text colour on the coloured bars)
+surface2 = "#4c566a"
+surface1 = "#444c5e"
+surface0 = "#39404f"
+base = "#2e3440"
+mantle = "#2a2f3a"
+crust = "#232831"
