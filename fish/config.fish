@@ -383,13 +383,21 @@ fish_add_path --append ~/.local/bin
 # the fix is `brew unlink <formula>`, not reordering PATH. podman is already
 # unlinked. Homebrew's fontconfig is another: it cannot see
 # ~/.local/share/fonts, so `just doctor` calls /usr/bin/fc-list explicitly.
-for __brew_prefix in /home/linuxbrew/.linuxbrew $HOME/.linuxbrew /opt/homebrew
-    if test -x $__brew_prefix/bin/brew
-        fish_add_path --prepend --move $__brew_prefix/bin $__brew_prefix/sbin
+set -l __brew_bin
+for __candidate in /home/linuxbrew/.linuxbrew/bin/brew $HOME/.linuxbrew/bin/brew /opt/homebrew/bin/brew
+    if test -x $__candidate
+        set __brew_bin $__candidate
         break
     end
 end
-set -e __brew_prefix
+# r2d2 keeps brew under /space/personal/<user>/.linuxbrew, which none of the
+# fixed paths above match — fall back to wherever it already resolves so the
+# ordering fix applies there too, rather than silently doing nothing.
+test -z "$__brew_bin"; and set __brew_bin (command -v brew)
+if test -n "$__brew_bin"
+    set -l __brew_root (path dirname (path dirname $__brew_bin))
+    fish_add_path --prepend --move $__brew_root/bin $__brew_root/sbin
+end
 
 # ─── Tool Configuration (set before shell integrations) ─────────────────────
 
