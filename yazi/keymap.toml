@@ -14,6 +14,13 @@ for  = "unix"
 run  = 'shell "fish" --block'
 desc = "Open fish here"
 
+# Shadows the default "find previous" (N after / does the same thing)
+[[mgr.prepend_keymap]]
+on   = "?"
+for  = "unix"
+run  = 'shell "glow -p ~/.config/yazi/cheatsheet.md" --block'
+desc = "Show keybinding cheatsheet"
+
 # Bookmarks
 [[mgr.prepend_keymap]]
 on   = ["g", "d"]
