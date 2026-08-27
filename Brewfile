@@ -4,7 +4,6 @@ brew "fish"
 brew "bat"
 brew "delta"
 brew "devcontainer"
-brew "direnv"
 brew "dust"
 brew "dysk"
 brew "eza"
@@ -66,11 +65,13 @@ brew "gum"
 brew "vhs"
 
 # Developer workflow
+# mise also covers per-directory env ([env] / _.file / _.source), which is why
+# direnv is not installed — running both fights over PATH ordering.
 brew "mise"
 
 # Terminal productivity
-brew "glow"
-brew "slides"
+# presenterm replaces slides — slides has had no release since Sept 2022.
+brew "presenterm"
 brew "hyperfine"
 brew "tokei"
 brew "bottom"

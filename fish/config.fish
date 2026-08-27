@@ -25,7 +25,6 @@ abbr --add find fd
 abbr --add watch watchexec
 abbr --add bench hyperfine
 abbr --add md glow
-abbr --add pair aider
 abbr --add up topgrade
 abbr --add rm trash
 abbr --add use 'mise use'
@@ -104,11 +103,12 @@ end
 
 # fzf-powered project jumper via zoxide (scored, with tree preview)
 function zp -d 'Fuzzy jump to a project directory'
+    # --accept-nth returns the chosen fields directly. It replaces an
+    # `awk '{print $2}'` that truncated any directory containing a space.
     set -l dir (zoxide query -ls | fzf --height 50% --layout=reverse \
         --preview 'eza --icons --tree --level=2 --color=always {2..}' \
         --preview-window 'right:50%' \
-        --with-nth 2.. \
-        | awk '{print $2}')
+        --with-nth 2.. --accept-nth 2..)
     if test $pipestatus[2] -ne 0; or test -z "$dir"
         return
     end
@@ -117,7 +117,7 @@ end
 
 # fzf-powered process killer
 function fkill -d 'Fuzzy find and kill a process'
-    set -l pid (procs --no-header | fzf --height 40% --multi | awk '{print $1}')
+    set -l pid (procs --no-header | fzf --height 40% --multi --accept-nth 1)
     if test $pipestatus[2] -ne 0; or test -z "$pid"
         return
     end
@@ -232,15 +232,6 @@ function decrypt -d 'Decrypt age file'
     age -d -o (string replace '.age' '' $argv[1]) $argv[1]
 end
 
-# Quick ollama chat
-function ai -d 'Chat with local LLM'
-    if test (count $argv) -gt 0
-        ollama run llama3 $argv
-    else
-        ollama run llama3
-    end
-end
-
 # Quick container inspection
 function dive-last -d 'Dive into most recent container image'
     set img (podman images --format '{{.Repository}}:{{.Tag}}' | head -1)
@@ -353,16 +344,6 @@ function bloat -d 'Find files larger than size (default: 10MB)'
     fd --size +(test (count $argv) -gt 0; and echo $argv[1]; or echo "10MB") --type f
 end
 
-# ─── Event Handlers ─────────────────────────────────────────────────────────
-
-# Desktop notification for commands that take longer than 10 seconds
-function __notify_long_command --on-event fish_postexec
-    if test $CMD_DURATION -gt 10000; and not set -q SSH_TTY
-        set -l secs (math $CMD_DURATION / 1000)
-        notify-send --app-name=fish "Command finished ($secs""s)" "$argv[1]" 2>/dev/null
-    end
-end
-
 # ─── Transient Prompt ────────────────────────────────────────────────────────
 
 # Collapse the starship prompt to a simple marker for already-executed lines,
@@ -381,14 +362,34 @@ bind \ee 'nvim; commandline -f repaint'
 set -gx EDITOR nvim
 set -gx VISUAL nvim
 set -gx XDG_CONFIG_HOME "$HOME/.config"
-set -gx CDPATH . ~ ~/projects
+set -gx CDPATH . ~ ~/Projects
 
 # Man pages with syntax highlighting (bat)
 set -gx MANPAGER "bat -plman"
 set -gx MANROFFOPT "-c"
 
 fish_add_path --append ~/.local/bin
-fish_add_path --append ~/.linuxbrew/bin
+
+# Homebrew must come before /usr/bin. EL10 ships older builds of tools we
+# deliberately install from brew, and with brew appended (last) every shell
+# silently resolved the system copy: fzf 0.58 not 0.74, glow 2.1 not 3.0,
+# gum 0.17 not 2.0, plus stale just, rclone, skopeo and starship.
+# --move re-seats brew if it is already on PATH. mise activates further down
+# and re-prepends its own shims, so precedence ends up mise > brew > system.
+#
+# Caveat this creates: brew's bin also contains ~296 transitive copies of
+# system tools nobody asked for. Where the OS copy must stay authoritative —
+# podman, which is tied to this ostree host's container storage and quadlets —
+# the fix is `brew unlink <formula>`, not reordering PATH. podman is already
+# unlinked. Homebrew's fontconfig is another: it cannot see
+# ~/.local/share/fonts, so `just doctor` calls /usr/bin/fc-list explicitly.
+for __brew_prefix in /home/linuxbrew/.linuxbrew $HOME/.linuxbrew /opt/homebrew
+    if test -x $__brew_prefix/bin/brew
+        fish_add_path --prepend --move $__brew_prefix/bin $__brew_prefix/sbin
+        break
+    end
+end
+set -e __brew_prefix
 
 # ─── Tool Configuration (set before shell integrations) ─────────────────────
 
@@ -403,9 +404,6 @@ set -gx FZF_ALT_C_OPTS '--preview "eza --all --icons --tree --level=2 --color=al
 # zoxide: tree preview for zi, exclude noise directories
 set -gx _ZO_FZF_OPTS '--height=60% --layout=reverse --border=rounded --preview "eza --icons --tree --level=2 --color=always {2..}" --preview-window=right:45%:wrap --bind=ctrl-/:toggle-preview'
 set -gx _ZO_EXCLUDE_DIRS "$HOME:$HOME/Downloads:$HOME/.cache:/tmp"
-
-# direnv: dim output instead of noisy env-diff
-set -gx DIRENV_LOG_FORMAT (printf '\033[2mdirenv: %%s\033[0m')
 
 # ─── Zellij Auto-Start ───────────────────────────────────────────────────────
 
@@ -425,9 +423,11 @@ fzf --fish | source
 atuin init fish | source
 starship init fish | source
 
-# Heavy integrations (skip in remote sessions to reduce latency)
+# mise covers per-directory env too ([env] with _.file / _.source), and its own
+# docs advise against running it alongside direnv — the two fight over PATH
+# ordering. direnv had allowed zero directories here, so it was dropped rather
+# than kept as a second, unused env loader.
 if not set -q SSH_TTY
-    direnv hook fish | source
     mise activate fish | source
 end
 
@@ -439,9 +439,4 @@ bind \et fzf-file-widget
 if bind -M insert \ct &>/dev/null
     bind -M insert --erase \ct
     bind -M insert \et fzf-file-widget
-end
-
-functions -c fish_command_not_found __original_command_not_found
-function fish_command_not_found
-    __original_command_not_found $argv
 end
