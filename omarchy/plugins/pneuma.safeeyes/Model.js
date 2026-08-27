@@ -17,7 +17,6 @@ var SHORT_PROMPTS = [
 var LONG_PROMPTS = [
   "Walk for a while",
   "Lean back at your seat and relax",
-  "Do 20 push ups",
   "Do some stretches"
 ]
 
