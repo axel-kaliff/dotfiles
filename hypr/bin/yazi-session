@@ -1,10 +1,14 @@
 #!/bin/bash
 
-# Persistent-session yazi: restore the tabs from the last quit instance.
-# Saving happens on quit via projects.yazi (last.update_before_quit).
-# The DDS emit needs a moment for yazi to start listening on the client id.
+# Persistent-session yazi: the tab-session plugin restores the saved tabs and
+# then autosaves them on every navigation, so any exit path preserves them.
+# Retry the emit until yazi's DDS socket is up (a cold terminal start can take
+# a while); ya emit exits non-zero while nothing is listening.
 
 id=$RANDOM
-(sleep 0.2 && YAZI_ID=$id ya emit plugin projects load_last) &
+for _ in $(seq 1 25); do
+  sleep 0.2
+  YAZI_ID=$id ya emit plugin tab-session 2>/dev/null && break
+done &
 
 exec yazi --client-id "$id"

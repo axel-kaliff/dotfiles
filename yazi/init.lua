@@ -6,10 +6,6 @@ require("git"):setup()
 -- so `Z` fzf-searches the full cross-session directory history.
 require("zoxide"):setup({ update_db = true })
 
--- Tabs auto-save as the "last" project on quit; hypr/bin/yazi-session
--- restores it on launch (load_after_start would clobber `yazi <dir>`).
-require("projects"):setup({
-	save = { method = "lua" },
-	last = { update_before_quit = true },
-	notify = { enable = false },
-})
+-- Session persistence lives in plugins/tab-session.yazi (no setup needed):
+-- hypr/bin/yazi-session emits `plugin tab-session` after launch, which
+-- restores the saved tabs and arms continuous autosave in that instance.

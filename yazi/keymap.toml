@@ -21,21 +21,12 @@ for  = "unix"
 run  = 'shell "glow -p ~/.config/yazi/cheatsheet.md" --block'
 desc = "Show keybinding cheatsheet"
 
-# Sessions (projects.yazi) -- quit auto-saves "last", yazi-session restores it
-[[mgr.prepend_keymap]]
-on   = ["P", "s"]
-run  = "plugin projects save"
-desc = "Save session as named project"
-
-[[mgr.prepend_keymap]]
-on   = ["P", "l"]
-run  = "plugin projects load"
-desc = "Load a saved project"
-
+# Session (tab-session plugin) -- restore saved tabs and adopt the session
+# here (arms continuous autosave); yazi-session runs this on launch
 [[mgr.prepend_keymap]]
 on   = ["P", "P"]
-run  = "plugin projects load_last"
-desc = "Restore last session"
+run  = "plugin tab-session"
+desc = "Restore tab session"
 
 # Bookmarks
 [[mgr.prepend_keymap]]

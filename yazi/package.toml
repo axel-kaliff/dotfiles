@@ -18,11 +18,6 @@ use = "yazi-rs/plugins:mime-ext"
 rev = "efa4d79"
 hash = "94d994483dd84ddb2a47a52b59feaae6"
 
-[[plugin.deps]]
-use = "MasouShizuka/projects"
-rev = "22a4006"
-hash = "195d1b8c8fc1a944883b5ce3d92d7ca7"
-
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-mocha"
 rev = "be0b21d"

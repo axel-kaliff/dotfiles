@@ -14,8 +14,7 @@ Press `q` (or `Ctrl-c` in this pager) to close. Full searchable list: `~` or `F1
 | `g c` | Go to ~/.config |
 | `g D` | Go to ~/Downloads |
 | `g o` | Go to ~/Documents |
-| `P s` / `P l` | Save / load named session (projects) |
-| `P P` | Restore last session (auto-saved on quit) |
+| `P P` | Restore tab session (auto-saved continuously) |
 
 ## Navigation
 

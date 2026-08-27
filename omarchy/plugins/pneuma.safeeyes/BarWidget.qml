@@ -4,9 +4,8 @@ import qs.Ui
 
 // A pause/resume toggle for the eye-break engine that lives visually inside
 // the omarchy.indicators cluster: place it directly beside that widget in
-// the bar layout. It speaks the cluster's grammar — invisible while breaks
-// run (the default state), revealed dimmed by the bar's center-section hover
-// peek, and a full-strength eye-off glyph while breaks are paused.
+// the bar layout. Always visible — a dimmed eye glyph while breaks run,
+// a full-strength eye-off glyph while breaks are paused.
 BarWidget {
   id: root
   moduleName: "pneuma.safeeyes"
@@ -34,31 +33,16 @@ BarWidget {
   }
 
   readonly property bool paused: eyes ? eyes.enabled !== true : false
-  readonly property bool revealed: bar
-    ? bar.centerSectionRevealHeld === true && bar.centerHoverRevealSuppressed !== true
-    : false
-  readonly property bool shown: paused || revealed
 
-  // The Indicators module collapses the space of concealed indicators from
-  // the outside, so this widget does the same for its single slot.
-  clip: true
-  implicitWidth: vertical ? barSize : (shown ? indicator.implicitWidth : 0)
-  implicitHeight: vertical ? (shown ? indicator.implicitHeight : 0) : barSize
-
-  Behavior on implicitWidth {
-    enabled: !root.vertical
-    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-  }
-  Behavior on implicitHeight {
-    enabled: root.vertical
-    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-  }
+  implicitWidth: vertical ? barSize : indicator.implicitWidth
+  implicitHeight: vertical ? indicator.implicitHeight : barSize
 
   // Stands in for the Indicators module so BarIndicator's shared reveal
-  // logic works outside it.
+  // logic works outside it; always revealing keeps the running-state glyph
+  // permanently visible (dimmed) instead of hover-peeked.
   QtObject {
     id: revealShim
-    readonly property bool revealInactiveIndicators: root.revealed
+    readonly property bool revealInactiveIndicators: true
   }
 
   BarIndicator {
