@@ -1,50 +1,71 @@
 #!/usr/bin/env bash
 # Claude Code status line script
-# Shows: user@host cwd [git-branch] | model | context%
 
+# ANSI color codes
+RESET='\033[0m'
+BOLD='\033[1m'
+DIM='\033[2m'
+
+FG_BLUE='\033[34m'
+FG_CYAN='\033[36m'
+FG_GREEN='\033[32m'
+FG_YELLOW='\033[33m'
+FG_RED='\033[31m'
+FG_MAGENTA='\033[35m'
+FG_WHITE='\033[37m'
+
+# Separators
+SEP_LEFT=''   # Powerline left solid arrow
+SEP_THIN=''  # Powerline left thin arrow
+
+# Read JSON input
 input=$(cat)
 
-cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // ""')
-model=$(echo "$input" | jq -r '.model.display_name // ""')
+# Extract fields from JSON
+cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // "unknown"')
+model=$(echo "$input" | jq -r '.model.display_name // "Claude"')
 used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
+remaining_pct=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
 
-# Shorten home directory to ~
-home="$HOME"
-short_cwd="${cwd/#$home/~}"
+# Shorten the working directory: replace $HOME with ~
+home_dir="$HOME"
+display_cwd="${cwd/#$home_dir/\~}"
 
-# Get git branch (skip locks for safety)
+# Get git branch (skip optional locks to avoid conflicts)
 git_branch=""
-if git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
-    git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null \
-        || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+if git_out=$(git -C "$cwd" --no-optional-locks branch --show-current 2>/dev/null); then
+  if [ -n "$git_out" ]; then
+    git_branch="$git_out"
+  fi
 fi
 
-# Build context string
-ctx_str=""
+# Build context usage indicator
+context_segment=""
 if [ -n "$used_pct" ]; then
-    ctx_str=$(printf "%.0f%% ctx" "$used_pct")
+  used_int=${used_pct%.*}
+  if [ "$used_int" -ge 80 ]; then
+    ctx_color="$FG_RED"
+    ctx_icon=""
+  elif [ "$used_int" -ge 50 ]; then
+    ctx_color="$FG_YELLOW"
+    ctx_icon=""
+  else
+    ctx_color="$FG_GREEN"
+    ctx_icon=""
+  fi
+  context_segment="${ctx_color}${ctx_icon} ${used_int}%${RESET}"
 fi
 
-# Build branch string
-branch_str=""
+# Build the status line
+printf "${DIM}${FG_BLUE}${BOLD} ${display_cwd}${RESET}"
+
 if [ -n "$git_branch" ]; then
-    branch_str="[$git_branch]"
+  printf "  ${DIM}${FG_MAGENTA}${BOLD} ${git_branch}${RESET}"
 fi
 
-# Compose the line using ANSI colors via printf
-# Colors: bold cyan for path, yellow for branch, dim for model, magenta for ctx
-printf '\033[36m%s@%s\033[0m:\033[1;34m%s\033[0m' \
-    "$(whoami)" "$(hostname -s)" "$short_cwd"
-
-if [ -n "$branch_str" ]; then
-    printf ' \033[33m%s\033[0m' "$branch_str"
+if [ -n "$context_segment" ]; then
+  printf "  ${DIM}${context_segment}"
 fi
 
-if [ -n "$model" ] || [ -n "$ctx_str" ]; then
-    printf ' \033[2m|'
-    [ -n "$model" ] && printf ' %s' "$model"
-    [ -n "$ctx_str" ] && printf ' | %s' "$ctx_str"
-    printf '\033[0m'
-fi
-
-printf '\n'
+printf "  ${DIM}${FG_CYAN}${model}${RESET}"
+printf "\n"
