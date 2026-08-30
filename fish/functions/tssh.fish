@@ -24,7 +24,6 @@ function tssh -d 'SSH and attach to remote tmux session'
         set i (math $i + 1)
     end
 
-    # Call the ssh fish function (handles terminfo, nvim sync, etc.)
     # -t forces TTY allocation, required for tmux
     ssh -t $ssh_args "tmux new-session -A -s $session"
 end

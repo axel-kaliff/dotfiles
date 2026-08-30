@@ -68,3 +68,11 @@ keybind = performable:ctrl+c=copy_to_clipboard
 # Prompt jumping (requires shell integration)
 keybind = alt+up=jump_to_prompt:-1
 keybind = alt+down=jump_to_prompt:1
+
+# --- SSH ---
+# Install the xterm-ghostty terminfo on remote hosts on first connect, and fall
+# back to TERM=xterm-256color when the install fails, instead of leaving the
+# remote on an unknown TERM. Replaces the hand-rolled fish ssh wrapper.
+# Successful installs are cached and never expire, so after a host is rebuilt:
+#   ghostty +ssh-cache --remove=user@host
+shell-integration-features = ssh-env,ssh-terminfo
