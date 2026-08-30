@@ -435,7 +435,7 @@ starship init fish | source
 # docs advise against running it alongside direnv — the two fight over PATH
 # ordering. direnv had allowed zero directories here, so it was dropped rather
 # than kept as a second, unused env loader.
-if not set -q SSH_TTY
+if not set -q SSH_TTY; and command -q mise
     mise activate fish | source
 end
 
