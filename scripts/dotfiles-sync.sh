@@ -116,9 +116,9 @@ if [ "$(git rev-list --count @{u}..HEAD 2>/dev/null)" -gt 0 ]; then
     log "OK: push succeeded"
 fi
 
-# Deploy
+# Deploy — recipe overridable per machine (the homeserver unit sets deploy-server)
 if command -v just &>/dev/null; then
-    if just -f "$DOTFILES_DIR/justfile" deploy >> "$LOGFILE" 2>&1; then
+    if just -f "$DOTFILES_DIR/justfile" "${DOTFILES_DEPLOY_RECIPE:-deploy}" >> "$LOGFILE" 2>&1; then
         log "OK: deploy complete"
     else
         log "ERROR: deploy failed"

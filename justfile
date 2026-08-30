@@ -15,6 +15,19 @@ sync: && deploy
 deploy: stow-dotfiles configure-zellij link-omarchy-skill
   @echo "Deploy complete for {{hostname}}"
 
+# Headless-server deploy (the homeserver's dotfiles-sync unit selects this via
+# DOTFILES_DEPLOY_RECIPE): no stow, no machine-config selection — just folded
+# symlinks for the allowlisted shared packages. Everything else in ~/.config
+# is server-owned and never touched. `ln -sfn` refuses to replace a real
+# directory, so a stale pre-sync copy fails the deploy loudly instead of
+# nesting a link inside it (homeserver setup-dotfiles.sh backs those up first).
+deploy-server:
+  @for pkg in atuin bat direnv fish lazygit nvim ripgrep tealdeer yazi zellij; do \
+    ln -sfn "$HOME/dotfiles/$pkg" "$HOME/.config/$pkg" || exit 1; \
+  done; \
+  ln -sfn "$HOME/dotfiles/starship.toml" "$HOME/.config/starship.toml" || exit 1
+  @echo "Deploy complete for {{hostname}} (server allowlist)"
+
 # Link the omarchy default skill into ~/.claude/skills.
 # Created here rather than tracked as a symlink in the claude package: stow
 # refuses to stow absolute symlinks, and a relative one would encode the
