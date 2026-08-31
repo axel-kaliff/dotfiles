@@ -79,6 +79,21 @@ if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --o
         exit 1
     fi
 
+    # Stow refuses packages containing absolute symlinks (see link-omarchy-skills
+    # in the justfile). A tool that drops one into a folded package dir — an
+    # omarchy migration did, through ~/.claude/skills — must not get it pushed:
+    # it aborts deploy on every other machine.
+    abs_links=$(git diff --cached --name-only --diff-filter=AMT -z \
+        | while IFS= read -r -d '' path; do
+            if [ -L "$path" ] && [[ $(readlink "$path") == /* ]]; then echo "$path"; fi
+        done)
+    if [ -n "$abs_links" ]; then
+        git reset >/dev/null
+        log "ABORT: absolute symlink(s) staged — stow cannot deploy them, nothing committed: $abs_links"
+        log "       Link them from a deploy recipe instead (justfile: link-omarchy-skills)"
+        exit 1
+    fi
+
     git commit -m "auto-sync from $(hostname) at $(date -Is)" --no-gpg-sign --no-verify
     log "OK: auto-committed local changes"
 fi

@@ -12,7 +12,7 @@ sync: && deploy
   @git -C ~/dotfiles pull --rebase --autostash
 
 # Stow + select correct machine config
-deploy: stow-dotfiles configure-zellij link-omarchy-skill
+deploy: stow-dotfiles configure-zellij link-omarchy-skills
   @echo "Deploy complete for {{hostname}}"
 
 # Headless-server deploy (the homeserver's dotfiles-sync unit selects this via
@@ -28,20 +28,21 @@ deploy-server:
   ln -sfn "$HOME/dotfiles/starship.toml" "$HOME/.config/starship.toml" || exit 1
   @echo "Deploy complete for {{hostname}} (server allowlist)"
 
-# Link the omarchy default skill into ~/.claude/skills.
-# Created here rather than tracked as a symlink in the claude package: stow
-# refuses to stow absolute symlinks, and a relative one would encode the
-# machine's home depth. Skipped on machines without omarchy.
-link-omarchy-skill:
-  @src="/usr/share/omarchy/default/agents/skills/omarchy"; \
-  dest="$HOME/.claude/skills/omarchy"; \
+# Link every omarchy default skill (omarchy, diagnose-crash, ...) into
+# ~/.claude/skills. Created here rather than tracked as symlinks in the claude
+# package: stow refuses to stow absolute symlinks, and a relative one would
+# encode the machine's home depth. Skipped on machines without omarchy.
+link-omarchy-skills:
+  @src="/usr/share/omarchy/default/agents/skills"; \
   if [ ! -d "$src" ]; then \
-    echo "Omarchy not installed -- skipping omarchy skill link"; \
+    echo "Omarchy not installed -- skipping omarchy skill links"; \
   elif [ -L "$HOME/.claude/skills" ]; then \
-    echo "WARNING: ~/.claude/skills is a folded stow symlink -- refusing to link omarchy skill into the package"; \
+    echo "WARNING: ~/.claude/skills is a folded stow symlink -- refusing to link omarchy skills into the package"; \
   else \
-    ln -sfn "$src" "$dest"; \
-    echo "Omarchy skill linked"; \
+    for skill in "$src"/*/; do \
+      ln -sfn "${skill%/}" "$HOME/.claude/skills/$(basename "$skill")"; \
+    done; \
+    echo "Omarchy skills linked: $(ls "$src" | xargs)"; \
   fi
 
 # Symlink the correct zellij config for this machine.
