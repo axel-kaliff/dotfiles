@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# omarchy:summary=Display annotated Zellij keybindings using an interactive search menu.
+# omarchy:args=[--print|-p] [--sheet <path>]
+#
+# Replaces omarchy-menu-tmux-keybindings on SUPER + ALT + K. The sheet is
+# authored as markdown in the zellij config directory rather than inlined here,
+# so the popup and the copy committed to dotfiles can never disagree.
+
+set -euo pipefail
+
+print_only=false
+sheet="${ZELLIJ_CHEATSHEET:-$HOME/.config/zellij/CHEATSHEET.md}"
+
+while (($#)); do
+  case "$1" in
+    --print | -p) print_only=true ;;
+    --sheet)
+      shift
+      sheet="$1"
+      ;;
+    *) sheet="$1" ;;
+  esac
+  shift
+done
+
+if [[ ! -f $sheet ]]; then
+  echo "Zellij cheat sheet not found: $sheet" >&2
+  exit 1
+fi
+
+# Flatten the markdown into "<key> → <action>" rows the menu can fuzzy-search,
+# each section announced by its own heading row. Prose paragraphs are dropped:
+# they carry the reasoning, which belongs in the file, not in a picker.
+output_keybindings() {
+  awk '
+    /^## / {
+      section = substr($0, 4)
+      printf "\n── %s ──\n", toupper(section)
+      next
+    }
+    /^\|/ {
+      line = $0
+      sub(/^\|[[:space:]]*/, "", line)
+      sub(/[[:space:]]*\|[[:space:]]*$/, "", line)
+      split(line, cell, /[[:space:]]*\|[[:space:]]*/)
+      if (cell[1] == "" || cell[2] == "") next
+      if (cell[1] ~ /^-+$/) next
+      gsub(/`/, "", cell[1])
+      gsub(/`/, "", cell[2])
+      printf "%-30s → %s\n", cell[1], cell[2]
+    }
+  ' "$sheet"
+}
+
+if [[ $print_only == true ]]; then
+  output_keybindings
+  exit 0
+fi
+
+records=$(output_keybindings)
+
+monitor_height=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .height' 2>/dev/null)
+
+if [[ ! $monitor_height =~ ^[0-9]+$ ]] || ((monitor_height <= 0)); then
+  monitor_height=900
+fi
+
+menu_height=$((monitor_height * 40 / 100))
+printf '%s\n' "$records" | omarchy-menu-select 'Zellij keybindings' -- --width 800 --height "$menu_height" >/dev/null || true

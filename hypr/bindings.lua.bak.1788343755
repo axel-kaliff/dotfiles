@@ -30,8 +30,7 @@
 
 -- Vim-style window navigation: SUPER + h/j/k/l focuses, + SHIFT swaps.
 -- Displaced defaults move to the same key with ALT added. SUPER + ALT + K was
--- already the terminal-multiplexer cheatsheet, so the Omarchy keybindings menu
--- takes SHIFT + ALT.
+-- already the tmux cheatsheet, so the Omarchy keybindings menu takes SHIFT + ALT.
 hl.unbind("SUPER + J") -- was: Toggle window split
 hl.unbind("SUPER + K") -- was: Keybindings
 hl.unbind("SUPER + L") -- was: Toggle workspace layout
@@ -39,13 +38,6 @@ hl.unbind("SUPER + L") -- was: Toggle workspace layout
 o.bind("SUPER + ALT + J", "Toggle window split", hl.dsp.layout("togglesplit"))
 o.bind("SUPER + SHIFT + ALT + K", "Keybindings", "omarchy-menu-keybindings")
 o.bind("SUPER + ALT + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
-
--- Cheat sheet on SUPER + ALT + K shows zellij, not tmux -- zellij is the
--- multiplexer here. Rendered from ~/.config/zellij/CHEATSHEET.md, which is the
--- same file the dotfiles repo carries.
-hl.unbind("SUPER + ALT + K") -- was: Tmux keybindings
-o.bind("SUPER + ALT + K", "Zellij keybindings",
-  os.getenv("HOME") .. "/.config/hypr/bin/omarchy-menu-zellij-keybindings")
 
 o.bind("SUPER + H", "Focus on left window", hl.dsp.focus({ direction = "l" }))
 o.bind("SUPER + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
