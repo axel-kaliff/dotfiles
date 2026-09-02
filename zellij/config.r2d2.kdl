@@ -329,6 +329,16 @@ load_plugins {
 // Shell: fish preferred (use full path — Zellij needs a binary, not a script)
 default_shell "/space/personal/akaliff/.linuxbrew/bin/fish"
 
+// Zellij snapshots the environment when a SESSION IS CREATED and reuses it for
+// every pane for that session's whole life — a later `attach` with a good TERM
+// does not repair it. If the creating client had no TERM (e.g. a PTY-less ssh
+// command), every pane runs TERM-less and TUIs fall back to monochrome.
+// Setting it here makes panes correct regardless of how the session was created.
+env {
+    TERM "xterm-256color"
+    COLORTERM "truecolor"
+}
+
 // Palette lives in themes/nordfox.kdl (auto-loaded from the config dir).
 theme "nordfox"
 pane_frames true
