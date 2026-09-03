@@ -52,6 +52,7 @@ BarWidget {
       model: root.workspaceIds()
 
       WidgetButton {
+        id: cell
         required property int modelData
 
         readonly property var workspace: root.workspaceById(modelData)
@@ -59,13 +60,37 @@ BarWidget {
         readonly property bool focused: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.id === modelData
 
         bar: root.bar
-        text: focused ? "\uDB85\uDCFB" : (modelData === 10 ? "0" : String(modelData))
+        text: modelData === 10 ? "0" : String(modelData)
         opacity: occupied || focused ? 1 : 0.5
         horizontalMargin: 6
         verticalPadding: 6
-        fixedWidth: root.vertical ? root.barSize : Style.space(20)
+        fixedWidth: root.vertical ? root.barSize : Style.space(22)
         fixedHeight: root.barSize
         onPressed: function() { root.focusWorkspace(modelData) }
+
+        // The focused workspace sits in a glass pill, the tab-bar idiom, and
+        // keeps its number instead of turning into a filled-square glyph;
+        // hovering another one lifts it slightly. Same [controls] tokens as
+        // the bar's open-panel capsule.
+        BorderSurface {
+          readonly property int inset: Style.space(3)
+
+          z: -1
+          anchors.fill: parent
+          anchors.topMargin: root.vertical ? Style.space(1) : inset
+          anchors.bottomMargin: root.vertical ? Style.space(1) : inset
+          anchors.leftMargin: root.vertical ? inset : Style.space(1)
+          anchors.rightMargin: root.vertical ? inset : Style.space(1)
+          radius: Math.min(Style.cornerRadius, Math.min(width, height) / 2)
+          color: cell.focused ? Style.selectedFillFor(cell.foreground, Color.accent)
+            : cell.tooltipHovered ? Style.hoverFillFor(cell.foreground, Color.accent)
+            : "transparent"
+          borderSpec: cell.focused ? Border.controlSpec("selected", cell.foreground, Color.accent) : Border.none()
+
+          Behavior on color {
+            ColorAnimation { duration: 140; easing.type: Easing.OutCubic }
+          }
+        }
       }
     }
   }
