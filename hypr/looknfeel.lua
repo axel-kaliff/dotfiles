@@ -49,20 +49,33 @@
 --   },
 -- })
 
--- Motion follows the material: Apple's default spring (SwiftUI
--- response 0.55 s, damping fraction 0.825, so stiffness 130 / damping 19 at
--- unit mass) for anything that arrives or moves, and a short accelerating
--- bezier for anything leaving. Workspace switching stays instant (the
--- Omarchy default).
-hl.curve("appleSpring", { type = "spring", mass = 1, stiffness = 130, dampening = 19 })
+-- Motion follows the material: Apple's default spring shape (damping
+-- fraction 0.825) at twice Apple's pace, response 0.275 s instead of
+-- 0.55 s, for anything that arrives or moves, and a short accelerating
+-- bezier for anything leaving. Springs are simulated on real time and
+-- ignore `speed`, so their pace lives in the constants: doubling the
+-- natural frequency (stiffness x4, damping x2 at unit mass) halves every
+-- timing while keeping the same bounce. Workspace switching stays instant
+-- (the Omarchy default).
+hl.curve("appleSpring", { type = "spring", mass = 1, stiffness = 520, dampening = 38 })
 hl.curve("appleExit", { type = "bezier", points = { { 0.3, 0 }, { 0.8, 0.15 } } })
 
-hl.animation({ leaf = "windows", enabled = true, speed = 3, spring = "appleSpring" })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 3, spring = "appleSpring", style = "popin 90%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "appleExit", style = "popin 90%" })
-hl.animation({ leaf = "layersIn", enabled = true, speed = 3, spring = "appleSpring", style = "fade" })
-hl.animation({ leaf = "layersOut", enabled = true, speed = 1.5, bezier = "appleExit", style = "fade" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, spring = "appleSpring", style = "slidefadevert 15%" })
+hl.animation({ leaf = "windows", enabled = true, speed = 1.5, spring = "appleSpring" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 1.5, spring = "appleSpring", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 0.75, bezier = "appleExit", style = "popin 90%" })
+hl.animation({ leaf = "layersIn", enabled = true, speed = 1.5, spring = "appleSpring", style = "fade" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 0.75, bezier = "appleExit", style = "fade" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 1.5, spring = "appleSpring", style = "slidefadevert 15%" })
+
+-- The leaves Omarchy's default looknfeel sets (border colour, window and
+-- layer fades) at half its speeds, so nothing lags behind the springs.
+hl.animation({ leaf = "border", enabled = true, speed = 2.7, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fade", enabled = true, speed = 1.5, bezier = "quick" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 0.85, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 0.75, bezier = "almostLinear" })
+hl.animation({ leaf = "layers", enabled = true, speed = 1.9, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeLayersIn", enabled = true, speed = 0.9, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 0.7, bezier = "almostLinear" })
 
 -- Glass design language, after Apple's material stack (macOS vibrancy and
 -- Liquid Glass). A surface is never a flat alpha wash: the backdrop is blurred
