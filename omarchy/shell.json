@@ -80,14 +80,19 @@
     },
     {
       "id": "pneuma.safeeyes"
+    },
+    {
+      "id": "akaliff.osd"
     }
   ],
   "disabledPlugins": [
     "omarchy.notifications",
-    "omarchy.media"
+    "omarchy.media",
+    "omarchy.osd"
   ],
   "cloneSourceRestores": [
     "akaliff.notifications",
-    "akaliff.media"
+    "akaliff.media",
+    "akaliff.osd"
   ]
 }
