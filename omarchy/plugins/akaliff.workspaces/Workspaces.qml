@@ -68,6 +68,36 @@ BarWidget {
         fixedHeight: root.barSize
         onPressed: function() { root.focusWorkspace(modelData) }
 
+        // A digit has to sit dead centre in its pill, and two things stop the
+        // stock label from managing it: it centres the glyph's advance box
+        // rather than the ink inside it, and native rendering then snaps the
+        // result to a whole pixel. Both leave the number reading left of the
+        // circle. So the glyph is placed on the pixel that best centres its
+        // ink, and the pill — which antialiases freely — is centred on where
+        // that ink actually lands, absorbing the leftover fraction.
+        labelVisible: false
+
+        readonly property real inkCenter: digitMetrics.tightBoundingRect.x
+          + digitMetrics.tightBoundingRect.width / 2
+        readonly property real glyphX: Math.round(width / 2 - inkCenter)
+        readonly property real paintedCenter: glyphX + inkCenter
+
+        TextMetrics {
+          id: digitMetrics
+          font.family: cell.fontFamily
+          font.pixelSize: Math.max(1, Math.round(cell.fontSize))
+          text: cell.text
+        }
+
+        Text {
+          x: cell.glyphX
+          anchors.verticalCenter: parent.verticalCenter
+          text: cell.text
+          color: cell.foreground
+          font: digitMetrics.font
+          renderType: Text.NativeRendering
+        }
+
         // The focused workspace sits in a glass pill, the tab-bar idiom, and
         // keeps its number instead of turning into a filled-square glyph;
         // hovering another one lifts it slightly. Same [controls] tokens as
@@ -76,11 +106,11 @@ BarWidget {
           readonly property int inset: Style.space(3)
 
           z: -1
-          anchors.fill: parent
-          anchors.topMargin: root.vertical ? Style.space(1) : inset
-          anchors.bottomMargin: root.vertical ? Style.space(1) : inset
-          anchors.leftMargin: root.vertical ? inset : Style.space(1)
-          anchors.rightMargin: root.vertical ? inset : Style.space(1)
+          width: parent.width - (root.vertical ? inset : Style.space(1)) * 2
+          height: parent.height - (root.vertical ? Style.space(1) : inset) * 2
+          anchors.verticalCenter: parent.verticalCenter
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.horizontalCenterOffset: cell.paintedCenter - parent.width / 2
           radius: Math.min(Style.cornerRadius, Math.min(width, height) / 2)
           color: cell.focused ? Style.selectedFillFor(cell.foreground, Color.accent)
             : cell.tooltipHovered ? Style.hoverFillFor(cell.foreground, Color.accent)
