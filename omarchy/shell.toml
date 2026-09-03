@@ -16,7 +16,9 @@ background-alpha = 0.62
 
 [controls]
 # Control chrome sits on glass, so fills and borders are quieter than the
-# theme default; hover and selection still step up clearly.
+# theme default; hover and selection still step up clearly. A selected
+# control is a brighter slab with its own hairline: the same pill the bar
+# draws under an open panel's module and the focused workspace.
 normal-fill-alpha         = 0.05
 normal-border-alpha       = 0.14
 hover-cursor-fill-alpha   = 0.12
@@ -24,15 +26,22 @@ hover-cursor-border-alpha = 0.22
 focus-fill-alpha          = 0.12
 focus-border-alpha        = 0.22
 selected-fill-alpha       = 0.18
+selected-border-width     = 1
+selected-border-alpha     = 0.25
 
 # The specular rim shared by every card: a white hairline, brighter along the
 # top edge, in place of the theme's solid accent border. Because it is
 # translucent it reads brighter over bright backdrops and dimmer over dark
 # ones, so it adapts without being painted on.
+#
+# Surface alpha climbs with elevation rather than adding more blur (the
+# Fluent and glassmorphism rule): the bar strip and full-screen menus sit
+# at 0.62, toasts over windows at 0.66, flyout cards dense with controls at
+# 0.72, and tooltips, which are pure text, at 0.82.
 
 [popups]
 background       = "background"
-background-alpha = 0.6
+background-alpha = 0.72
 border           = "#ffffff5c #ffffff24 90deg"
 border-alpha     = 1.0
 border-width     = 1
@@ -46,7 +55,7 @@ border-width     = 1
 
 [notifications]
 background       = "background"
-background-alpha = 0.55
+background-alpha = 0.66
 border           = "#ffffff5c #ffffff24 90deg"
 border-alpha     = 1.0
 border-width     = 1
@@ -76,7 +85,7 @@ selected-border-alpha     = 0.2
 
 [polkit]
 background       = "background"
-background-alpha = 0.66
+background-alpha = 0.72
 border           = "#ffffff5c #ffffff24 90deg"
 border-alpha     = 1.0
 border-width     = 1

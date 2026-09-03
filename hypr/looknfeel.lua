@@ -127,8 +127,9 @@ hl.config({
 
     blur = {
       enabled = true,
-      -- size * 2^passes is the effective radius: ~96px, the macOS 30pt
-      -- quarter-resolution Gaussian at 2x.
+      -- Dual Kawase: each pass halves resolution and samples `size` px out,
+      -- so the reach is 2 * size * (2^passes - 1) = 168px, a wide, soft
+      -- frost in the range of macOS's 30pt Gaussian at quarter resolution.
       size = 12,
       passes = 3,
       -- Vibrancy re-saturates the blurred backdrop the way NSVisualEffectView
