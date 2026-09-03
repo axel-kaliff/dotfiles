@@ -76,9 +76,3 @@ o.bind("SUPER + SHIFT + F", "File manager",
   .. os.getenv("HOME") .. "/.config/hypr/bin/yazi-session")
 o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
   os.getenv("HOME") .. "/.config/hypr/bin/yazi-cwd")
-
--- MX Keys screenshot button. The keyboard sends the Windows snipping-tool
--- combo (Left Win + Shift + S) in firmware; altwin:swap_lalt_lwin in input.lua
--- turns Left Win into Alt, so Hyprland actually sees ALT + SHIFT + S. Binding
--- SUPER + SHIFT + S instead would never fire (and is Google Maps by default).
-o.bind("ALT + SHIFT + S", "Screenshot (MX Keys button)", "omarchy-capture-screenshot")
