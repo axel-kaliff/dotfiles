@@ -116,7 +116,7 @@
   "effortLevel": "xhigh",
   "modelSettings": {
     "claude-opus-5": {
-      "effortLevel": "medium"
+      "effortLevel": "xhigh"
     },
     "claude-fable-5": {
       "effortLevel": "xhigh"
