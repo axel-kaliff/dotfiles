@@ -56,14 +56,11 @@
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
 
--- Pneuma default: US + Swedish layouts, toggle with SUPER + SHIFT + SPACE
--- (see bindings.lua). No grp:* toggle here on purpose: every grp option that
--- uses Alt (grp:alts_toggle and friends) rebinds <RALT> to plain Alt_R, which
--- destroys AltGr/ISO_Level3_Shift -- and with it @ $ { [ ] } \ | ~ on "se".
+-- Pneuma default: US + Swedish layouts, toggle with Left Alt + Right Alt.
 hl.config({
   input = {
     kb_layout = "us,se",
-    kb_options = "compose:caps,shift:both_capslock_cancel,altwin:swap_lalt_lwin",
+    kb_options = "compose:caps,shift:both_capslock_cancel,grp:alts_toggle,altwin:swap_lalt_lwin",
   },
 })
 
