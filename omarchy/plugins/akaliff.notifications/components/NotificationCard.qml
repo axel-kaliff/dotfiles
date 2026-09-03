@@ -78,19 +78,6 @@ BorderSurface {
 
   HoverHandler { id: hoverTracker }
 
-  // Inner lip: the thin band of light a thick glass edge catches along its
-  // top, fading out a quarter of the way down, with a whisper of it at the
-  // bottom. Sits under the content, over the glass wash.
-  Rectangle {
-    anchors.fill: parent
-    radius: root.radius
-    gradient: Gradient {
-      GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.12) }
-      GradientStop { position: 0.25; color: Qt.rgba(1, 1, 1, 0.0) }
-      GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.035) }
-    }
-  }
-
   MouseArea {
     anchors.fill: parent
     cursorShape: Qt.PointingHandCursor

@@ -25,7 +25,7 @@ adjust-cell-height = 3
 # --- Window ---
 # Glass: only the cell background is translucent, text stays opaque. Hyprland
 # blurs and re-saturates what shows through (hypr/looknfeel.lua).
-background-opacity = 0.85
+background-opacity = 0.92
 window-padding-x = 5
 window-padding-y = 3
 window-padding-balance = true

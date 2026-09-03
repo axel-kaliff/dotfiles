@@ -25,14 +25,15 @@ focus-fill-alpha          = 0.12
 focus-border-alpha        = 0.22
 selected-fill-alpha       = 0.18
 
-# The specular rim shared by every card: a hairline lit from the top-left
-# that fades across the card and picks up a fainter glint at the bottom-right,
-# the Liquid Glass silhouette, in place of the theme's solid accent border.
+# The specular rim shared by every card: a white hairline, brighter along the
+# top edge, in place of the theme's solid accent border. Because it is
+# translucent it reads brighter over bright backdrops and dimmer over dark
+# ones, so it adapts without being painted on.
 
 [popups]
 background       = "background"
-background-alpha = 0.72
-border           = "#ffffff80 #ffffff1a #ffffff40 45deg"
+background-alpha = 0.6
+border           = "#ffffff5c #ffffff24 90deg"
 border-alpha     = 1.0
 border-width     = 1
 
@@ -45,16 +46,16 @@ border-width     = 1
 
 [notifications]
 background       = "background"
-background-alpha = 0.72
-border           = "#ffffff80 #ffffff1a #ffffff40 45deg"
+background-alpha = 0.55
+border           = "#ffffff5c #ffffff24 90deg"
 border-alpha     = 1.0
 border-width     = 1
 countdown        = "accent"
 
 [menu]
 background                = "background"
-background-alpha          = 0.72
-border                    = "#ffffff80 #ffffff1a #ffffff40 45deg"
+background-alpha          = 0.62
+border                    = "#ffffff5c #ffffff24 90deg"
 border-alpha              = 1.0
 border-width              = 1
 # The scrim is blurred by the layer rule, so it needs less darkness to
@@ -65,8 +66,8 @@ selected-border-alpha     = 0.2
 
 [launcher]
 background                = "background"
-background-alpha          = 0.72
-border                    = "#ffffff80 #ffffff1a #ffffff40 45deg"
+background-alpha          = 0.62
+border                    = "#ffffff5c #ffffff24 90deg"
 border-alpha              = 1.0
 border-width              = 1
 scrim-alpha               = 0.35
@@ -75,8 +76,8 @@ selected-border-alpha     = 0.2
 
 [polkit]
 background       = "background"
-background-alpha = 0.76
-border           = "#ffffff80 #ffffff1a #ffffff40 45deg"
+background-alpha = 0.66
+border           = "#ffffff5c #ffffff24 90deg"
 border-alpha     = 1.0
 border-width     = 1
 

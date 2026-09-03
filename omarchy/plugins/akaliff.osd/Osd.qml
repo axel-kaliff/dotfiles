@@ -138,32 +138,14 @@ Item {
     mask: Region {}
 
     // Glass: the card takes the shared popup surface (background alpha and
-    // specular rim from shell.toml) and floats on a two-layer drop shadow,
-    // a wide ambient one plus a tight contact one, like a macOS HUD. The
-    // shadows stay under the omarchy-osd layer rule's ignore_alpha so the
-    // compositor blur is confined to the card.
+    // rim from shell.toml) and sits on one soft drop shadow, kept under the
+    // omarchy-osd layer rule's ignore_alpha so the blur stays on the card.
     RectangularShadow {
       anchors.fill: card
       radius: card.radius
-      blur: Style.space(40)
-      offset.y: Style.space(12)
-      color: Qt.rgba(0, 0, 0, 0.42)
-      opacity: card.opacity
-    }
-    RectangularShadow {
-      anchors.fill: card
-      radius: card.radius
-      blur: Style.space(6)
-      offset.y: Style.space(2)
-      color: Qt.rgba(0, 0, 0, 0.35)
-      opacity: card.opacity
-    }
-    RectangularShadow {
-      anchors.fill: card
-      radius: card.radius + 1
-      blur: 0
-      spread: 1
-      color: Qt.rgba(0, 0, 0, 0.45)
+      blur: Style.space(28)
+      offset.y: Style.space(6)
+      color: Qt.rgba(0, 0, 0, 0.3)
       opacity: card.opacity
     }
 
@@ -178,17 +160,6 @@ Item {
       borderSpec: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2)))
       radius: Style.cornerRadius
       opacity: root.opened ? 1 : 0
-
-      // Inner lip highlight along the top edge, under the content.
-      Rectangle {
-        anchors.fill: parent
-        radius: card.radius
-        gradient: Gradient {
-          GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.12) }
-          GradientStop { position: 0.3; color: Qt.rgba(1, 1, 1, 0.0) }
-          GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.035) }
-        }
-      }
 
       Row {
         anchors.fill: parent

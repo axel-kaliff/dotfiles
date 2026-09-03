@@ -924,37 +924,17 @@ Item {
               }
             }
 
-            // Two-layer drop shadow, the way macOS lifts a notification: a
-            // wide soft ambient shadow plus a tight contact shadow at the
-            // edge. Both stay under the ignore_alpha threshold of the
-            // omarchy-notifications layer rule (hypr/looknfeel.lua), so the
-            // compositor blur is confined to the card and never rings the
-            // shadow.
-            RectangularShadow {
-              anchors.fill: card
-              z: -2
-              radius: card.radius
-              blur: Style.space(40)
-              offset.y: Style.space(12)
-              color: Qt.rgba(0, 0, 0, 0.42)
-            }
+            // One soft drop shadow grounds the card; it stays under the
+            // ignore_alpha threshold of the omarchy-notifications layer rule
+            // (hypr/looknfeel.lua) so the compositor blur is confined to the
+            // card itself.
             RectangularShadow {
               anchors.fill: card
               z: -1
               radius: card.radius
-              blur: Style.space(6)
-              offset.y: Style.space(2)
-              color: Qt.rgba(0, 0, 0, 0.35)
-            }
-            // 1px dark contact ring just outside the rim: what keeps a glass
-            // edge crisp against a bright backdrop.
-            RectangularShadow {
-              anchors.fill: card
-              z: -1
-              radius: card.radius + 1
-              blur: 0
-              spread: 1
-              color: Qt.rgba(0, 0, 0, 0.45)
+              blur: Style.space(28)
+              offset.y: Style.space(6)
+              color: Qt.rgba(0, 0, 0, 0.3)
             }
 
             NotificationCard {

@@ -67,7 +67,7 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, spring = "a
 -- Glass design language, after Apple's material stack (macOS vibrancy and
 -- Liquid Glass). A surface is never a flat alpha wash: the backdrop is blurred
 -- wide, re-saturated and slightly flattened so it stays legible; every surface
--- gets a 1px specular rim (bright at the top, a faint glint at the bottom)
+-- gets a 1px specular rim (brighter along the top edge)
 -- instead of a coloured border; and a large soft shadow does the focus work
 -- the accent border used to do. The shell half of this is omarchy/shell.toml.
 --
@@ -86,8 +86,8 @@ end
 
 local light = theme_is_light()
 local rim_active = light
-  and { colors = { "rgba(00000059)", "rgba(00000033)", "rgba(00000047)" }, angle = 90 }
-  or { colors = { "rgba(ffffff80)", "rgba(ffffff1f)", "rgba(ffffff3d)" }, angle = 90 }
+  and { colors = { "rgba(00000059)", "rgba(00000033)" }, angle = 90 }
+  or { colors = { "rgba(ffffff73)", "rgba(ffffff26)" }, angle = 90 }
 local rim_inactive = light and "rgba(00000024)" or "rgba(ffffff1f)"
 
 hl.config({
@@ -135,7 +135,7 @@ hl.config({
       -- does (~1.8x); contrast < 1 flattens luminosity the way Apple's
       -- regular material does; brightness < 1 is a post-blur dim.
       vibrancy = 0.28,
-      vibrancy_darkness = 0.15,
+      vibrancy_darkness = 0.3,
       contrast = 0.88,
       brightness = light and 1.05 or 0.9,
       noise = 0.02,
