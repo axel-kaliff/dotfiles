@@ -1,6 +1,6 @@
 # Documentation Lookup — MANDATORY
 
-Use the `context7-plugin:docs` skill (or the `docs-researcher` agent) to look up official library documentation **before** writing code or debugging issues involving third-party libraries or non-trivial stdlib modules.
+Use `WebFetch` against the library's official documentation to look up its API **before** writing code or debugging issues involving third-party libraries or non-trivial stdlib modules.
 
 ## When to look up docs
 
@@ -10,7 +10,7 @@ Use the `context7-plugin:docs` skill (or the `docs-researcher` agent) to look up
 
 ## How to apply
 
-1. Use the `/docs` skill or spawn a `docs-researcher` agent for the lookup.
+1. Use `WebSearch` to find the official docs page, then `WebFetch` it — or spawn a `general-purpose` agent for the lookup.
 2. Note any version-specific caveats or deprecations found in the docs.
 3. Use the verified signatures and patterns in your implementation — do not deviate from what the docs specify.
 4. If the docs contradict your prior knowledge, trust the docs.
@@ -28,8 +28,8 @@ Before planning new functions, fixes, or any non-trivial implementation, **alway
 
 ### How to search
 
-- **Spawn multiple parallel agents** — use `docs-researcher` and `general-purpose` agents simultaneously to search different angles (official docs, community solutions, best practices, known pitfalls)
-- Use `WebSearch`, `WebFetch`, and context7 docs tools liberally
+- **Spawn multiple parallel agents** — use `general-purpose` agents simultaneously to search different angles (official docs, community solutions, best practices, known pitfalls)
+- Use `WebSearch` and `WebFetch` liberally
 - **Token cost is not a concern** — thoroughness matters more than efficiency
 - Do NOT skip searches to "save time" or because you think you already know the answer
 - Prefer parallel searches over sequential ones to maximize coverage

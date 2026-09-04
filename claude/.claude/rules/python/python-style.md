@@ -23,7 +23,7 @@ When fixing violations from `/analyse` output:
 - **NEVER use `# type: ignore`** without an explicit error code (e.g., `# type: ignore[override]`) and a comment explaining why
 - Use `TypeAlias` for complex type expressions: `JsonValue: TypeAlias = str | int | float | bool | None | list["JsonValue"] | dict[str, "JsonValue"]`
 - Use `TypeVar` and `ParamSpec` for generic functions — never fall back to `Any`
-- Use `Protocol` over `ABC` when you only need structural subtyping
+- Use `ABC` for internal interfaces; reserve `Protocol` for boundaries that genuinely need structural subtyping
 - Prefer `X | Y` union syntax (3.10+) over `Union[X, Y]` and `X | None` over `Optional[X]`
 - Collections: use `list[int]`, `dict[str, V]`, `tuple[int, ...]` (lowercase builtins, 3.9+)
 - Use `@overload` when a function's return type depends on input types
@@ -56,7 +56,7 @@ When fixing violations from `/analyse` output:
 - No god classes — max ~100 lines per class
 - Use `__slots__` on non-dataclass classes that will be instantiated frequently
 - Prefer composition over inheritance
-- Use `Protocol` for dependency injection, not ABC
+- Use `ABC` for dependency injection; `Protocol` only when the implementer can't inherit (third-party or cross-boundary types)
 
 ## Error Handling
 
@@ -185,68 +185,3 @@ These should NEVER appear in code:
 | Nested comprehensions (2+ levels) | Extract to named helper — low cyclomatic but high cognitive complexity |
 | Long chained method calls (4+) | Break into named intermediate variables — improves readability and debuggability |
 | Dense single-expression returns | Split into steps with named locals — one operation per line for complex logic |
-
-## Ruff Configuration (Baseline)
-
-```toml
-[tool.ruff]
-target-version = "py312"
-line-length = 99
-
-[tool.ruff.lint]
-select = [
-    "E", "W",       # pycodestyle
-    "F",             # pyflakes
-    "I",             # isort
-    "N",             # pep8-naming
-    "UP",            # pyupgrade
-    "ANN",           # flake8-annotations
-    "B",             # flake8-bugbear
-    "A",             # flake8-builtins
-    "C4",            # flake8-comprehensions
-    "C901",          # mccabe complexity
-    "SIM",           # flake8-simplify
-    "TCH",           # flake8-type-checking
-    "RUF",           # ruff-specific
-    "PT",            # flake8-pytest-style
-    "RET",           # flake8-return
-    "PTH",           # flake8-use-pathlib
-    "S",             # flake8-bandit (security: eval, exec, pickle, assert, hardcoded passwords)
-    "PLR0911",       # too many return statements
-    "PLR0912",       # too many branches
-    "PLR0913",       # too many arguments
-    "PLR0915",       # too many statements
-]
-
-[tool.ruff.lint.mccabe]
-max-complexity = 10
-
-[tool.ruff.lint.pylint]
-max-args = 5
-max-returns = 4
-max-branches = 8
-max-statements = 30
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = ["ANN", "S101"]  # relax annotations and allow assert in tests
-
-[tool.ruff.lint.flake8-annotations]
-allow-star-arg-any = false
-suppress-none-returning = false
-```
-
-## Mypy Configuration (Baseline)
-
-```toml
-[tool.mypy]
-python_version = "3.12"
-strict = true
-warn_return_any = true
-warn_unreachable = true
-disallow_any_explicit = true
-disallow_any_generics = true
-disallow_untyped_defs = true
-disallow_untyped_calls = true
-disallow_incomplete_defs = true
-no_implicit_optional = true
-```
