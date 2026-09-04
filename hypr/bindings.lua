@@ -82,3 +82,17 @@ o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
 -- turns Left Win into Alt, so Hyprland actually sees ALT + SHIFT + S. Binding
 -- SUPER + SHIFT + S instead would never fire (and is Google Maps by default).
 o.bind("ALT + SHIFT + S", "Screenshot (MX Keys button)", "omarchy-capture-screenshot")
+
+-- Jump to whichever window is asking for attention (urgent hint), or back to
+-- the previous window when nothing is.
+o.bind("SUPER + U", "Focus urgent window", hl.dsp.focus({ urgent_or_last = true }))
+
+hl.config({
+  binds = {
+    -- SUPER + n on the workspace you are already on returns to the last one.
+    workspace_back_and_forth = true,
+    -- SUPER + h/j/k/l keep cycling windows behind a fullscreen one instead of
+    -- being swallowed by it.
+    movefocus_cycles_fullscreen = true,
+  },
+})
