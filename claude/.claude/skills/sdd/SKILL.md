@@ -1,7 +1,7 @@
 ---
 name: sdd
 description: Spec-Driven Development workflow v2.0. Triggers on /sdd commands or when SPEC.md exists.
-argument-hint: [command] [options]
+argument-hint: "[command] [options]"
 user-invocable: true
 ---
 
