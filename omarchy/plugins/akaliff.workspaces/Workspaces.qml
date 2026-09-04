@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Widgets
 import qs.Commons
 import qs.Ui
 
@@ -28,6 +30,40 @@ BarWidget {
 
     ids.sort(function(left, right) { return left - right })
     return ids
+  }
+
+  // One icon per distinct app on the workspace, in window order, capped so a
+  // busy workspace stays a pill rather than a dock. The app id comes from the
+  // toplevel protocol (live) with the IPC class as fallback, and is resolved
+  // through the desktop entries the way the launcher does.
+  readonly property int maxIcons: 4
+
+  function toplevelAppId(toplevel) {
+    var wayland = toplevel.wayland
+    if (wayland && wayland.appId) return wayland.appId
+    var ipc = toplevel.lastIpcObject
+    return ipc && ipc.class ? String(ipc.class) : ""
+  }
+
+  function iconForAppId(appId) {
+    var entry = DesktopEntries.heuristicLookup(appId)
+    var name = entry && entry.icon ? entry.icon : ""
+    return name ? Quickshell.iconPath(name, true) : ""
+  }
+
+  function iconsFor(workspace) {
+    if (!workspace) return []
+    var toplevels = workspace.toplevels.values
+    var seen = {}
+    var icons = []
+    for (var i = 0; i < toplevels.length && icons.length < root.maxIcons; i++) {
+      var appId = toplevelAppId(toplevels[i])
+      if (!appId || seen[appId]) continue
+      seen[appId] = true
+      var icon = iconForAppId(appId)
+      if (icon) icons.push(icon)
+    }
+    return icons
   }
 
   function focusWorkspace(id) {
@@ -59,12 +95,22 @@ BarWidget {
         readonly property bool occupied: workspace !== null && workspace.toplevels.values.length > 0
         readonly property bool focused: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.id === modelData
 
+        // The digit keeps its own slot; app icons extend the pill to the
+        // right of it on a horizontal bar. A vertical bar has no room and
+        // stays digits only.
+        readonly property var appIcons: root.vertical ? [] : root.iconsFor(workspace)
+        readonly property int digitSlot: root.vertical ? root.barSize : Style.space(22)
+        readonly property int iconSize: Style.space(14)
+        readonly property int iconGap: Style.space(4)
+        readonly property int iconsWidth: appIcons.length === 0 ? 0
+          : appIcons.length * iconSize + (appIcons.length - 1) * iconGap + Style.space(9)
+
         bar: root.bar
         text: modelData === 10 ? "0" : String(modelData)
         opacity: occupied || focused ? 1 : 0.5
         horizontalMargin: 6
         verticalPadding: 6
-        fixedWidth: root.vertical ? root.barSize : Style.space(22)
+        fixedWidth: digitSlot + iconsWidth
         fixedHeight: root.barSize
         onPressed: function() { root.focusWorkspace(modelData) }
 
@@ -79,7 +125,7 @@ BarWidget {
 
         readonly property real inkCenter: digitMetrics.tightBoundingRect.x
           + digitMetrics.tightBoundingRect.width / 2
-        readonly property real glyphX: Math.round(width / 2 - inkCenter)
+        readonly property real glyphX: Math.round(digitSlot / 2 - inkCenter)
         readonly property real paintedCenter: glyphX + inkCenter
 
         TextMetrics {
@@ -98,6 +144,23 @@ BarWidget {
           renderType: Text.NativeRendering
         }
 
+        Row {
+          x: cell.digitSlot - Style.space(2)
+          anchors.verticalCenter: parent.verticalCenter
+          spacing: cell.iconGap
+
+          Repeater {
+            model: cell.appIcons
+
+            IconImage {
+              required property string modelData
+              source: modelData
+              implicitSize: cell.iconSize
+              opacity: cell.focused ? 1 : 0.85
+            }
+          }
+        }
+
         // The focused workspace sits in a glass pill, the tab-bar idiom, and
         // keeps its number instead of turning into a filled-square glyph;
         // hovering another one lifts it slightly. Same [controls] tokens as
@@ -110,7 +173,7 @@ BarWidget {
           height: parent.height - (root.vertical ? Style.space(1) : inset) * 2
           anchors.verticalCenter: parent.verticalCenter
           anchors.horizontalCenter: parent.horizontalCenter
-          anchors.horizontalCenterOffset: cell.paintedCenter - parent.width / 2
+          anchors.horizontalCenterOffset: cell.paintedCenter - cell.digitSlot / 2
           radius: Math.min(Style.cornerRadius, Math.min(width, height) / 2)
           color: cell.focused ? Style.selectedFillFor(cell.foreground, Color.accent)
             : cell.tooltipHovered ? Style.hoverFillFor(cell.foreground, Color.accent)
