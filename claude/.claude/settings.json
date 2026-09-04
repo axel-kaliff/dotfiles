@@ -23,7 +23,7 @@
       "Bash(git restore:*)"
     ],
     "ask": [
-      "Bash(git push:*)"
+      "Bash(gh pr create:*)"
     ],
     "defaultMode": "auto"
   },
