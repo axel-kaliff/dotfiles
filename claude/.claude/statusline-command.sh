@@ -57,15 +57,15 @@ if [ -n "$used_pct" ]; then
 fi
 
 # Build the status line
-printf "${DIM}${FG_BLUE}${BOLD} ${display_cwd}${RESET}"
+printf '%b' "${DIM}${FG_BLUE}${BOLD} ${display_cwd}${RESET}"
 
 if [ -n "$git_branch" ]; then
-  printf "  ${DIM}${FG_MAGENTA}${BOLD} ${git_branch}${RESET}"
+  printf '%b' "  ${DIM}${FG_MAGENTA}${BOLD} ${git_branch}${RESET}"
 fi
 
 if [ -n "$context_segment" ]; then
-  printf "  ${DIM}${context_segment}"
+  printf '%b' "  ${DIM}${context_segment}"
 fi
 
-printf "  ${DIM}${FG_CYAN}${model}${RESET}"
-printf "\n"
+printf '%b' "  ${DIM}${FG_CYAN}${model}${RESET}"
+printf '%b' "\n"
