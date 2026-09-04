@@ -22,7 +22,7 @@ Check `$ARGUMENTS`:
 
 Spawn all six in a single message so they run concurrently:
 
-**Agent 1 — `grumpy-reviewer`:** the standard `/grumpy-review` prompt (read code not just diffs, comprehension first, trace error paths, verdict with severities). Add: "Also flag unnecessary complexity and unearned abstraction aggressively — a second opinion on what should not exist is wanted here. Limit output to your top 10 findings by severity, under 100 lines."
+**Agent 1 — `grumpy-reviewer`:** pass the target and: "Read the code, not just the diff; establish comprehension first, trace the error paths, and give every finding a severity." Add: "Also flag unnecessary complexity and unearned abstraction aggressively — a second opinion on what should not exist is wanted here. Limit output to your top 10 findings by severity, under 100 lines."
 
 **Agent 2 — `leanness-reviewer`:** pass the target and: "Gun to your head: produce your ranked cut list reaching 40–50% of this diff's added lines, cheapest cuts first, every entry with evidence and an honest cost label, per your output format. Keep abstraction cuts where the fix is pure deletion or inlining; whole-design restructures belong to a sibling reviewer running in parallel — don't spend your budget on them."
 
@@ -106,7 +106,7 @@ Import findings do not go through the cuts/redesigns approval questions. Split t
 **`BRANCH-INTRODUCED` — fixed, no exceptions.** This branch is not shipping a dependency violation it created, however inconvenient the fix. Present the table (file:line, the import, the violation, fix scope, the fix) and state plainly that these are being fixed rather than offered. Then:
 
 - **`LOCAL`** — apply the fix in Step 5. No question asked.
-- **`STRUCTURAL`** — do NOT quietly apply it, and do NOT paper over it with a function-scoped import or a `TYPE_CHECKING` guard; that leaves the violation in place under a bag. Stop and notify the user: what the violation is, why the local fix isn't one, the redesign shape the reviewer sketched, and the call sites it touches. Ask via AskUserQuestion whether to (1) apply the sketched redesign now, (2) let them orchestrate the redesign themselves — this skill reports and stops on that finding, or (3) hand it to `/rethink` or `/sdd` for a proper design pass first. The user is choosing *how* it gets fixed, not *whether* — say so, and do not offer "leave it".
+- **`STRUCTURAL`** — do NOT quietly apply it, and do NOT paper over it with a function-scoped import or a `TYPE_CHECKING` guard; that leaves the violation in place under a bag. Stop and notify the user: what the violation is, why the local fix isn't one, the redesign shape the reviewer sketched, and the call sites it touches. Ask via AskUserQuestion whether to (1) apply the sketched redesign now, (2) let them orchestrate the redesign themselves — this skill reports and stops on that finding, or (3) hand it to `/rethink` for a proper design pass first. The user is choosing *how* it gets fixed, not *whether* — say so, and do not offer "leave it".
 
 **`PRE-EXISTING` — filed, not fixed.** These are outside the branch's purpose; fixing them here is exactly the drive-by edit this skill exists to prevent. File one GitHub issue per finding (group findings that share a single root violation into one issue):
 

@@ -110,10 +110,9 @@ Spawn a **general-purpose agent** with this prompt:
 > - Check for lighter alternatives
 >
 > **2. Dedup Check**
-> ```bash
-> python3 ~/.claude/skills/dedup/dedup_check.py --branch-diff -s src/ -v
-> ```
-> If overlaps found, assess whether consolidation is warranted.
+> Run `/ai-dev:dedup` on the branch, or grep the repo for the names and
+> signatures the branch introduces. If overlaps are found, assess whether
+> consolidation is warranted.
 >
 > **3. Size Inventory**
 > ```bash
