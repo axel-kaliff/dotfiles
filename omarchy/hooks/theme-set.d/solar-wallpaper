@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omarchy-theme-set resets the background to the theme's own; put the solar
+# wallpaper back right away instead of waiting for the timer's next tick. The
+# script itself checks the solar-wallpaper toggle, so this is a no-op while
+# that is off.
+
+exec /usr/bin/python3 "$HOME/dotfiles/scripts/solar/solar_wallpaper.py"

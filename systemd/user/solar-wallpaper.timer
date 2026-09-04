@@ -1,0 +1,10 @@
+[Unit]
+Description=Re-check the sun every ten minutes
+
+[Timer]
+OnStartupSec=20
+OnCalendar=*:0/10
+Persistent=true
+
+[Install]
+WantedBy=timers.target

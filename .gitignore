@@ -55,3 +55,9 @@ gsconnect/*.pem
 *.rpm
 *.deb
 .worktrees/
+
+# Python tooling caches (scripts/solar)
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
