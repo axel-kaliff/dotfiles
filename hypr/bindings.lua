@@ -96,3 +96,26 @@ hl.config({
     movefocus_cycles_fullscreen = true,
   },
 })
+
+-- Resize mode: SUPER + R, then h/j/k/l grow the window towards that side
+-- (held keys repeat), Escape or any other key leaves. The stock MINUS/EQUAL
+-- chords still work; this is the vim-shaped route to the same thing. The OSD
+-- shows the mode while it is on, so a stuck submap is never a mystery.
+hl.bind("SUPER + R", hl.dsp.submap("resize"), { description = "Resize mode" })
+hl.define_submap("resize", function()
+  local step = 40
+  hl.bind("h", hl.dsp.window.resize({ x = -step, y = 0, relative = true }), { repeating = true })
+  hl.bind("j", hl.dsp.window.resize({ x = 0, y = step, relative = true }), { repeating = true })
+  hl.bind("k", hl.dsp.window.resize({ x = 0, y = -step, relative = true }), { repeating = true })
+  hl.bind("l", hl.dsp.window.resize({ x = step, y = 0, relative = true }), { repeating = true })
+  hl.bind("escape", hl.dsp.submap("reset"))
+  hl.bind("catchall", hl.dsp.submap("reset"))
+end)
+
+hl.on("keybinds.submap", function(name)
+  if name == "resize" then
+    hl.exec_cmd([[omarchy-shell -q osd show '{"icon":"⤢","message":"Resize  h j k l","duration":0}']])
+  else
+    hl.exec_cmd("omarchy-shell -q osd close")
+  end
+end)
