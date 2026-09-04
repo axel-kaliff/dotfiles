@@ -124,12 +124,34 @@ hl.config({
       active_border = rim_active,
       inactive_border = rim_inactive,
     },
+    -- Floating windows snap to screen edges and to each other while dragged.
+    snap = { enabled = true },
   },
 
   group = {
     col = {
       border_active = rim_active,
       border_inactive = rim_inactive,
+    },
+
+    -- Group tabs in the same material as the bar's pills: a blurred strip
+    -- with rounded, translucent tab fills instead of Omarchy's flat black
+    -- washes. The active tab is the selected-pill tint (0.18 white, 0.16
+    -- black on light themes); inactive tabs barely register until hovered.
+    groupbar = {
+      blur = true,
+      font_family = font,
+      gradients = true,
+      gradient_rounding = 8,
+      gradient_rounding_power = 3.0,
+      rounding = 8,
+      indicator_height = 0,
+      text_color = light and "rgb(000000)" or "rgb(ffffff)",
+      text_color_inactive = light and "rgba(00000099)" or "rgba(ffffff99)",
+      col = {
+        active = light and "rgba(00000029)" or "rgba(ffffff2e)",
+        inactive = light and "rgba(0000000f)" or "rgba(ffffff12)",
+      },
     },
   },
 
@@ -152,6 +174,9 @@ hl.config({
 
     blur = {
       enabled = true,
+      -- Scratchpads (named special workspaces) hover over a frosted desktop,
+      -- the same treatment the menu and clipboard get.
+      special = true,
       -- Dual Kawase: each pass halves resolution and samples `size` px out,
       -- so the reach is 2 * size * (2^passes - 1) = 168px, a wide, soft
       -- frost in the range of macOS's 30pt Gaussian at quarter resolution.
@@ -176,6 +201,13 @@ hl.config({
     -- covers instead of hiding it behind a flat wallpaper copy.
     session_lock_xray = true,
     session_lock_blur = true,
+    font_family = font,
+  },
+
+  cursor = {
+    -- The pointer already hides while typing (Omarchy default); also hide it
+    -- once the hand leaves the mouse, the way macOS does.
+    inactive_timeout = 3,
   },
 })
 
