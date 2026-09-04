@@ -11,7 +11,7 @@
     "layout": {
       "left": [
         {
-          "id": "omarchy.menu"
+          "id": "pneuma.menu"
         },
         {
           "id": "akaliff.workspaces"
@@ -51,7 +51,12 @@
           "id": "pneuma.pomodoro"
         },
         {
-          "id": "omarchy.agents"
+          "id": "omarchy.agents",
+          "providers": {
+            "codex": {
+              "enabled": false
+            }
+          }
         },
         {
           "id": "omarchy.bluetooth"

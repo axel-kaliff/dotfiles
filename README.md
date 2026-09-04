@@ -156,7 +156,7 @@ Hyprland 0.56 (Lua config) with the Omarchy 4 shell, in the glass design
 language of the `glass` branch. Everything here sits on top of Omarchy's
 defaults, in `hypr/*.lua` and `omarchy/`.
 
-### Keybindings added on top of Omarchy
+### Keybindings changed from the defaults
 
 | Shortcut | Action |
 |----------|--------|
@@ -169,6 +169,12 @@ defaults, in `hypr/*.lua` and `omarchy/`.
 | `Super+Shift+F` | yazi, with its last session restored |
 | `Super+Alt+K` | Zellij cheat sheet |
 | `Super+Shift+E` / `Super+Shift+Alt+E` / `Super+Shift+C` | Thunderbird: inbox, new message, calendar (`hypr/bin/thunderbird`) |
+
+The defaults' tmux, Grok and HEY bindings are unbound. The desktop shows no
+Omarchy branding: the bar's menu button is `pneuma.menu`, the About logo and
+the screensaver are the pneuma wordmark (`omarchy/branding/`), and the
+launcher hides the rows for the Omarchy manual and Discord, tmux, Grok and
+Codex (`omarchy/extensions/omarchy-menu.jsonc`).
 
 ### Backgrounds
 
@@ -380,7 +386,6 @@ The `zj` function manages sessions:
 | `Ctrl+N` | Resize | `h/j/k/l` increase, `H/J/K/L` decrease |
 | `Ctrl+M` | Move | `h/j/k/l` move pane |
 | `Ctrl+S` | Scroll | `j/k` scroll, `d/u` half page, `s` search |
-| `Ctrl+B` | Tmux | Familiar tmux bindings (`"` hsplit, `%` vsplit, `c` new tab, `z` zoom) |
 | `Ctrl+O` | Session | `w` session manager, `d` detach |
 | `Esc` / `Enter` | Return to normal mode |
 
@@ -804,7 +809,7 @@ dotfiles/
 │   └── lua/
 │       ├── custom/plugins/   # fzf-lua, snacks, noice, neogit, diffview, oil, flash, trouble, grug-far
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
-├── omarchy/        # Desktop shell: bar layout (shell.json), glass tokens (shell.toml), QML plugins, hooks, launcher menu rows
+├── omarchy/        # Desktop shell: bar layout (shell.json), glass tokens (shell.toml), QML plugins, hooks, launcher menu rows, branding
 ├── ripgrep/        # ripgrep config (smart-case, hidden files, max-columns)
 ├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers; solar/ is the solar wallpaper with its tests, backgrounds/ the picker and Bluefin import
 ├── server/         # Podman quadlets for the homeserver (plex, sonarr, radarr)

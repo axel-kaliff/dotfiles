@@ -131,11 +131,19 @@ o.bind("ALT + TAB", "Window switcher", hl.dsp.global("pneuma-switcher:next"))
 o.bind("ALT + SHIFT + TAB", "Window switcher (back)", hl.dsp.global("pneuma-switcher:prev"))
 hl.bind("ALT + Alt_L", hl.dsp.global("pneuma-switcher:commit"), { release = true })
 
--- Email and calendar are Thunderbird (flatpak) through hypr/bin/thunderbird
--- instead of the HEY web apps.
+-- Pruned and de-branded defaults. The menu keys keep their commands under a
+-- plain name; tmux and Grok go; email and calendar are Thunderbird (flatpak)
+-- through hypr/bin/thunderbird instead of the HEY web apps.
+hl.unbind("SUPER + SPACE")            -- was: Omarchy menu
+hl.unbind("SUPER + SHIFT + code:201") -- was: Omarchy menu
+hl.unbind("SUPER + ALT + RETURN")     -- was: Tmux
+hl.unbind("SUPER + SHIFT + ALT + A")  -- was: Grok
 hl.unbind("SUPER + SHIFT + E")        -- was: Email (HEY)
 hl.unbind("SUPER + SHIFT + ALT + E")  -- was: New email (HEY)
 hl.unbind("SUPER + SHIFT + C")        -- was: Calendar (HEY)
+o.bind("SUPER + SPACE", "Menu", "omarchy-menu toggle")
+o.bind("SUPER + SHIFT + code:201", "Menu", "omarchy-menu toggle root")
+
 local thunderbird = os.getenv("HOME") .. "/.config/hypr/bin/thunderbird"
 o.bind("SUPER + SHIFT + E", "Email", thunderbird .. " -mail")
 o.bind("SUPER + SHIFT + ALT + E", "New email", thunderbird .. " -compose")
