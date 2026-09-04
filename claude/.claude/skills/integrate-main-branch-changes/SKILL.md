@@ -1,6 +1,8 @@
 ---
 name: integrate-main-branch-changes
 description: Use when needing to update a feature branch with the latest changes from origin/master, when the working branch is behind master, or when the user asks to pull/sync/rebase from main/master
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Integrate Main Branch Changes
