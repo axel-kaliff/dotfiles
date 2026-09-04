@@ -91,17 +91,25 @@ hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 0.7, bezier = "al
 -- Light themes flip the chrome the way macOS does: the hairline turns dark
 -- (a white rim vanishes on a light backdrop), the backdrop is lifted rather
 -- than dimmed, and the shadow gets lighter. `omarchy theme set` reloads
--- Hyprland, so the check re-runs on every theme switch.
-local function theme_is_light()
-  local marker = io.open((os.getenv("HOME") or "") .. "/.local/state/omarchy/current/theme/light.mode", "r")
-  if marker then
-    marker:close()
-    return true
-  end
-  return false
-end
+-- Hyprland, so the check re-runs on every theme switch. omarchy-theme-color
+-- resolves the mode the way the shell does: the `mode` key in colors.toml
+-- first (what every stock light theme sets), then a light.mode marker, then
+-- background luminance.
+local light = o.shell_succeeds('[ "$(omarchy-theme-color mode)" = light ]')
 
-local light = theme_is_light()
+-- The monospace font the rest of the desktop uses (`omarchy font set` writes
+-- it to fontconfig), so Hyprland's own chrome -- group tabs, the
+-- not-responding dialog -- matches instead of falling back to Sans.
+local function monospace_font()
+  local handle = io.popen("fc-match monospace -f '%{family}' 2>/dev/null")
+  if not handle then
+    return "monospace"
+  end
+  local family = (handle:read("*l") or ""):match("^([^,]+)") or ""
+  handle:close()
+  return family ~= "" and family or "monospace"
+end
+local font = monospace_font()
 local rim_active = light
   and { colors = { "rgba(00000059)", "rgba(00000033)" }, angle = 90 }
   or { colors = { "rgba(ffffff73)", "rgba(ffffff26)" }, angle = 90 }
