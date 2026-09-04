@@ -177,7 +177,9 @@ Background row (`scripts/backgrounds/pick`, wired in
 own images, with labels and type-to-filter. `scripts/backgrounds/import-bluefin`
 fills it with the Bluefin wallpapers, converted from JPEG XL, which the picker
 cannot read. Picking an image turns the solar wallpaper off; the Style ▸ Solar
-Wallpaper row turns it back on.
+Wallpaper row turns it back on. The picker thumbnails through `vipsthumbnail`,
+which the pneuma image lacks, so `scripts/backgrounds/shim/` stands in with
+ImageMagick until `vips-tools` lands in the image.
 
 ### Solar wallpaper
 

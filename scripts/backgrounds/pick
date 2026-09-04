@@ -4,6 +4,10 @@
 # row. A picked image is a deliberate choice, so the solar wallpaper stands
 # down until `omarchy toggle solar-wallpaper on`.
 
+# omarchy-menu-images thumbnails through vipsthumbnail, which the pneuma image
+# lacks; shim/ fills in with ImageMagick, after PATH so a real one wins.
+export PATH="$PATH:$(dirname "$(readlink -f "$0")")/shim"
+
 theme_name=$(cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null)
 current=$(readlink -f "$HOME/.local/state/omarchy/current/background" 2>/dev/null)
 
