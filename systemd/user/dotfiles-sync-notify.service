@@ -1,0 +1,9 @@
+[Unit]
+Description=Desktop notification when the dotfiles sync fails
+
+[Service]
+Type=oneshot
+# The homeserver runs dotfiles-sync too and has no session bus, so a failed
+# notify there must not turn into a second failed unit: "-" ignores the status.
+ExecStart=-/usr/bin/notify-send --urgency=critical "Dotfiles sync failed" \
+    "journalctl --user -u dotfiles-sync for details"

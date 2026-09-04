@@ -36,3 +36,7 @@ zellij/config\.kdl
 
 # systemd enablement state is machine-local — stowing it broke deploy in 2026
 .*\.target\.wants
+
+# Timestamped tool backups: gitignored, but a locally generated one must not be
+# linked into ~/.config either
+.*\.bak\.[0-9]+

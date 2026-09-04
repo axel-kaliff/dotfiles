@@ -1,5 +1,6 @@
 [Unit]
 Description=Sync dotfiles from git
+OnFailure=dotfiles-sync-notify.service
 
 [Service]
 Type=oneshot

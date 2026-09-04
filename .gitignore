@@ -61,3 +61,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .hypothesis/
+
+# Timestamped backups a tool drops next to a config (an omarchy migration does
+# this). The sync timer stages with `git add -A`, so without this they get
+# committed and replicated to every other machine.
+*.bak.[0-9]*

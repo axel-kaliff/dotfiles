@@ -125,14 +125,20 @@ setup-brew:
 # Deploy repo -> ~. Deliberately NOT --adopt: adopt reverses the data flow,
 # overwriting the repo with whatever happens to be on disk, and the 15-minute
 # sync timer would then commit and push that. It is how the tracked nvim config
-# was clobbered in March 2026. On a conflict stow now fails loudly; resolve it
-# by hand, or run `just adopt` if pulling the on-disk file in really is intended.
+# was clobbered in March 2026. Conflicting on-disk files are cleared first by
+# scripts/stow-resolve-conflicts.sh -- identical copies deleted, differing ones
+# quarantined under ~/.local/state/dotfiles-conflicts/ -- so one stale leftover
+# cannot abort the whole package and strand every other file undeployed. Run
+# `just adopt` if pulling the on-disk file into the repo really is intended.
 stow-dotfiles:
   @echo "Stowing dotfiles to ~/.config..."
+  @$HOME/dotfiles/scripts/stow-resolve-conflicts.sh -d ~ -t ~/.config dotfiles
   @stow -d ~ -t ~/.config --restow dotfiles
   @echo "Stowing bash config to ~..."
+  @$HOME/dotfiles/scripts/stow-resolve-conflicts.sh -d ~/dotfiles -t ~ bash
   @stow -d ~/dotfiles -t ~ --restow bash
   @echo "Stowing claude config to ~..."
+  @$HOME/dotfiles/scripts/stow-resolve-conflicts.sh -d ~/dotfiles -t ~ claude
   @stow -d ~/dotfiles -t ~ --restow claude
   @echo "Dotfiles stowed."
 

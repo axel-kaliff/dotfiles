@@ -16,15 +16,24 @@ require("default.hypr.omarchy")
 -- Put your personal overrides in these files. They're loaded after Omarchy's
 -- defaults so package updates can improve the defaults without rewriting your
 -- ~/.config/hypr files.
-require("hypr.monitors")
-require("hypr.input")
-require("hypr.bindings")
-require("hypr.looknfeel")
-require("hypr.autostart")
-require("hypr.scratchpads")
-require("hypr.privacy")
+-- Loaded optionally, the way Omarchy loads its own optional pieces. A plain
+-- require() that cannot find its module aborts the rest of this file, so a
+-- module that has been pulled but not yet stowed -- the sync timer pulls before
+-- it deploys, and these files are symlinks into the repo -- would take privacy,
+-- power and the toggles down with it rather than just itself. A module missing
+-- here always means the deploy failed; the dotfiles-sync notification is what
+-- tells you that.
+local require_optional = require("default.hypr.require_optional")
+
+require_optional.module("hypr.monitors")
+require_optional.module("hypr.input")
+require_optional.module("hypr.bindings")
+require_optional.module("hypr.looknfeel")
+require_optional.module("hypr.autostart")
+require_optional.module("hypr.scratchpads")
+require_optional.module("hypr.privacy")
 -- After looknfeel: it corrects the blur values looknfeel just set.
-require("hypr.power")
+require_optional.module("hypr.power")
 
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
