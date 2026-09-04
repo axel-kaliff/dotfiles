@@ -1,6 +1,6 @@
 # Zellij Cheat Sheet
 
-Rendered into the Omarchy popup by `omarchy-menu-zellij-keybindings`
+Rendered into the keybindings popup by `omarchy-menu-zellij-keybindings`
 (SUPER + ALT + K). Edit this file — the popup keeps no second copy.
 
 Verified against `config.kdl`, which sets `clear-defaults=true`, so every

@@ -1,6 +1,7 @@
 // Notification service for the omarchy shell.
 
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -921,6 +922,19 @@ Item {
                   service.expirePopup(cardSlot.index)
                 }
               }
+            }
+
+            // One soft drop shadow grounds the card; it stays under the
+            // ignore_alpha threshold of the omarchy-notifications layer rule
+            // (hypr/looknfeel.lua) so the compositor blur is confined to the
+            // card itself.
+            RectangularShadow {
+              anchors.fill: card
+              z: -1
+              radius: card.radius
+              blur: Style.space(28)
+              offset.y: Style.space(6)
+              color: Qt.rgba(0, 0, 0, 0.3)
             }
 
             NotificationCard {

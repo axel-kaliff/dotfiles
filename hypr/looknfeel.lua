@@ -49,40 +49,185 @@
 --   },
 -- })
 
--- Material 3 motion, borrowed from caelestia-dots but paced twice as fast:
--- entering surfaces decelerate softly over ~250ms while exits accelerate
--- away in ~150ms; that in/out asymmetry, plus the special workspace drifting
--- only 15% of the screen while it fades, is what reads as "floating".
--- Workspace switching stays instant (the Omarchy default).
-hl.curve("emphasizedDecel", { type = "bezier", points = { { 0.05, 0.7 }, { 0.1, 1 } } })
-hl.curve("emphasizedAccel", { type = "bezier", points = { { 0.3, 0 }, { 0.8, 0.15 } } })
-hl.curve("md3Standard", { type = "bezier", points = { { 0.2, 0 }, { 0, 1 } } })
+-- Motion follows the material: Apple's default spring shape (damping
+-- fraction 0.825) at twice Apple's pace, response 0.275 s instead of
+-- 0.55 s, for anything that arrives or moves, and a short accelerating
+-- bezier for anything leaving. Springs are simulated on real time and
+-- ignore `speed`, so their pace lives in the constants: doubling the
+-- natural frequency (stiffness x4, damping x2 at unit mass) halves every
+-- timing while keeping the same bounce. Workspace switching stays instant
+-- (the Omarchy default).
+hl.curve("appleSpring", { type = "spring", mass = 1, stiffness = 520, dampening = 38 })
+hl.curve("appleExit", { type = "bezier", points = { { 0.3, 0 }, { 0.8, 0.15 } } })
 
-hl.animation({ leaf = "windows", enabled = true, speed = 3, bezier = "md3Standard" })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 2.5, bezier = "emphasizedDecel", style = "popin 87%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "emphasizedAccel", style = "popin 87%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2, bezier = "emphasizedDecel", style = "slidefadevert 15%" })
+hl.animation({ leaf = "windows", enabled = true, speed = 1.5, spring = "appleSpring" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 1.5, spring = "appleSpring", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 0.75, bezier = "appleExit", style = "popin 90%" })
+hl.animation({ leaf = "layersIn", enabled = true, speed = 1.5, spring = "appleSpring", style = "fade" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 0.75, bezier = "appleExit", style = "fade" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 1.5, spring = "appleSpring", style = "slidefadevert 15%" })
 
--- Caelestia's soft-surface tier: rounded corners, blur behind translucent
--- surfaces, and a shadow faint enough (alpha 0x10) to ground windows without
--- drawing outlines. Omarchy's default gaps (5 in / 10 out) already match
--- caelestia's, so only decoration changes here.
+-- The leaves Omarchy's default looknfeel sets (border colour, window and
+-- layer fades) at half its speeds, so nothing lags behind the springs.
+hl.animation({ leaf = "border", enabled = true, speed = 2.7, bezier = "easeOutQuint" })
+-- The shadow colour switch lives on its own leaf (fadeShadow, a child of
+-- fade), not on border, so it has to be matched to border by hand or the
+-- rim and the shadow of a newly focused window settle at different times.
+hl.animation({ leaf = "fadeShadow", enabled = true, speed = 2.7, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fade", enabled = true, speed = 1.5, bezier = "quick" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 0.85, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 0.75, bezier = "almostLinear" })
+hl.animation({ leaf = "layers", enabled = true, speed = 1.9, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeLayersIn", enabled = true, speed = 0.9, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 0.7, bezier = "almostLinear" })
+
+-- Glass design language, after Apple's material stack (macOS vibrancy and
+-- Liquid Glass). A surface is never a flat alpha wash: the backdrop is blurred
+-- wide, re-saturated and slightly flattened so it stays legible; every surface
+-- gets a 1px specular rim (brighter along the top edge)
+-- instead of a coloured border; and a large soft shadow does the focus work
+-- the accent border used to do. The shell half of this is omarchy/shell.toml.
+--
+-- Light themes flip the chrome the way macOS does: the hairline turns dark
+-- (a white rim vanishes on a light backdrop), the backdrop is lifted rather
+-- than dimmed, and the shadow gets lighter. `omarchy theme set` reloads
+-- Hyprland, so the check re-runs on every theme switch. omarchy-theme-color
+-- resolves the mode the way the shell does: the `mode` key in colors.toml
+-- first (what every stock light theme sets), then a light.mode marker, then
+-- background luminance.
+local light = o.shell_succeeds('[ "$(omarchy-theme-color mode)" = light ]')
+
+-- The monospace font the rest of the desktop uses (`omarchy font set` writes
+-- it to fontconfig), so Hyprland's own chrome -- group tabs, the
+-- not-responding dialog -- matches instead of falling back to Sans.
+local function monospace_font()
+  local handle = io.popen("fc-match monospace -f '%{family}' 2>/dev/null")
+  if not handle then
+    return "monospace"
+  end
+  local family = (handle:read("*l") or ""):match("^([^,]+)") or ""
+  handle:close()
+  return family ~= "" and family or "monospace"
+end
+local font = monospace_font()
+local rim_active = light
+  and { colors = { "rgba(00000059)", "rgba(00000033)" }, angle = 90 }
+  or { colors = { "rgba(ffffff73)", "rgba(ffffff26)" }, angle = 90 }
+local rim_inactive = light and "rgba(00000024)" or "rgba(ffffff1f)"
+
 hl.config({
-  decoration = {
-    rounding = 4,
+  general = {
+    gaps_in = 6,
+    gaps_out = 14,
+    border_size = 1,
+    col = {
+      active_border = rim_active,
+      inactive_border = rim_inactive,
+    },
+    -- Floating windows snap to screen edges and to each other while dragged.
+    snap = { enabled = true },
+  },
 
+  group = {
+    col = {
+      border_active = rim_active,
+      border_inactive = rim_inactive,
+    },
+
+    -- Group tabs in the same material as the bar's pills: a blurred strip
+    -- with rounded, translucent tab fills instead of Omarchy's flat black
+    -- washes. The active tab is the selected-pill tint (0.18 white, 0.16
+    -- black on light themes); inactive tabs barely register until hovered.
+    groupbar = {
+      blur = true,
+      font_family = font,
+      gradients = true,
+      gradient_rounding = 8,
+      gradient_rounding_power = 3.0,
+      rounding = 8,
+      indicator_height = 0,
+      text_color = light and "rgb(000000)" or "rgb(ffffff)",
+      text_color_inactive = light and "rgba(00000099)" or "rgba(ffffff99)",
+      col = {
+        active = light and "rgba(00000029)" or "rgba(ffffff2e)",
+        inactive = light and "rgba(0000000f)" or "rgba(ffffff12)",
+      },
+    },
+  },
+
+  decoration = {
+    rounding = 14,
+    -- Between a circle (2) and a squircle (4): Apple's continuous corners.
+    rounding_power = 3.0,
+
+    -- macOS window shadow, measured: ~22px drop, 45-70px blur, ~50% black on
+    -- the active window; inactive windows keep a lighter one so they still
+    -- sit on the desktop.
     shadow = {
       enabled = true,
-      range = 15,
-      render_power = 4,
-      color = "rgba(00000010)",
+      range = 56,
+      render_power = 3,
+      color = light and "rgba(00000059)" or "rgba(0000008c)",
+      color_inactive = light and "rgba(0000002e)" or "rgba(00000047)",
+      offset = { 0, 12 },
     },
 
     blur = {
       enabled = true,
-      size = 8,
-      passes = 2,
+      -- Scratchpads (named special workspaces) hover over a frosted desktop,
+      -- the same treatment the menu and clipboard get.
+      special = true,
+      -- Dual Kawase: each pass halves resolution and samples `size` px out,
+      -- so the reach is 2 * size * (2^passes - 1) = 168px, a wide, soft
+      -- frost in the range of macOS's 30pt Gaussian at quarter resolution.
+      size = 12,
+      passes = 3,
+      -- Vibrancy re-saturates the blurred backdrop the way NSVisualEffectView
+      -- does (~1.8x); contrast < 1 flattens luminosity the way Apple's
+      -- regular material does; brightness < 1 is a post-blur dim.
+      vibrancy = 0.28,
+      vibrancy_darkness = 0.3,
+      contrast = 0.88,
+      brightness = light and 1.05 or 0.9,
+      noise = 0.02,
+      ignore_opacity = true,
       popups = true,
+      popups_ignorealpha = 0.4,
     },
   },
+
+  misc = {
+    -- The lock screen is a session lock, not a layer: blur the desktop it
+    -- covers instead of hiding it behind a flat wallpaper copy.
+    session_lock_xray = true,
+    session_lock_blur = true,
+    font_family = font,
+  },
+
+  cursor = {
+    -- The pointer already hides while typing (Omarchy default); also hide it
+    -- once the hand leaves the mouse, the way macOS does.
+    inactive_timeout = 3,
+  },
 })
+
+-- Shell surfaces are layer-shell windows, so the compositor has to be told
+-- which of them get the backdrop blur, and ignore_alpha decides which pixels
+-- of a surface count. Cards that float on a QML drop shadow (toasts, OSD)
+-- use a high threshold so only the card itself is blurred and the shadow
+-- never rings; modal surfaces with a scrim (menu, clipboard, emojis, polkit)
+-- use a low one so the whole desktop frosts behind them, macOS-style.
+-- The bar never overlaps a window, so it samples the wallpaper only (xray):
+-- the macOS under-window-background look, and cheaper.
+hl.layer_rule({ match = { namespace = "omarchy-bar" }, blur = true, blur_popups = true, xray = true, ignore_alpha = 0.5 })
+hl.layer_rule({ match = { namespace = "^(omarchy-notifications|omarchy-osd|pneuma-switcher)$" }, blur = true, ignore_alpha = 0.5 })
+hl.layer_rule({
+  match = {
+    namespace = "^(omarchy-menu|omarchy-clipboard|omarchy-emojis|omarchy-polkit|omarchy-reminders"
+      .. "|omarchy-keyboard-panel|omarchy-network-qr)$",
+  },
+  blur = true,
+  ignore_alpha = 0.2,
+})
+-- Toasts enter from the screen edge like macOS notifications.
+hl.layer_rule({ match = { namespace = "omarchy-notifications" }, animation = "slide right" })

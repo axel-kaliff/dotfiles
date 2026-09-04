@@ -14,7 +14,7 @@ Run this bash block. It creates the directory, excludes it from git, and initial
 
 ```bash
 mkdir -p claude_session
-git_dir=$(git rev-parse --git-dir)
+git_dir=$(git rev-parse --git-common-dir)   # common dir: a worktree's own info/exclude is ignored by git
 mkdir -p "$git_dir/info"
 grep -qxF 'claude_session/' "$git_dir/info/exclude" 2>/dev/null || echo 'claude_session/' >> "$git_dir/info/exclude"
 

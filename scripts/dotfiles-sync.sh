@@ -98,6 +98,25 @@ if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --o
     log "OK: auto-committed local changes"
 fi
 
+# A branch created locally has no upstream: the rebase below fails outright and
+# the @{u}..HEAD push gate silently never fires, so its commits never leave the
+# machine. Publish it so feature branches stay backed up like any other.
+if ! git rev-parse --abbrev-ref '@{u}' &>/dev/null; then
+    publish_status=0
+    publish_output=$(git push -u origin HEAD 2>&1) || publish_status=$?
+    printf '%s\n' "$publish_output" >> "$LOGFILE"
+
+    if ((publish_status != 0)); then
+        if is_network_error "$publish_output"; then
+            log "SKIP: network unavailable while publishing branch"
+            exit 0
+        fi
+        log "ERROR: failed to publish $(git branch --show-current)"
+        exit 1
+    fi
+    log "OK: published $(git branch --show-current)"
+fi
+
 # Pull with rebase (our auto-commits rebase cleanly on top of remote)
 pull_status=0
 pull_output=$(git pull --rebase --autostash 2>&1) || pull_status=$?

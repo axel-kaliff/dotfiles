@@ -37,6 +37,14 @@ Item {
   property string focusEndSound: defaultFocusEndSound
   property string breakEndSound: defaultBreakEndSound
 
+  // Focus mode: notifications are silenced while a focus phase is on the
+  // clock and come back when it stops, unless Do Not Disturb was already on,
+  // in which case it is left exactly as found. `dndHeld` remembers that this
+  // service was the one that turned it on, and is persisted so a shell
+  // restart mid-session still releases it afterwards.
+  property bool focusDnd: true
+  property bool dndHeld: false
+
   readonly property var config: ({
     workMinutes: root.workMinutes,
     breakMinutes: root.breakMinutes,
@@ -65,6 +73,37 @@ Item {
     : 0
 
   readonly property string notifyBin: (omarchyPath !== "" ? omarchyPath + "/bin/" : "") + "omarchy-notification-send"
+
+  // ------------------------------------------------------------ focus mode
+
+  readonly property bool focusTicking: running && phase === "focus"
+  onFocusTickingChanged: syncDnd()
+  onFocusDndChanged: syncDnd()
+
+  // The notification daemon runs in this same shell process, so DND is a
+  // property write on its service rather than a round trip through IPC. The
+  // clone keeps the first-party id in the registry; the fallback covers a
+  // shell that registers it under the clone's own id.
+  function notificationService() {
+    if (!shell || typeof shell.serviceFor !== "function") return null
+    return shell.serviceFor("omarchy.notifications") || shell.serviceFor("akaliff.notifications")
+  }
+
+  function syncDnd() {
+    var service = notificationService()
+    if (!service) return
+    if (focusTicking && focusDnd) {
+      if (!dndHeld && !service.doNotDisturb) {
+        service.setDoNotDisturb(true)
+        dndHeld = true
+        scheduleSave()
+      }
+    } else if (dndHeld) {
+      dndHeld = false
+      service.setDoNotDisturb(false)
+      scheduleSave()
+    }
+  }
 
   // ------------------------------------------------------------- transport
 
@@ -209,7 +248,8 @@ Item {
       endsAt: root.endsAt,
       pausedMs: root.pausedMs,
       totalMs: root.totalMs,
-      completedInCycle: root.completedInCycle
+      completedInCycle: root.completedInCycle,
+      dndHeld: root.dndHeld
     }) + "\n")
   }
 
@@ -219,6 +259,7 @@ Item {
     try { data = JSON.parse(raw || "{}") } catch (error) { data = {} }
 
     completedInCycle = Model.clampInt(data.completedInCycle, 0, 0, cyclesPerLong)
+    dndHeld = data.dndHeld === true
     nowMs = Date.now()
     loaded = true
 
@@ -249,6 +290,9 @@ Item {
     pausedMs = Math.max(0, Number(data.pausedMs) || 0)
     endsAt = 0
     running = false
+    // A paused or ready phase never holds DND; a hold left over from a
+    // session that died mid-focus is released here.
+    syncDnd()
   }
 
   Process {
@@ -284,7 +328,9 @@ Item {
         cyclesPerLong: root.cyclesPerLong,
         workMinutes: root.workMinutes,
         breakMinutes: root.breakMinutes,
-        longBreakMinutes: root.longBreakMinutes
+        longBreakMinutes: root.longBreakMinutes,
+        focusDnd: root.focusDnd,
+        dndHeld: root.dndHeld
       })
     }
   }

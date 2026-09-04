@@ -188,7 +188,6 @@ out of a locked pane rather than unlocking.
 | `Ctrl+N` | Resize | `hjkl` grow `HJKL` shrink |
 | `Ctrl+M` | Move | `hjkl` move pane |
 | `Ctrl+S` | Scroll | `jk` scroll `du` half-page `s` search |
-| `Ctrl+B` | Tmux | `"` hsplit `%` vsplit `c` tab `z` zoom |
 | `Ctrl+O` | Session | `w` manager `d` detach |
 
 ### Sessions & Layouts

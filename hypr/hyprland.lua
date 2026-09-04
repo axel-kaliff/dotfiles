@@ -21,12 +21,20 @@ require("hypr.input")
 require("hypr.bindings")
 require("hypr.looknfeel")
 require("hypr.autostart")
+require("hypr.scratchpads")
+require("hypr.privacy")
+-- After looknfeel: it corrects the blur values looknfeel just set.
+require("hypr.power")
 
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
 
 -- Add any other personal Hyprland configuration below.
 -- o.window("qemu", { workspace = "5" })
+
+-- The "Edit" action on a screenshot notification opens Gradia (see
+-- hypr/bin/gradia-edit); Omarchy's default editor has no EL10 package.
+hl.env("OMARCHY_SCREENSHOT_EDITOR", os.getenv("HOME") .. "/.config/hypr/bin/gradia-edit")
 
 -- Float yazi like Omarchy's other TUI windows (btop, terminal). The app-id
 -- comes from omarchy-launch-tui's default: org.omarchy.<command>.

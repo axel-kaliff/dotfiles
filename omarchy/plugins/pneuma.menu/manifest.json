@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.menu",
+  "name": "Menu",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Bar button for the command menu, without the Omarchy wordmark",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Menu",
+    "description": "Opens the command menu; right-click opens a terminal",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaultSection": "left"
+  }
+}

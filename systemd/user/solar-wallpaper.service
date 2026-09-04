@@ -1,0 +1,18 @@
+[Unit]
+Description=Solar wallpaper: day/night wallpaper, night light and theme by sun position
+# Needs the Hyprland session: omarchy-shell IPC for the wallpaper, hyprctl for
+# the night light. Omarchy's autostart imports the session variables into the
+# user manager, so this skips cleanly outside a session.
+ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/dotfiles/scripts/solar/solar_wallpaper.py
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+# Location defaults to Stockholm; themes are left alone unless both are named.
+# Environment=SOLAR_LATITUDE=59.3293 SOLAR_LONGITUDE=18.0686
+# Environment=SOLAR_DAY_THEME=catppuccin-latte SOLAR_NIGHT_THEME=tokyo-night
+# Environment=SOLAR_NIGHTLIGHT=0
+# The first run of a month converts a 6300x2700 JPEG XL; a theme switch
+# retints fifteen apps.
+TimeoutStartSec=300

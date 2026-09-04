@@ -76,3 +76,75 @@ o.bind("SUPER + SHIFT + F", "File manager",
   .. os.getenv("HOME") .. "/.config/hypr/bin/yazi-session")
 o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
   os.getenv("HOME") .. "/.config/hypr/bin/yazi-cwd")
+
+-- MX Keys screenshot button. The keyboard sends the Windows snipping-tool
+-- combo (Left Win + Shift + S) in firmware; altwin:swap_lalt_lwin in input.lua
+-- turns Left Win into Alt, so Hyprland actually sees ALT + SHIFT + S. Binding
+-- SUPER + SHIFT + S instead would never fire (and is Google Maps by default).
+o.bind("ALT + SHIFT + S", "Screenshot (MX Keys button)", "omarchy-capture-screenshot")
+
+-- Jump to whichever window is asking for attention (urgent hint), or back to
+-- the previous window when nothing is.
+o.bind("SUPER + U", "Focus urgent window", hl.dsp.focus({ urgent_or_last = true }))
+
+hl.config({
+  binds = {
+    -- SUPER + n on the workspace you are already on returns to the last one.
+    workspace_back_and_forth = true,
+    -- SUPER + h/j/k/l keep cycling windows behind a fullscreen one instead of
+    -- being swallowed by it.
+    movefocus_cycles_fullscreen = true,
+  },
+})
+
+-- Resize mode: SUPER + R, then h/j/k/l grow the window towards that side
+-- (held keys repeat), Escape or any other key leaves. The stock MINUS/EQUAL
+-- chords still work; this is the vim-shaped route to the same thing. The OSD
+-- shows the mode while it is on, so a stuck submap is never a mystery.
+hl.bind("SUPER + R", hl.dsp.submap("resize"), { description = "Resize mode" })
+hl.define_submap("resize", function()
+  local step = 40
+  hl.bind("h", hl.dsp.window.resize({ x = -step, y = 0, relative = true }), { repeating = true })
+  hl.bind("j", hl.dsp.window.resize({ x = 0, y = step, relative = true }), { repeating = true })
+  hl.bind("k", hl.dsp.window.resize({ x = 0, y = -step, relative = true }), { repeating = true })
+  hl.bind("l", hl.dsp.window.resize({ x = step, y = 0, relative = true }), { repeating = true })
+  hl.bind("escape", hl.dsp.submap("reset"))
+  hl.bind("catchall", hl.dsp.submap("reset"))
+end)
+
+hl.on("keybinds.submap", function(name)
+  if name == "resize" then
+    hl.exec_cmd([[omarchy-shell -q osd show '{"icon":"⤢","message":"Resize  h j k l","duration":0}']])
+  else
+    hl.exec_cmd("omarchy-shell -q osd close")
+  end
+end)
+
+-- Alt-Tab is a window switcher overlay (omarchy/plugins/pneuma.switcher):
+-- windows most recent first with live thumbnails, macOS-style. Hyprland
+-- forwards the keys as global shortcuts, including the release of Alt, which
+-- lands on the highlighted window. Omarchy's cycle-and-raise binds move
+-- aside; SUPER + h/j/k/l already do the spatial version.
+hl.unbind("ALT + TAB")         -- was: Focus on next window; Reveal active window on top
+hl.unbind("ALT + SHIFT + TAB") -- was: Focus on previous window; Reveal active window on top
+o.bind("ALT + TAB", "Window switcher", hl.dsp.global("pneuma-switcher:next"))
+o.bind("ALT + SHIFT + TAB", "Window switcher (back)", hl.dsp.global("pneuma-switcher:prev"))
+hl.bind("ALT + Alt_L", hl.dsp.global("pneuma-switcher:commit"), { release = true })
+
+-- Pruned and de-branded defaults. The menu keys keep their commands under a
+-- plain name; tmux and Grok go; email and calendar are Thunderbird (flatpak)
+-- through hypr/bin/thunderbird instead of the HEY web apps.
+hl.unbind("SUPER + SPACE")            -- was: Omarchy menu
+hl.unbind("SUPER + SHIFT + code:201") -- was: Omarchy menu
+hl.unbind("SUPER + ALT + RETURN")     -- was: Tmux
+hl.unbind("SUPER + SHIFT + ALT + A")  -- was: Grok
+hl.unbind("SUPER + SHIFT + E")        -- was: Email (HEY)
+hl.unbind("SUPER + SHIFT + ALT + E")  -- was: New email (HEY)
+hl.unbind("SUPER + SHIFT + C")        -- was: Calendar (HEY)
+o.bind("SUPER + SPACE", "Menu", "omarchy-menu toggle")
+o.bind("SUPER + SHIFT + code:201", "Menu", "omarchy-menu toggle root")
+
+local thunderbird = os.getenv("HOME") .. "/.config/hypr/bin/thunderbird"
+o.bind("SUPER + SHIFT + E", "Email", thunderbird .. " -mail")
+o.bind("SUPER + SHIFT + ALT + E", "New email", thunderbird .. " -compose")
+o.bind("SUPER + SHIFT + C", "Calendar", thunderbird .. " -calendar")

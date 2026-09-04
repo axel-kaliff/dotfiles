@@ -49,7 +49,11 @@ BorderSurface {
   readonly property color dimColor: Qt.darker(Color.notifications.text, 1.4)
   readonly property color bodyColor: Qt.darker(Color.notifications.text, 1.15)
   readonly property color accentColor: urgency === 2 ? Color.urgent : (urgency === 0 ? dimColor : Color.notifications.countdown)
-  readonly property var cardBorderSpec: Border.surfaceSpec("notifications", "border", Color.notifications.border, Math.max(1, Style.space(2)))
+  // Every toast wears the shared glass rim; a critical one swaps it for the
+  // theme's urgent colour so it still reads as an alert at a glance.
+  readonly property var cardBorderSpec: urgency === 2
+    ? Border.flat(Util.alpha(Color.urgent, 0.85), Math.max(1, Style.space(1)))
+    : Border.surfaceSpec("notifications", "border", Color.notifications.border, Math.max(1, Style.space(2)))
 
   function sanitizeBody(s) {
     return NotificationLogic.sanitizeBody(s, app, appIcon)

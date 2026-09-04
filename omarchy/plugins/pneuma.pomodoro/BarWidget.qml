@@ -40,6 +40,7 @@ BarWidget {
     pomo.cyclesPerLong = Model.clampInt(setting("cyclesPerLong", 4), 4, 1, 12)
     pomo.focusEndSound = String(setting("focusEndSound", pomo.defaultFocusEndSound))
     pomo.breakEndSound = String(setting("breakEndSound", pomo.defaultBreakEndSound))
+    pomo.focusDnd = String(setting("focusDnd", "true")) !== "false"
   }
 
   function minutesFor(spec) {

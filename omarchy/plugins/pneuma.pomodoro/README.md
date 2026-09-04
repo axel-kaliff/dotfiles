@@ -34,6 +34,10 @@ resolve to the same remaining time. State persists to
 Breaks start on their own when a focus phase ends; focus always waits for a
 deliberate start, so walking away never silently burns a session.
 
+A ticking focus phase is a focus mode: notifications are silenced (Do Not
+Disturb) for as long as it runs and released when it pauses, ends or is
+reset. A DND that was already on before the phase started is left alone.
+
 ## Settings
 
 The three session lengths are editable from the panel: the tune button (or
@@ -56,6 +60,7 @@ omarchy bar set pneuma.pomodoro workMinutes 50 --json
 | `breakMinutes` | `5` | Short break length |
 | `longBreakMinutes` | `15` | Long break length |
 | `cyclesPerLong` | `4` | Focus phases before a long break |
+| `focusDnd` | `true` | Silence notifications while a focus phase is ticking |
 | `focusEndSound` | `service-login.oga` | Chime when a focus phase ends |
 | `breakEndSound` | `string.ogg` | Chime when a break ends |
 

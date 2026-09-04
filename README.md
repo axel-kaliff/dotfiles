@@ -150,6 +150,77 @@ These are auto-used by neovim's config — no manual invocation needed:
 
 ---
 
+## Desktop
+
+Hyprland 0.56 (Lua config) with the Omarchy 4 shell, in the glass design
+language of the `glass` branch. Everything here sits on top of Omarchy's
+defaults, in `hypr/*.lua` and `omarchy/`.
+
+### Keybindings changed from the defaults
+
+| Shortcut | Action |
+|----------|--------|
+| `Super+H/J/K/L` (+`Shift`) | Focus / swap windows, vim-style |
+| `Alt+Tab` / `Alt+Shift+Tab` | Window switcher: most recent first, live thumbnails; release `Alt` to land, `Esc` cancels |
+| `Super+R` then `H/J/K/L` | Resize mode (held keys repeat); `Esc` or any other key leaves, the OSD shows the mode |
+| `Super+U` | Focus the window asking for attention, or the last one |
+| `Super+Shift+M` / four fingers down | Music scratchpad: Spotify in its own special workspace, launched on first use |
+| `Super+Shift+Space` | Next keyboard layout (us / se) |
+| `Super+Shift+F` | yazi, with its last session restored |
+| `Super+Alt+K` | Zellij cheat sheet |
+| `Super+Shift+E` / `Super+Shift+Alt+E` / `Super+Shift+C` | Thunderbird: inbox, new message, calendar (`hypr/bin/thunderbird`) |
+
+The defaults' tmux, Grok and HEY bindings are unbound. The desktop shows no
+Omarchy branding: the bar's menu button is `pneuma.menu`, the About logo and
+the screensaver are the pneuma wordmark (`omarchy/branding/`), and the
+launcher hides the rows for the Omarchy manual and Discord, tmux, Grok and
+Codex (`omarchy/extensions/omarchy-menu.jsonc`).
+
+### Backgrounds
+
+`~/Pictures/Backgrounds` is a wallpaper library. The launcher's Style ▸
+Background row (`scripts/backgrounds/pick`, wired in
+`omarchy/extensions/omarchy-menu.jsonc`) lists it next to the current theme's
+own images, with labels and type-to-filter. `scripts/backgrounds/import-bluefin`
+fills it with the Bluefin wallpapers, converted from JPEG XL, which the picker
+cannot read. Picking an image turns the solar wallpaper off; the Style ▸ Solar
+Wallpaper row turns it back on. The picker thumbnails through `vipsthumbnail`,
+which the pneuma image lacks, so `scripts/backgrounds/shim/` stands in with
+ImageMagick until `vips-tools` lands in the image.
+
+### Solar wallpaper
+
+`scripts/solar/` computes sunrise and sunset for Stockholm and, every ten
+minutes (`solar-wallpaper.timer`) and after every theme change (theme-set
+hook), shows the day or night half of the Bluefin wallpaper pair for the
+current month, converted once from JPEG XL into `~/.local/share/pneuma/solar/`.
+The night light follows the same clock. Enable with
+`omarchy toggle solar-wallpaper on` or the launcher's Style ▸ Solar Wallpaper
+row. `SOLAR_LATITUDE`/`SOLAR_LONGITUDE`, `SOLAR_NIGHTLIGHT=0` and
+`SOLAR_DAY_THEME`/`SOLAR_NIGHT_THEME` in the service unit move it or make it
+switch themes. Tests:
+`cd scripts/solar && uv run --with pytest --with hypothesis pytest`.
+
+### Compositor behaviour
+
+- **Battery-aware blur** (`hypr/power.lua`): on battery the frost drops from three passes at 12px to two at 8px, and returns on the charger. A compositor timer polls sysfs; no daemon.
+- **Screen-share hygiene** (`hypr/privacy.lua`): notification toasts and the clipboard history never appear in a shared screen, and a running share holds off the idle lock. Screen-capture permissions are enforced: grim, hyprpicker, gpu-screen-recorder, quickshell and the portal are allowed, anything else prompts.
+- **Scratchpads** (`hypr/scratchpads.lua`): named special workspaces that launch their app through `on_created_empty` and vanish when it closes.
+- Glass group tabs, pointer hiding after three idle seconds, floating-window snapping and back-and-forth workspace switching live in `hypr/looknfeel.lua` and `hypr/bindings.lua`.
+
+### Shell plugins
+
+| Plugin | What it adds |
+|--------|--------------|
+| `pneuma.switcher` | The Alt-Tab overlay (`omarchy-shell pneuma.switcher next / prev / commit / cancel / state`) |
+| `pneuma.pomodoro` | Focus timer; a ticking focus phase silences notifications (`focusDnd`) |
+| `pneuma.safeeyes` | Eye-break overlays |
+| `pneuma.clipboard` | Clipboard history entry point |
+| `akaliff.workspaces` | Workspace pills with the apps' icons |
+| `akaliff.bar`, `akaliff.notifications`, `akaliff.osd`, `akaliff.media` | Clones of the stock plugins wearing the glass material |
+
+---
+
 ## Fish Shell
 
 ### Transparent Replacements
@@ -315,7 +386,6 @@ The `zj` function manages sessions:
 | `Ctrl+N` | Resize | `h/j/k/l` increase, `H/J/K/L` decrease |
 | `Ctrl+M` | Move | `h/j/k/l` move pane |
 | `Ctrl+S` | Scroll | `j/k` scroll, `d/u` half page, `s` search |
-| `Ctrl+B` | Tmux | Familiar tmux bindings (`"` hsplit, `%` vsplit, `c` new tab, `z` zoom) |
 | `Ctrl+O` | Session | `w` session manager, `d` detach |
 | `Esc` / `Enter` | Return to normal mode |
 
@@ -732,19 +802,19 @@ dotfiles/
 ├── docs/           # Notes and proposals — not config, never stowed
 ├── fish/           # Fish shell config, plugins, functions
 ├── ghostty/        # Terminal emulator config
-├── hypr/           # Hyprland overrides on top of Omarchy (bindings, input, monitors, looknfeel)
+├── hypr/           # Hyprland overrides on top of Omarchy (bindings, looknfeel, scratchpads, privacy, power)
 ├── lazygit/        # Git TUI config
 ├── nvim/           # Neovim config (Kickstart-based)
 │   ├── init.lua    # Main config (keymaps, LSP, plugins)
 │   └── lua/
 │       ├── custom/plugins/   # fzf-lua, snacks, noice, neogit, diffview, oil, flash, trouble, grug-far
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
-├── omarchy/        # Desktop shell: bar layout (shell.json) + custom QML bar plugins
+├── omarchy/        # Desktop shell: bar layout (shell.json), glass tokens (shell.toml), QML plugins, hooks, launcher menu rows, branding
 ├── ripgrep/        # ripgrep config (smart-case, hidden files, max-columns)
-├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers
+├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers; solar/ is the solar wallpaper with its tests, backgrounds/ the picker and Bluefin import
 ├── server/         # Podman quadlets for the homeserver (plex, sonarr, radarr)
 ├── starship.toml   # Shell prompt config (nordfox palette)
-├── systemd/        # User units: dotfiles-sync, backup, awatcher, readest
+├── systemd/        # User units: dotfiles-sync, backup, readest
 ├── yazi/           # File manager config (catppuccin flavor, git/smart-enter/smart-filter plugins)
 ├── zellij/         # Zellij config + layouts
 │   ├── config.kdl        # pneuma

@@ -1,0 +1,98 @@
+# Glass surface tokens for the Omarchy shell. Layered over the active theme's
+# generated shell.toml (user keys win, the rest fall through), so only what
+# the glass language changes is here, and palette roles (background,
+# foreground, accent) keep it theme-agnostic. The compositor half of the
+# design, blur, rounding, window rims and shadows, is hypr/looknfeel.lua.
+# The shell hot-reloads this file on save.
+
+[font]
+base-size = 12
+
+[bar]
+# Full-width strip like the macOS menu bar: a tinted wash over the blurred
+# wallpaper (blur comes from the omarchy-bar layer rule).
+background       = "background"
+background-alpha = 0.62
+
+[controls]
+# Control chrome sits on glass, so fills and borders are quieter than the
+# theme default; hover and selection still step up clearly. A selected
+# control is a brighter slab with its own hairline: the same pill the bar
+# draws under an open panel's module and the focused workspace.
+normal-fill-alpha         = 0.05
+normal-border-alpha       = 0.14
+hover-cursor-fill-alpha   = 0.12
+hover-cursor-border-alpha = 0.22
+focus-fill-alpha          = 0.12
+focus-border-alpha        = 0.22
+selected-fill-alpha       = 0.18
+selected-border-width     = 1
+selected-border-alpha     = 0.25
+
+# The specular rim shared by every card: a white hairline, brighter along the
+# top edge, in place of the theme's solid accent border. Because it is
+# translucent it reads brighter over bright backdrops and dimmer over dark
+# ones, so it adapts without being painted on.
+#
+# Surface alpha climbs with elevation rather than adding more blur (the
+# Fluent and glassmorphism rule): the bar strip and full-screen menus sit
+# at 0.62, toasts over windows at 0.66, flyout cards dense with controls at
+# 0.72, and tooltips, which are pure text, at 0.82.
+
+[popups]
+background       = "background"
+background-alpha = 0.72
+border           = "#ffffff5c #ffffff24 90deg"
+border-alpha     = 1.0
+border-width     = 1
+
+[tooltip]
+background       = "background"
+background-alpha = 0.82
+border           = "#ffffff40"
+border-alpha     = 1.0
+border-width     = 1
+
+[notifications]
+background       = "background"
+background-alpha = 0.66
+border           = "#ffffff5c #ffffff24 90deg"
+border-alpha     = 1.0
+border-width     = 1
+countdown        = "accent"
+
+[menu]
+background                = "background"
+background-alpha          = 0.62
+border                    = "#ffffff5c #ffffff24 90deg"
+border-alpha              = 1.0
+border-width              = 1
+# The scrim is blurred by the layer rule, so it needs less darkness to
+# separate the card from the desktop.
+scrim-alpha               = 0.35
+selected-background-alpha = 0.12
+selected-border-alpha     = 0.2
+
+[launcher]
+background                = "background"
+background-alpha          = 0.62
+border                    = "#ffffff5c #ffffff24 90deg"
+border-alpha              = 1.0
+border-width              = 1
+scrim-alpha               = 0.35
+selected-background-alpha = 0.12
+selected-border-alpha     = 0.2
+
+[polkit]
+background       = "background"
+background-alpha = 0.72
+border           = "#ffffff5c #ffffff24 90deg"
+border-alpha     = 1.0
+border-width     = 1
+
+[lock]
+background       = "background"
+background-alpha = 0.55
+border           = "#ffffff59"
+border-active    = "accent"
+border-alpha     = 1.0

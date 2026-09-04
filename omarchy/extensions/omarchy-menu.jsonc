@@ -1,0 +1,46 @@
+{
+  // Extend the Quickshell Omarchy menu with JSONC.
+  //
+  // IDs are object keys. The parent is inferred from the dotted id, so
+  // "personal.notes" appears under "personal", and "personal" appears on the
+  // root menu. Reuse an existing id to override/extend it.
+  //
+  // Fields:
+  //   icon        Nerd Font glyph shown in the icon column.
+  //   label       Visible row title.
+  //   action      Shell command to run. If omitted, the row is a submenu.
+  //   target      Existing submenu id to open. Use for links/aliases.
+  //   provider    Runtime provider function/command returning JSON rows.
+  //   aliases     alternate `omarchy menu summon <name>` routes; also searchable.
+  //   description Optional subtitle and extra search text.
+  //   when        Shell condition; hide row when it fails.
+  //   checked     Shell condition; append ✓ when it succeeds.
+  //
+  // Examples:
+  // "personal": {"icon":"","label":"Personal"},
+  // "personal.notes": {"icon":"󰎞","label":"Notes","action":"omarchy-launch-editor ~/notes"},
+  // "personal.files": {"icon":"","label":"Files","action":"uwsm-app -- nautilus ~/Documents"},
+  //
+  // Only use provider when a provider_name function or command named "name"
+  // returns JSON rows. Static submenus only need dotted ids.
+  //
+  // Example: replace the default About action by reusing the same id. Existing
+  // fields are kept unless overridden.
+  // "about": {"icon":"","label":"About","action":"omarchy-launch-or-focus-tui \"zsh -c 'fastfetch; read -k 1'\""},
+  // Overrides restate every field: the shell blanks whatever an override
+  // omits before merging, despite the note above. A default row is removed
+  // by giving it a `when` that fails.
+  // The update entry (default label "Omedora") is this machine's image.
+  "update.omarchy": {"icon":"󰚰","label":"Pneuma","action":"omarchy-launch-floating-terminal-with-presentation omarchy-update"},
+  // Background picker over the theme's backgrounds plus ~/Pictures/Backgrounds.
+  // Picking one turns the solar wallpaper off; the Solar Wallpaper row turns it back on.
+  "style.background": {"icon":"","label":"Background","aliases":["background","wallpaper"],"action":"$HOME/dotfiles/scripts/backgrounds/pick"},
+  "style.solar": {"icon":"󰖙","label":"Solar Wallpaper","aliases":["solar"],"description":"Bluefin day and night wallpaper by the sun","checked":"[[ -f $HOME/.local/state/omarchy/toggles/solar-wallpaper ]]","action":"omarchy-toggle solar-wallpaper; /usr/bin/python3 $HOME/dotfiles/scripts/solar/solar_wallpaper.py"},
+  // Gone from the defaults: the Omarchy manual and Discord, the tmux sheet,
+  // and the Grok and Codex agent choices.
+  "learn.omarchy": {"when":"false"},
+  "learn.community": {"when":"false"},
+  "learn.tmux-keybindings": {"when":"false"},
+  "setup.default.agent.grok": {"when":"false"},
+  "setup.default.agent.codex": {"when":"false"}
+}
