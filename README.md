@@ -168,6 +168,7 @@ defaults, in `hypr/*.lua` and `omarchy/`.
 | `Super+Shift+Space` | Next keyboard layout (us / se) |
 | `Super+Shift+F` | yazi, with its last session restored |
 | `Super+Alt+K` | Zellij cheat sheet |
+| `Super+Shift+E` / `Super+Shift+Alt+E` / `Super+Shift+C` | Thunderbird: inbox, new message, calendar (`hypr/bin/thunderbird`) |
 
 ### Backgrounds
 

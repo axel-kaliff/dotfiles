@@ -1,0 +1,15 @@
+#!/bin/bash
+# Thunderbird (flatpak) on the requested tab, for the email and calendar keys
+# in bindings.lua: -mail, -calendar or -compose. A running instance takes the
+# flag over its remote and is then focused by class, so landing on it does not
+# hinge on the remote's activation request. Cold, the flag is the tab it
+# starts on.
+set -u
+app=org.mozilla.thunderbird_esr
+
+hyprctl clients -j | jq -e --arg class "$app" 'any(.[]; .class == $class)' >/dev/null ||
+  exec uwsm-app -- flatpak run "$app" "$@"
+
+flatpak run "$app" "$@"
+# A compose window is new and takes focus by itself.
+[[ ${1:-} == -compose ]] || omarchy-launch-or-focus "$app"
