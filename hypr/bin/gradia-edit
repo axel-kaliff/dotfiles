@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Screenshot editor for the "Edit" action on omarchy-capture-screenshot's
+# notification (OMARCHY_SCREENSHOT_EDITOR, set in hypr/hyprland.lua). The
+# stock editor, tensaku-edit, has no EL10 package; Gradia is installed as a
+# flatpak, and file forwarding is what lets the sandbox open a path from
+# outside it.
+
+exec flatpak run --file-forwarding be.alexandervanhee.gradia @@ "$1" @@
