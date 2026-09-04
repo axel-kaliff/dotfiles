@@ -119,3 +119,14 @@ hl.on("keybinds.submap", function(name)
     hl.exec_cmd("omarchy-shell -q osd close")
   end
 end)
+
+-- Alt-Tab is a window switcher overlay (omarchy/plugins/pneuma.switcher):
+-- windows most recent first with live thumbnails, macOS-style. Hyprland
+-- forwards the keys as global shortcuts, including the release of Alt, which
+-- lands on the highlighted window. Omarchy's cycle-and-raise binds move
+-- aside; SUPER + h/j/k/l already do the spatial version.
+hl.unbind("ALT + TAB")         -- was: Focus on next window; Reveal active window on top
+hl.unbind("ALT + SHIFT + TAB") -- was: Focus on previous window; Reveal active window on top
+o.bind("ALT + TAB", "Window switcher", hl.dsp.global("pneuma-switcher:next"))
+o.bind("ALT + SHIFT + TAB", "Window switcher (back)", hl.dsp.global("pneuma-switcher:prev"))
+hl.bind("ALT + Alt_L", hl.dsp.global("pneuma-switcher:commit"), { release = true })

@@ -220,7 +220,7 @@ hl.config({
 -- The bar never overlaps a window, so it samples the wallpaper only (xray):
 -- the macOS under-window-background look, and cheaper.
 hl.layer_rule({ match = { namespace = "omarchy-bar" }, blur = true, blur_popups = true, xray = true, ignore_alpha = 0.5 })
-hl.layer_rule({ match = { namespace = "^(omarchy-notifications|omarchy-osd)$" }, blur = true, ignore_alpha = 0.5 })
+hl.layer_rule({ match = { namespace = "^(omarchy-notifications|omarchy-osd|pneuma-switcher)$" }, blur = true, ignore_alpha = 0.5 })
 hl.layer_rule({
   match = {
     namespace = "^(omarchy-menu|omarchy-clipboard|omarchy-emojis|omarchy-polkit|omarchy-reminders"

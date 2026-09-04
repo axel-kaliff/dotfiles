@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.switcher",
+  "name": "Window switcher",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Alt-Tab overlay: windows most recent first, with live thumbnails",
+  "kinds": [
+    "panel"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "panel": "Switcher.qml"
+  }
+}
