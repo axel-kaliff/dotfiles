@@ -28,5 +28,9 @@
   // fields are kept unless overridden.
   // "about": {"icon":"","label":"About","action":"omarchy-launch-or-focus-tui \"zsh -c 'fastfetch; read -k 1'\""},
   // Pneuma branding: rename the update entry (default label "Omedora")
-  "update.omarchy": {"label":"Pneuma"}
+  "update.omarchy": {"label":"Pneuma"},
+  // Background picker over the theme's backgrounds plus ~/Pictures/Backgrounds.
+  // Picking one turns the solar wallpaper off; the Solar Wallpaper row turns it back on.
+  "style.background": {"action":"$HOME/dotfiles/scripts/backgrounds/pick"},
+  "style.solar": {"icon":"󰖙","label":"Solar Wallpaper","aliases":["solar"],"description":"Bluefin day and night wallpaper by the sun","checked":"[[ -f $HOME/.local/state/omarchy/toggles/solar-wallpaper ]]","action":"omarchy-toggle solar-wallpaper; /usr/bin/python3 $HOME/dotfiles/scripts/solar/solar_wallpaper.py"}
 }

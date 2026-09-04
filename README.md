@@ -169,6 +169,16 @@ defaults, in `hypr/*.lua` and `omarchy/`.
 | `Super+Shift+F` | yazi, with its last session restored |
 | `Super+Alt+K` | Zellij cheat sheet |
 
+### Backgrounds
+
+`~/Pictures/Backgrounds` is a wallpaper library. The launcher's Style ▸
+Background row (`scripts/backgrounds/pick`, wired in
+`omarchy/extensions/omarchy-menu.jsonc`) lists it next to the current theme's
+own images, with labels and type-to-filter. `scripts/backgrounds/import-bluefin`
+fills it with the Bluefin wallpapers, converted from JPEG XL, which the picker
+cannot read. Picking an image turns the solar wallpaper off; the Style ▸ Solar
+Wallpaper row turns it back on.
+
 ### Solar wallpaper
 
 `scripts/solar/` computes sunrise and sunset for Stockholm and, every ten
@@ -176,9 +186,10 @@ minutes (`solar-wallpaper.timer`) and after every theme change (theme-set
 hook), shows the day or night half of the Bluefin wallpaper pair for the
 current month, converted once from JPEG XL into `~/.local/share/pneuma/solar/`.
 The night light follows the same clock. Enable with
-`omarchy toggle solar-wallpaper on`. `SOLAR_LATITUDE`/`SOLAR_LONGITUDE`,
-`SOLAR_NIGHTLIGHT=0` and `SOLAR_DAY_THEME`/`SOLAR_NIGHT_THEME` in the service
-unit move it or make it switch themes. Tests:
+`omarchy toggle solar-wallpaper on` or the launcher's Style ▸ Solar Wallpaper
+row. `SOLAR_LATITUDE`/`SOLAR_LONGITUDE`, `SOLAR_NIGHTLIGHT=0` and
+`SOLAR_DAY_THEME`/`SOLAR_NIGHT_THEME` in the service unit move it or make it
+switch themes. Tests:
 `cd scripts/solar && uv run --with pytest --with hypothesis pytest`.
 
 ### Compositor behaviour
@@ -790,9 +801,9 @@ dotfiles/
 │   └── lua/
 │       ├── custom/plugins/   # fzf-lua, snacks, noice, neogit, diffview, oil, flash, trouble, grug-far
 │       └── kickstart/plugins/ # gitsigns, lint, debug, autopairs, remote
-├── omarchy/        # Desktop shell: bar layout (shell.json), glass tokens (shell.toml), QML plugins, hooks
+├── omarchy/        # Desktop shell: bar layout (shell.json), glass tokens (shell.toml), QML plugins, hooks, launcher menu rows
 ├── ripgrep/        # ripgrep config (smart-case, hidden files, max-columns)
-├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers; solar/ is the solar wallpaper with its tests
+├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers; solar/ is the solar wallpaper with its tests, backgrounds/ the picker and Bluefin import
 ├── server/         # Podman quadlets for the homeserver (plex, sonarr, radarr)
 ├── starship.toml   # Shell prompt config (nordfox palette)
 ├── systemd/        # User units: dotfiles-sync, backup, readest

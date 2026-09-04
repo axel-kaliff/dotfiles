@@ -1,0 +1,17 @@
+#!/bin/bash
+# The Omarchy background picker over the theme's backgrounds plus the
+# ~/Pictures/Backgrounds library, wired to the launcher's Style > Background
+# row. A picked image is a deliberate choice, so the solar wallpaper stands
+# down until `omarchy toggle solar-wallpaper on`.
+
+theme_name=$(cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null)
+current=$(readlink -f "$HOME/.local/state/omarchy/current/background" 2>/dev/null)
+
+background=$(omarchy-menu-images --selected "$current" --show-labels --filterable \
+  "$HOME/.local/state/omarchy/current/theme/backgrounds" \
+  "$HOME/.config/omarchy/backgrounds/$theme_name" \
+  "$HOME/Pictures/Backgrounds")
+[[ -n $background ]] || exit 0
+
+omarchy-toggle solar-wallpaper off
+omarchy-theme-bg-set "$background"

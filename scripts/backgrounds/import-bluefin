@@ -1,0 +1,16 @@
+#!/bin/bash
+# Convert the Bluefin JPEG XL wallpapers into ~/Pictures/Backgrounds, where
+# the background picker (which lists JPEG and PNG only) can show them.
+# Re-running converts only what is missing.
+set -euo pipefail
+
+source_dir=${1:-/usr/share/backgrounds/bluefin}
+target_dir="$HOME/Pictures/Backgrounds"
+mkdir -p "$target_dir"
+
+for image in "$source_dir"/*.jxl; do
+  target="$target_dir/$(basename "${image%.jxl}").jpg"
+  [[ -f $target ]] && continue
+  magick "$image" "jpeg:$target.partial"
+  mv "$target.partial" "$target"
+done
