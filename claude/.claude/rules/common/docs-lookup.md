@@ -33,6 +33,7 @@ Before planning new functions, fixes, or any non-trivial implementation, **alway
 - **Token cost is not a concern** — thoroughness matters more than efficiency
 - Do NOT skip searches to "save time" or because you think you already know the answer
 - Prefer parallel searches over sequential ones to maximize coverage
+- When the project has `claude_session/notes/`, tell each research agent to write its full report to `claude_session/notes/raw/<topic>-<date>.md` and return a summary under 300 words; run `/notes` afterwards to distil the reports into topic notes
 
 ### What to search for
 

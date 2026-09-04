@@ -81,6 +81,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/announce-handoff.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

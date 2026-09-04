@@ -1,6 +1,8 @@
 ---
 name: pickup
 description: Use when starting a new session and the user says to pick up where they left off, continue previous work, or resume — finds the latest handoff, loads the files it points to, verifies nothing drifted, and orients the agent
+allowed-tools:
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/find.sh *)
 ---
 
 # Pickup
@@ -9,68 +11,72 @@ description: Use when starting a new session and the user says to pick up where 
 
 Orient yourself from the latest handoff left by a previous agent — read it, load the files it points to, verify nothing drifted, then continue.
 
-**Core principle:** Don't just *recite* the handoff back. Actually load the Key Files into context so you arrive ready to work, not merely able to summarize.
+**Core principle:** Don't just *recite* the handoff back. Load the Read First docs and Key Files into context so you arrive ready to work, not merely able to summarize.
 
 **Announce at start:** "Reading handoff document."
 
+## Handoff and live state (found at invocation)
+
+```!
+${CLAUDE_SKILL_DIR}/scripts/find.sh "${CLAUDE_PROJECT_DIR}"
+```
+
+This session is `${CLAUDE_SESSION_ID}`.
+
 ## The Process
 
-### Step 1: Find the handoff
+### Step 1: Confirm which handoff is active
 
-Look in order; use the first match:
+The block above shows the newest handoff under `claude_session/handoffs/` (legacy root `HANDOFF.md` as fallback) with its content.
 
-```bash
-# 1. latest active handoff (current layout — glob is non-recursive, so it ignores archive/)
-ls -t claude_session/handoffs/*.md 2>/dev/null | head -1
-# 2. legacy location: current dir
-[ -f HANDOFF.md ] && echo HANDOFF.md
-# 3. legacy location: project root via git
-f="$(git rev-parse --show-toplevel 2>/dev/null)/HANDOFF.md"; [ -f "$f" ] && echo "$f"
-```
+- **None found** → "No handoff found. Can you describe what you were working on?"
+- **Stale extras listed** → the newest is active; note the others and offer to archive them.
+- **Already picked up** by a session other than this one → another session or machine may be mid-work on it. Ask before continuing.
 
-If none exist: "No handoff found. Can you describe what you were working on?"
+### Step 2: Detect drift
 
-If `claude_session/handoffs/` holds more than one `.md`, the newest is active; the rest are stale leftovers from forgotten cleanups — note them and offer to archive the old ones.
-
-Read the file it points to.
-
-### Step 2: Verify state and detect drift
-
-```bash
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git branch --show-current
-  git rev-parse --short HEAD
-  git status --short
-  git log --oneline -5
-fi
-```
-
-Compare against the handoff's `## Session` block:
+Compare the handoff's `## Session` block against the live git state in the block above:
 - **Branch mismatch** → ask before switching; don't assume.
-- **HEAD moved** (current sha ≠ the handoff's, or commits landed since it was written) → the handoff may be partly stale. Read the new commits first. If they already satisfy the Next Steps, the handoff is spent — offer to archive it (Step 5) instead of redoing the work.
+- **HEAD moved** (current sha ≠ the handoff's) → read the new commits first. If they already satisfy the Next Steps, the handoff is spent — offer to archive it (Step 6) instead of redoing the work.
 - **Clean match** → proceed.
 
-### Step 3: Load the key files
+Then mark the handoff as taken, so a second session sees it:
 
-Read every file listed under **Key Files**, plus any file named in **In Progress** — in parallel, up front. If the handoff reports **Uncommitted Changes**, read the live `git diff` too: the half-finished edits are the real state, more reliable than the prose describing them. This is what makes pickup more than a summary: you arrive oriented.
+```bash
+sed -i "/^- HEAD:/a - Picked up: $(date '+%Y-%m-%d %H:%M') by session ${CLAUDE_SESSION_ID}" "<handoff-path>"
+```
 
-### Step 4: Orient and continue
+### Step 3: Load, don't recite
 
-Give a tight summary:
+Read, in parallel, up front:
+- every doc under **Read First** — `claude_session/notes/INDEX.md` and the hot notes it names, DECISIONS.md, the plan file;
+- every file under **Key Files** and any file named in **In Progress**;
+- the live `git diff` when **Uncommitted Changes** is present — the half-finished edits are the real state, more reliable than the prose describing them.
+
+Other notes in the index stay on disk until a step needs them.
+
+### Step 4: Check the claimed state
+
+- Run the **Verify** command. Green: trust the `[verified]` tags. Red: the handoff's picture is stale — find out why before Next Steps.
+- Run each **Running State** liveness check; report what is alive, finished, or dead.
+
+### Step 5: Orient and continue
 
 ```
 Picked up from <path> (written <when>):
 - Goal: <goal>
 - Last working on: <in-progress>
+- Verify: <green / red + why>
 - Next: <first next step>
+- Needs you: <the Needs User questions, or omit the line>
 <+ a one-line drift warning if Step 2 found any>
 ```
 
-If git state matches and the Next Steps are unambiguous, **continue** — don't add friction when the user already said "continue." Only stop to confirm when there's drift, a branch mismatch, an ambiguous plan, or a destructive/hard-to-reverse first step.
+If git state matches, Verify is green, and the Next Steps are unambiguous, **continue** — don't add friction when the user already said "continue." Stop to confirm only on drift, a branch mismatch, an ambiguous plan, a Needs User question that blocks step 1, or a destructive/hard-to-reverse first step.
 
-### Step 5: Archive when its work is done
+### Step 6: Archive when its work is done
 
-Leave the handoff active while you work — moving it now gains nothing (archive/ is recoverable) and a later pickup can still find it if the session dies. Archive it at a natural, memorable end:
+Leave the handoff active while you work — archive/ is recoverable and a later pickup can still find it if the session dies. Archive at a natural end:
 - the work it described lands in a commit, **or**
 - you write a *new* handoff (the handoff skill rotates the old one for you), **or**
 - the user says you're moving on.
@@ -80,33 +86,28 @@ mkdir -p claude_session/handoffs/archive
 mv "<handoff-path>" claude_session/handoffs/archive/
 ```
 
-(Legacy root `HANDOFF.md`: move it into `claude_session/handoffs/archive/` too, so future sessions don't trip over it. This cleanup is best-effort by nature — if you want archiving *guaranteed*, a SessionEnd hook in settings.json can do it automatically.)
+(Legacy root `HANDOFF.md`: move it into `claude_session/handoffs/archive/` too.)
+
+## When the handoff and notes don't know
+
+The previous session's full transcript stays on disk for ~30 days (path in the `## Session` block). Ask it directly, as a last resort — it reloads the whole conversation, which on a long session costs several dollars per question:
+
+```bash
+claude -p --fork-session --resume <session-id> "<one specific question>"
+```
+
+Check `claude_session/notes/` first; when the transcript had the answer, file it into the notes afterwards with `/notes`.
 
 ## Common Mistakes
 
-**Reciting instead of loading**
-- Problem: summarizing the handoff text without reading the Key Files.
-- Fix: load them first — arrive ready to work, not just able to describe.
+**Reciting instead of loading** — summarizing the handoff without reading Read First and Key Files. Load them first.
 
-**Deleting on pickup**
-- Problem: removing the handoff the instant work begins loses the only record if the session crashes.
-- Fix: archive at the end, don't delete at the start.
+**Trusting [verified] without running Verify** — the tag says the previous agent saw it pass, not that it still does.
 
-**Ignoring drift**
-- Problem: handoff says HEAD `abc123` but commits landed since.
-- Fix: read the new commits before trusting stale Next Steps.
+**Deleting on pickup** — removing the handoff the instant work begins loses the only record if the session crashes. Archive at the end.
 
-**Over-confirming**
-- Problem: re-asking "should I continue?" when the user already said to.
-- Fix: proceed on a clean match; confirm only on drift or ambiguity.
+**Ignoring drift** — handoff says HEAD `abc123` but commits landed since. Read them before trusting stale Next Steps.
 
-**Trusting prose over the diff**
-- Problem: orienting from the handoff's *description* of half-done work instead of the edits themselves.
-- Fix: when there are uncommitted changes, read `git diff` — it can't drift from reality.
+**Over-confirming** — re-asking "should I continue?" on a clean match when the user already said to.
 
-## Red Flags
-
-- Reported the plan without reading the Key Files → read them
-- Branch ≠ handoff branch → ask before switching
-- Acted on Next Steps the new commits already completed → should have archived instead
-- Deleted the handoff before doing the work → should have archived at the end
+**Trusting prose over the diff** — when there are uncommitted changes, read `git diff`; it can't drift from reality.
