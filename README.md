@@ -744,7 +744,7 @@ dotfiles/
 ├── scripts/        # dotfiles-sync.sh (the 15-minute timer) and helpers
 ├── server/         # Podman quadlets for the homeserver (plex, sonarr, radarr)
 ├── starship.toml   # Shell prompt config (nordfox palette)
-├── systemd/        # User units: dotfiles-sync, backup, awatcher, readest
+├── systemd/        # User units: dotfiles-sync, backup, readest
 ├── yazi/           # File manager config (catppuccin flavor, git/smart-enter/smart-filter plugins)
 ├── zellij/         # Zellij config + layouts
 │   ├── config.kdl        # pneuma
