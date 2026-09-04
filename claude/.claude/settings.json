@@ -27,7 +27,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "fable",
+  "model": "opus",
   "skillOverrides": {
     "complexity-trends": "off",
     "debug": "off",
