@@ -24,9 +24,17 @@
     ],
     "ask": [
       "Bash(git push:*)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "model": "fable",
+  "skillOverrides": {
+    "complexity-trends": "off",
+    "debug": "off",
+    "doc-drift": "off",
+    "mutate": "off",
+    "root-cause": "off"
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -88,15 +96,15 @@
     "command": "bash /home/akaliff/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
-    "context7-plugin@context7-marketplace": true,
+    "context7-plugin@context7-marketplace": false,
     "pyright-lsp@claude-plugins-official": true,
     "superpowers@claude-plugins-official": false,
-    "rust-analyzer-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": false,
     "sics@zombiesnack-plugins": true,
     "ai-dev@sicsai-plugins": true,
-    "hyperstar@sicsai-plugins": true,
+    "hyperstar@sicsai-plugins": false,
     "sicsai@sicsai-plugins": true,
-    "clangd-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": false,
     "mattpocock-skills@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -116,7 +124,7 @@
   "effortLevel": "xhigh",
   "modelSettings": {
     "claude-opus-5": {
-      "effortLevel": "medium"
+      "effortLevel": "xhigh"
     },
     "claude-fable-5": {
       "effortLevel": "xhigh"
