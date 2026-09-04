@@ -23,6 +23,8 @@ require("hypr.looknfeel")
 require("hypr.autostart")
 require("hypr.scratchpads")
 require("hypr.privacy")
+-- After looknfeel: it corrects the blur values looknfeel just set.
+require("hypr.power")
 
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
