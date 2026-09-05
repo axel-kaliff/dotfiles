@@ -59,3 +59,9 @@ done
 unset __brew
 
 export PATH="$HOME/.local/bin:$PATH"
+
+# broot's `br` shell function (lets broot cd the shell on exit). The launcher is
+# generated per machine by `broot --install`, never tracked -- it is a symlink to
+# an absolute path under ~/.local/share. Guarded so a machine that has not run
+# the install, or has no broot at all, does not error on every shell startup.
+[ -f "$HOME/.config/broot/launcher/bash/br" ] && . "$HOME/.config/broot/launcher/bash/br"

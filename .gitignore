@@ -66,3 +66,8 @@ __pycache__/
 # this). The sync timer stages with `git add -A`, so without this they get
 # committed and replicated to every other machine.
 *.bak.[0-9]*
+
+# broot generates this as a symlink to an absolute path under ~/.local/share
+# when `broot --install` runs. It lands inside the stowed fish package, and a
+# committed absolute symlink aborts stow on every other machine.
+fish/functions/br.fish
