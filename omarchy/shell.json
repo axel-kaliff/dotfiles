@@ -51,7 +51,7 @@
           "id": "pneuma.pomodoro"
         },
         {
-          "id": "omarchy.agents",
+          "id": "akaliff.agents",
           "providers": {
             "codex": {
               "enabled": false
