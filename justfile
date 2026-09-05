@@ -130,6 +130,12 @@ setup-brew:
 # quarantined under ~/.local/state/dotfiles-conflicts/ -- so one stale leftover
 # cannot abort the whole package and strand every other file undeployed. Run
 # `just adopt` if pulling the on-disk file into the repo really is intended.
+#
+# The claude package is stowed --no-folding: folded, ~/.claude/skills collapses
+# to a single symlink INTO the package, and link-omarchy-skills then cannot put
+# omarchy's skills beside ours without writing them into the repo as absolute
+# symlinks -- which stow refuses on every other machine. Per-file links leave
+# room for machine-local entries in skills/, agents/, hooks/ and rules/.
 stow-dotfiles:
   @echo "Stowing dotfiles to ~/.config..."
   @$HOME/dotfiles/scripts/stow-resolve-conflicts.sh -d ~ -t ~/.config dotfiles
@@ -139,7 +145,7 @@ stow-dotfiles:
   @stow -d ~/dotfiles -t ~ --restow bash
   @echo "Stowing claude config to ~..."
   @$HOME/dotfiles/scripts/stow-resolve-conflicts.sh -d ~/dotfiles -t ~ claude
-  @stow -d ~/dotfiles -t ~ --restow claude
+  @stow -d ~/dotfiles -t ~ --restow --no-folding claude
   @echo "Dotfiles stowed."
 
 # Explicit, interactive counterpart to stow-dotfiles: pulls conflicting on-disk
@@ -148,7 +154,7 @@ adopt:
   @echo "Adopting on-disk files into the repo (this rewrites tracked files)..."
   @stow -d ~ -t ~/.config --restow --adopt dotfiles
   @stow -d ~/dotfiles -t ~ --restow --adopt bash
-  @stow -d ~/dotfiles -t ~ --restow --adopt claude
+  @stow -d ~/dotfiles -t ~ --restow --adopt --no-folding claude
   @echo ""
   @git -C ~/dotfiles status --short
   @echo ""
