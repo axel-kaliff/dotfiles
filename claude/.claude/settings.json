@@ -27,7 +27,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "fable",
   "skillOverrides": {
     "complexity-trends": "off",
     "debug": "off",
@@ -133,17 +133,6 @@
     }
   },
   "effortLevel": "xhigh",
-  "modelSettings": {
-    "claude-opus-5": {
-      "effortLevel": "xhigh"
-    },
-    "claude-fable-5": {
-      "effortLevel": "xhigh"
-    },
-    "claude-fable-5-1": {
-      "effortLevel": "xhigh"
-    }
-  },
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
@@ -178,5 +167,16 @@
       "**Org-specific CLIs**: None configured",
       "No \"routine under <user>/ prefix\" qualifiers were found for this project."
     ]
+  },
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "xhigh"
+    }
   }
 }
