@@ -2,7 +2,8 @@
   "env": {
     "MAX_THINKING_TOKENS": "10000",
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
-    "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin"
+    "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "permissions": {
     "allow": [
@@ -59,6 +60,15 @@
             "command": "/home/akaliff/dotfiles/claude/.claude/hooks/bash-pretool.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/protect-frozen.sh"
+          }
+        ]
       }
     ],
     "Notification": [
@@ -90,6 +100,18 @@
           {
             "type": "command",
             "command": "/home/akaliff/dotfiles/claude/.claude/hooks/announce-handoff.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/python-check.sh",
+            "timeout": 30
           }
         ]
       }
@@ -170,5 +192,10 @@
       "**Org-specific CLIs**: None configured",
       "No \"routine under <user>/ prefix\" qualifiers were found for this project."
     ]
-  }
+  },
+  "deniedMcpServers": [
+    "claude.ai Gmail",
+    "claude.ai Google Calendar",
+    "claude.ai Google Drive"
+  ]
 }
