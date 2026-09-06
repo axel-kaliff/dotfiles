@@ -5,8 +5,8 @@ paths: ["**/*.py"]
 
 The ai-dev conventions, ruff, and ty own naming, structure, imports, error handling, and testing style. This file keeps only what tools do not enforce.
 
-## /analyse loop
-After writing or editing a Python file, run /analyse and fix every violation before moving on. Feed the raw tool output into the fix, take 3 to 5 issues per pass, then re-run. Extract helpers until radon CC is 10 or under and cognitive complexity 15 or under. Run new tests immediately.
+## Feedback loop
+A PostToolUse hook runs ruff and ty on every edited .py file and returns the findings. Fix them before the next edit; feed the raw output into the fix, 3 to 5 issues per pass. /analyse adds complexity and forbidden-pattern checks: extract helpers until radon CC is 10 or under and cognitive complexity 15 or under. Run new tests immediately.
 
 ## Linter and type errors
 Never silence an error: no bare `# type: ignore`, `# noqa`, `cast()`, `isinstance` shims, or `Any`, and never widen a signature or add a runtime guard to dodge a checker. Fix the type where it originates. The one exception is a third-party stub bug, which gets `# type: ignore[code]` with a comment citing the upstream issue.
