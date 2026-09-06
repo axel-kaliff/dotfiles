@@ -2,7 +2,6 @@
 name: decisions
 description: Use when you want to persist session decisions to claude_session/DECISIONS.md — after brainstorming, after completing a feature, before handoff, or when explicitly asked. Captures choices between alternatives, dependency changes, architectural boundaries, and design trade-offs.
 user-invocable: true
-disable-model-invocation: true
 ---
 
 # Decisions

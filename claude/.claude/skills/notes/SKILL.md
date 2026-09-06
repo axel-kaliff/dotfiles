@@ -2,7 +2,6 @@
 name: notes
 description: Use when research, doc lookups, experiments, or design exploration produced knowledge worth keeping beyond this session — after research agents return, at a phase boundary, before a handoff, or when explicitly asked. Persists it as dated, sourced topic notes under claude_session/notes/ with an index, so a handoff can point at knowledge instead of carrying it.
 user-invocable: true
-disable-model-invocation: true
 allowed-tools:
   - Bash(${CLAUDE_SKILL_DIR}/scripts/index.sh *)
 ---
