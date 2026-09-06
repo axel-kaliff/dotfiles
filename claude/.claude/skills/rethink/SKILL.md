@@ -1,6 +1,6 @@
 ---
 name: rethink
-description: Design-level critique of current code and retrospective branch analysis — evaluates whether the solution is right, dependencies are justified, and complexity is earned. Use when goals shifted, fixes accumulated, code feels over-engineered, or you want a fresh perspective on design quality.
+description: Design-level critique of current code and retrospective branch analysis — evaluates whether the solution is right, dependencies are justified, and complexity is earned. Use when goals shifted, fixes accumulated, code feels over-engineered, or you want a fresh perspective on design quality. Do not use for stripping a branch diff (/lean-review) or for a correctness review (/ai-dev:review).
 argument-hint: "[focus area, file/directory, or 'dependencies']"
 user-invocable: true
 ---
