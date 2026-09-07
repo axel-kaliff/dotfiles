@@ -25,3 +25,6 @@ Save a memory only after the outcome is verified, as a dated lesson with the fai
 
 ## Maintenance
 When the same correction comes up a second time, propose the CLAUDE.md line, hook, or skill that prevents it instead of only fixing the instance. Why: chat corrections do not persist; configuration does.
+
+## Pull requests
+- Every PR body gets a `## Background` section, right after `# Summary` and before `## Why?`: 5-8 one-line bullets defining the terms and concepts a reviewer new to that part of the codebase needs to follow the rest of the body. Why: reviewers rotate across modules; a body that assumes the module's vocabulary is only reviewable by its author.
