@@ -15,13 +15,15 @@ Plan for the changes to sics-ai/ai-plugins that came out of the 2026-09-06 audit
 - PR body: invoke `/ai-dev:pr --project /space/personal/akaliff/ai-plugins master` after preflight; it needs the receipt and produces the `## Why? / ## How?` layout. Write the body to the scratchpad and pass `--body-file`.
 - After a merge, the marketplace copy still runs the old version until `claude plugin update ai-dev@sicsai-plugins`.
 
-## PR 1: plumbing (open)
+## PR 1: plumbing (merged 2026-09-07 as #184)
 
 https://github.com/sics-ai/ai-plugins/pull/184, branch `ak-plumbing-hooks-agents-dead-files`, CI green, review decision approved, awaiting a maintainer merge.
 
 Landed: both coaching hooks emit `additionalContext` (tests added); pre-commit-check timeout 30 s to 600 s (pyright on zombiesnack takes 177 s, so the gate had been passing silently); `name`/`description`/`tools` frontmatter on all 15 ai-dev agents; `legend.md` moved to `internal/`; `terraform.md` wired into review and improve; `typescript.md` deleted; five dead internal skills deleted and `sanity` demoted to a plain doc; superpowers note gated on the plugin being enabled (test added); docs-updater rewritten without the capitalised directives; changeset `ai-dev: minor`. The PR body carries the evidence section on why emphasis and repetition can go; reuse it for PR 2's brainstorming rewrite.
 
-## PR 2: load and routing
+## PR 2: load and routing (draft PR #187, opened 2026-09-07)
+
+Opened as https://github.com/sics-ai/ai-plugins/pull/187 from branch `ak-review-routing`, preflight and lint green, Sourcery's two findings fixed in 297b8fc. Deviations from the text below: the useless-try-except code is TRY203, not TRY302; PLW1514 is preview-only, so the encoding bullet stayed in prose; dead-code-hunter stays on opus because its lenses trace the call graph; the pr split moved steps 10 to 16b out rather than keeping 1 to 10, since that alone did not clear the cap; the improve parallel check reads `query filegraph`, the only query with incoming edges. The three prose reviewers' 1 high and 26 medium findings are fixed in the branch's last three commits.
 
 Goal: cut what one invocation loads and make sibling skills distinguishable. Touches `ai-dev` and `sicsai`, so the changeset needs both (`ai-dev: minor`, `sicsai: minor`). Suggested commit order: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, each its own commit. Run `/ai-dev:review-skills` on the diff before opening; lint-skills after every commit.
 
