@@ -41,8 +41,10 @@ if echo "$command" | grep -qE 'rm\s+-[rRf]+\s+\.$'; then
   exit 2
 fi
 
-# Force push to main/master only
-if echo "$command" | grep -qE 'git\s+push\s+.*(-f|--force)' && echo "$command" | grep -qE '\b(main|master)\b'; then
+# Force push to main/master only: a force flag and the branch on the same `git push` invocation
+if echo "$command" | grep -oE 'git\s+push[^;&|]*' \
+   | grep -E '(^|\s)(-[a-zA-Z]*f[a-zA-Z]*|--force(-with-lease|-if-includes)?(=\S*)?|\+\S+)(\s|$)' \
+   | grep -qE '(^|[[:space:]:+/])(main|master)([[:space:]:]|$)'; then
   echo "BLOCKED: Force push to main/master detected: $command" >&2
   exit 2
 fi

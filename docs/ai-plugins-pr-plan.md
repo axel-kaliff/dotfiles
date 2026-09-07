@@ -13,7 +13,6 @@ Plan for the changes to sics-ai/ai-plugins that came out of the 2026-09-06 audit
 - Repo conventions that differ from this repo's rules: commit subjects are capitalised sentences with no `feat:`/`fix:` prefix (their quality-gate warns on lowercase and on " and " in a subject); versions are never edited by hand, add a changeset with `scripts/changeset.sh new <plugin> <patch|minor|major> "<summary>"`; agents may omit frontmatter per lint but PR 1 established that they carry `name`, `description`, `tools`.
 - Before pushing: `uv run python -m grade lint-skills run --all` (0 errors required; the `grade` console script does not dispatch subcommands, use `python -m grade`), then `uv run python -m grade preflight run --target master`, which writes `.grade/preflight.json` for the push gate.
 - PR body: invoke `/ai-dev:pr --project /space/personal/akaliff/ai-plugins master` after preflight; it needs the receipt and produces the `## Why? / ## How?` layout. Write the body to the scratchpad and pass `--body-file`.
-- Quirk in this repo's own guard: `hooks/bash-pretool.sh` blocks any command that contains `git push` and the word `master`, so keep `--target master` and the push in separate commands. Fixing the regex (force flag and branch on the same push line) is a dotfiles follow-up.
 - After a merge, the marketplace copy still runs the old version until `claude plugin update ai-dev@sicsai-plugins`.
 
 ## PR 1: plumbing (open)
