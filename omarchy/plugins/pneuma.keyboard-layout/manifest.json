@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.keyboard-layout",
+  "name": "Keyboard layout (flags)",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "description": "Current xkb layout as a flag, click cycles",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "KeyboardLayout.qml"
+  },
+  "barWidget": {
+    "displayName": "Keyboard layout",
+    "description": "Current xkb layout; `flags` maps the label to a glyph",
+    "category": "Compositor",
+    "allowMultiple": false
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.keyboard-layout"
+  }
+}
