@@ -206,6 +206,7 @@ switch themes. Tests:
 - **Battery-aware blur** (`hypr/power.lua`): on battery the frost drops from three passes at 12px to two at 8px, and returns on the charger. A compositor timer polls sysfs; no daemon.
 - **Screen-share hygiene** (`hypr/privacy.lua`): notification toasts and the clipboard history never appear in a shared screen, and a running share holds off the idle lock. Screen-capture permissions are enforced: grim, hyprpicker, gpu-screen-recorder, quickshell and the portal are allowed, anything else prompts.
 - **Easy mode** (`hypr/bin/easy-mode`, `hypr/toggles/easy-mode.lua`): a floating, mouse-driven desktop for someone who expects macOS. `SUPER + ALT + E`, or Style ▸ Easy Mode in the launcher. See [Easy mode](#easy-mode).
+- **Keyboard layout as a flag** (`omarchy/plugins/pneuma.keyboard-layout`): the input-source toggle shows 🇬🇧 / 🇸🇪 rather than EN / SV, in both modes. The `flags` entry in the widget's `shell.json` block maps the short code the model derives to whatever glyph should stand for it; anything unmapped keeps its code. Note the English layout is `us`, not `gb` — the flag names the language, not the keymap.
 - **Scratchpads** (`hypr/scratchpads.lua`): named special workspaces that launch their app through `on_created_empty` and vanish when it closes.
 - Glass group tabs, pointer hiding after three idle seconds, floating-window snapping and back-and-forth workspace switching live in `hypr/looknfeel.lua` and `hypr/bindings.lua`.
 
@@ -214,6 +215,7 @@ switch themes. Tests:
 | Plugin | What it adds |
 |--------|--------------|
 | `pneuma.easy-mode` | Bar button that toggles easy mode; dimmed while it is off |
+| `pneuma.keyboard-layout` | Clone of `omarchy.keyboard-layout` adding `flags`: shows 🇬🇧 / 🇸🇪 instead of EN / SV |
 | `pneuma.tray` | Clone of `omarchy.tray` adding `alwaysExpanded`: no hover drawer, no chevron |
 | `pneuma.controls` | The indicator toggles as a labelled click dropdown instead of a hover reveal |
 | `pneuma.app-name` | The focused app's name, bold, for easy mode's macOS-shaped bar |

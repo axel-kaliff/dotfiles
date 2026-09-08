@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.window-menu",
+  "name": "Window menu",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Right-click menu for a window: float, sticky, maximize, minimize, close",
+  "kinds": [
+    "panel"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "panel": "WindowMenu.qml"
+  }
+}

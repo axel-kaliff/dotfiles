@@ -154,3 +154,57 @@ o.bind("SUPER + SHIFT + C", "Calendar", thunderbird .. " -calendar")
 -- the same toggle is in the launcher under Style, which is the route that does
 -- not need a keyboard. SUPER + M and SUPER + ALT + M appear while it is on.
 o.bind("SUPER + ALT + E", "Easy mode", os.getenv("HOME") .. "/.config/hypr/bin/easy-mode toggle")
+
+-- SUPER + right-click opens a menu for the window under the pointer; SUPER +
+-- right-drag still resizes. One button doing both needs a drag threshold:
+-- at 0 (the default) every press counts as a drag and the click bind never
+-- fires. SUPER + left-drag to move is left alone -- it has no click half.
+hl.config({ binds = { drag_threshold = 8 } })
+
+-- Which window the pointer is over. Hyprland has no "window at point" call, so
+-- it is a scan: the candidates are the mapped, visible windows whose box holds
+-- the cursor, and the winner is the one focused most recently (focus_history_id
+-- counts up from 0), which is the one on top of any stack.
+local function window_at_cursor()
+  local cursor = hl.get_cursor_pos()
+  if not cursor then return nil end
+
+  local found, found_rank = nil, nil
+  for _, window in ipairs(hl.get_windows()) do
+    local at, size = window.at, window.size
+    if window.mapped and window.visible and at and size then
+      local inside = cursor.x >= at.x and cursor.x <= at.x + size.x
+        and cursor.y >= at.y and cursor.y <= at.y + size.y
+      local rank = window.focus_history_id or math.huge
+      if inside and (found_rank == nil or rank < found_rank) then
+        found, found_rank = window, rank
+      end
+    end
+  end
+
+  return found
+end
+
+-- The menu is a shell plugin (omarchy/plugins/pneuma.window-menu). It is handed
+-- the state its rows need rather than looking it up, so the labels are correct
+-- the moment it appears.
+local function open_window_menu()
+  local window = window_at_cursor()
+  if not window then return end
+
+  local cursor = hl.get_cursor_pos()
+  local payload = string.format(
+    '{"address":"%s","x":%d,"y":%d,"floating":%s,"pinned":%s,"fullscreen":%d}',
+    window.address,
+    math.floor(cursor.x),
+    math.floor(cursor.y),
+    tostring(window.floating == true),
+    tostring(window.pinned == true),
+    window.fullscreen or 0)
+
+  hl.exec_cmd("omarchy-shell pneuma.window-menu open " .. o.shell_quote(payload))
+end
+
+hl.unbind("SUPER + mouse:273") -- was: Resize window (press, no click/drag split)
+o.bind("SUPER + mouse:273", "Resize window", hl.dsp.window.resize(), { mouse = true, drag = true })
+hl.bind("SUPER + mouse:273", open_window_menu, { mouse = true, click = true, description = "Window menu" })
