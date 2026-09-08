@@ -28,8 +28,14 @@ Item {
   property bool floating: false
   property bool pinned: false
   property int fullscreen: 0
+  // 0 when the window is in no stack at all; 1 is a stack of one, which is a
+  // real state -- it keeps its tab bar and swallows the next window launched.
+  property int stackSize: 0
+  property bool stackLocked: false
 
-  readonly property var rows: Model.rows(root.floating, root.pinned, root.fullscreen)
+  readonly property bool stacked: root.stackSize > 0
+  readonly property var rows: Model.rows(root.floating, root.pinned, root.fullscreen,
+    root.stackSize, root.stackLocked)
 
   function close() {
     root.opened = false
@@ -50,6 +56,8 @@ Item {
     root.floating = data.floating === true
     root.pinned = data.pinned === true
     root.fullscreen = Number(data.fullscreen) || 0
+    root.stackSize = Number(data.stackSize) || 0
+    root.stackLocked = data.stackLocked === true
     root.opened = true
     return "ok"
   }
@@ -77,6 +85,22 @@ Item {
       // means for a window currently owned by the layout.
       if (!root.floating) root.dispatch("hl.dsp.window.float({ window = " + target + " })")
       root.dispatch("hl.dsp.window.pin({ window = " + target + " })")
+    } else if (action === "stack") {
+      // A group only draws its tab bar while tiled, so a floating window is
+      // tiled on the way in. Skipping that leaves a stack that exists but is
+      // invisible, with no tabs to click.
+      if (!root.stacked && root.floating) {
+        root.dispatch("hl.dsp.window.float({ window = " + target + " })")
+      }
+      root.dispatch("hl.dsp.group.toggle({ window = " + target + " })")
+    } else if (action === "stack-remove") {
+      root.dispatch("hl.dsp.window.move({ out_of_group = true, window = " + target + " })")
+    } else if (action === "stack-lock") {
+      // lock_active is the only lock dispatcher and it acts on the focused
+      // group: passing it a window is ignored, and group.locked is read-only.
+      // So the stack is focused first -- which is where the click was anyway.
+      root.dispatch("hl.dsp.focus({ window = " + target + " })")
+      root.dispatch("hl.dsp.group.lock_active()")
     } else if (action === "maximize") {
       root.dispatch("hl.dsp.window.fullscreen({ window = " + target + ", mode = 1 })")
     } else if (action === "fullscreen") {
@@ -110,6 +134,8 @@ Item {
         floating: root.floating,
         pinned: root.pinned,
         fullscreen: root.fullscreen,
+        stackSize: root.stackSize,
+        stackLocked: root.stackLocked,
         rows: root.rows.map(function (row) { return row.separator ? "---" : row.label })
       })
     }

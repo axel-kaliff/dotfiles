@@ -193,14 +193,19 @@ local function open_window_menu()
   if not window then return end
 
   local cursor = hl.get_cursor_pos()
+  -- window.group is nil unless the window is stacked, so size 0 stands for
+  -- "not in a stack" and the menu has one number to read rather than two.
+  local stack = window.group
   local payload = string.format(
-    '{"address":"%s","x":%d,"y":%d,"floating":%s,"pinned":%s,"fullscreen":%d}',
+    '{"address":"%s","x":%d,"y":%d,"floating":%s,"pinned":%s,"fullscreen":%d,"stackSize":%d,"stackLocked":%s}',
     window.address,
     math.floor(cursor.x),
     math.floor(cursor.y),
     tostring(window.floating == true),
     tostring(window.pinned == true),
-    window.fullscreen or 0)
+    window.fullscreen or 0,
+    stack and stack.size or 0,
+    tostring(stack ~= nil and stack.locked == true))
 
   hl.exec_cmd("omarchy-shell pneuma.window-menu open " .. o.shell_quote(payload))
 end
