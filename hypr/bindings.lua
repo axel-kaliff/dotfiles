@@ -52,6 +52,12 @@ o.bind("SUPER + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
 o.bind("SUPER + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))
 o.bind("SUPER + L", "Focus on right window", hl.dsp.focus({ direction = "r" }))
 
+-- Focus moves between tiles, and a stack is one tile -- so on a workspace whose
+-- only tile is a stack, SUPER + direction has nowhere to go and does nothing.
+-- This makes it step through the stack's tabs first and leave the stack at its
+-- edges, which is what SUPER + SHIFT + direction does for moving a window.
+hl.config({ binds = { movefocus_cycles_groupfirst = true } })
+
 -- SUPER + SHIFT + direction moves a window the same way whether or not it is
 -- in a stack: between the tabs while there is one to trade places with, and in
 -- or out of the stack at its edges.
