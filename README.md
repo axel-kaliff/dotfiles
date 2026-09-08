@@ -207,6 +207,7 @@ switch themes. Tests:
 - **Screen-share hygiene** (`hypr/privacy.lua`): notification toasts and the clipboard history never appear in a shared screen, and a running share holds off the idle lock. Screen-capture permissions are enforced: grim, hyprpicker, gpu-screen-recorder, quickshell and the portal are allowed, anything else prompts.
 - **Easy mode** (`hypr/bin/easy-mode`, `hypr/toggles/easy-mode.lua`): a floating, mouse-driven desktop for someone who expects macOS. `SUPER + ALT + E`, or Style ▸ Easy Mode in the launcher. See [Easy mode](#easy-mode).
 - **Keyboard layout as a flag** (`omarchy/plugins/pneuma.keyboard-layout`): the input-source toggle shows 🇬🇧 / 🇸🇪 rather than EN / SV, in both modes. The `flags` entry in the widget's `shell.json` block maps the short code the model derives to whatever glyph should stand for it; anything unmapped keeps its code. Note the English layout is `us`, not `gb` — the flag names the language, not the keymap.
+- **Window menu** (`hypr/bindings.lua`, `omarchy/plugins/pneuma.window-menu`): SUPER + right-click on a window opens a menu — Float/Tile, Sticky (Hyprland's `pin`: on every workspace, above the rest, floating the window first if the layout owns it), Maximize, Fullscreen, Centre (floating windows only), Minimize, Close. SUPER + right-*drag* still resizes: Omarchy's held resize bind is left untouched and the menu is a second bind on the same button with `click`, which fires only on a press and release that never travelled past `binds.drag_threshold` (0 by default, which disables click detection, so it is set to 8). Adding `drag` to the resize bind instead breaks it — `mouse` is hold-to-act and the resize loop needs the button-down. The binding finds the window under the pointer itself — Hyprland has no "window at point" call, so it scans for the box containing the cursor and prefers the most recently focused one — and hands the plugin its state, so the row labels are right on open. Both modes.
 - **Scratchpads** (`hypr/scratchpads.lua`): named special workspaces that launch their app through `on_created_empty` and vanish when it closes.
 - Glass group tabs, pointer hiding after three idle seconds, floating-window snapping and back-and-forth workspace switching live in `hypr/looknfeel.lua` and `hypr/bindings.lua`.
 
@@ -219,6 +220,7 @@ switch themes. Tests:
 | `pneuma.tray` | Clone of `omarchy.tray` adding `alwaysExpanded`: no hover drawer, no chevron |
 | `pneuma.controls` | The indicator toggles as a labelled click dropdown instead of a hover reveal |
 | `pneuma.app-name` | The focused app's name, bold, for easy mode's macOS-shaped bar |
+| `pneuma.window-menu` | SUPER + right-click menu for a window: float, sticky, maximize, minimize, close |
 | `pneuma.dock` | The app dock, shown while easy mode is on (`omarchy-shell pneuma.dock state`) |
 | `pneuma.switcher` | The Alt-Tab overlay (`omarchy-shell pneuma.switcher next / prev / commit / cancel / state`) |
 | `pneuma.pomodoro` | Focus timer; a ticking focus phase silences notifications (`focusDnd`) |

@@ -205,6 +205,10 @@ local function open_window_menu()
   hl.exec_cmd("omarchy-shell pneuma.window-menu open " .. o.shell_quote(payload))
 end
 
-hl.unbind("SUPER + mouse:273") -- was: Resize window (press, no click/drag split)
-o.bind("SUPER + mouse:273", "Resize window", hl.dsp.window.resize(), { mouse = true, drag = true })
-hl.bind("SUPER + mouse:273", open_window_menu, { mouse = true, click = true, description = "Window menu" })
+-- Omarchy's resize binding is left exactly as it is: `mouse = true` is a held
+-- bind and the resize loop needs the button-down it starts from. (Adding `drag`
+-- to it made the bind fire once after the threshold with nothing holding the
+-- resize open, which stopped it resizing at all.) The menu is a second, separate
+-- bind on the same button: `click` fires on a press and release that never
+-- travelled past binds.drag_threshold, so a drag stays a resize.
+hl.bind("SUPER + mouse:273", open_window_menu, { click = true, description = "Window menu" })
