@@ -66,18 +66,39 @@ local function move_window(direction)
     local window = hl.get_active_window()
     local stack = window and window.group
 
-    -- Tabs run left to right, so only horizontal moves reorder them; up and
-    -- down leave the stack, which is what group_aware already does with them.
-    if stack and stack.size > 1 and (direction == "l" or direction == "r") then
+    if stack and stack.size > 1 then
+      local horizontal = direction == "l" or direction == "r"
       local index = stack.current_index
-      -- Guarded at both ends because group.move_window wraps: unguarded, a
-      -- move off the first tab would jump to the last instead of leaving.
-      if direction == "l" and index > 1 then
+
+      -- Tabs run left to right, so only horizontal moves trade places with a
+      -- neighbouring tab. Guarded at both ends because group.move_window
+      -- wraps: unguarded, a move off the first tab would jump to the last
+      -- instead of leaving the stack.
+      if horizontal and direction == "l" and index > 1 then
         return hl.dispatch(hl.dsp.group.move_window({ forward = false }))
       end
-      if direction == "r" and index < stack.size then
+      if horizontal and direction == "r" and index < stack.size then
         return hl.dispatch(hl.dsp.group.move_window({ forward = true }))
       end
+
+      -- Leaving. `group_aware` hands the window to whatever tile lies in that
+      -- direction, which throws it across the screen into a neighbour's column
+      -- and leaves the stack holding all its old space. Leaving with no
+      -- direction instead splits the stack's own tile, so the window stays
+      -- beside it; the split then has to be pointed the right way. dwindle
+      -- divides a tile along its longer side and, at force_split = 2, puts the
+      -- new window second -- so the axis is flipped when it disagrees with the
+      -- direction, and the window is swapped past the stack when the direction
+      -- asks for the first side.
+      local tile_is_wide = window.size.x > window.size.y
+      hl.dispatch(hl.dsp.window.move({ out_of_group = true }))
+      if horizontal ~= tile_is_wide then
+        hl.dispatch(hl.dsp.layout("togglesplit"))
+      end
+      if direction == "l" or direction == "u" then
+        hl.dispatch(hl.dsp.window.swap({ direction = direction }))
+      end
+      return
     end
 
     hl.dispatch(hl.dsp.window.move({ direction = direction, group_aware = true }))
