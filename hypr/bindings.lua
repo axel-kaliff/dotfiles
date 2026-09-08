@@ -28,7 +28,7 @@
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
 
--- Vim-style window navigation: SUPER + h/j/k/l focuses, + SHIFT swaps.
+-- Vim-style window navigation: SUPER + h/j/k/l focuses, + SHIFT moves.
 -- Displaced defaults move to the same key with ALT added. SUPER + ALT + K was
 -- already the terminal-multiplexer cheatsheet, so the Omarchy keybindings menu
 -- takes SHIFT + ALT.
@@ -52,10 +52,54 @@ o.bind("SUPER + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
 o.bind("SUPER + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))
 o.bind("SUPER + L", "Focus on right window", hl.dsp.focus({ direction = "r" }))
 
-o.bind("SUPER + SHIFT + H", "Swap window to the left", hl.dsp.window.swap({ direction = "l" }))
-o.bind("SUPER + SHIFT + J", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
-o.bind("SUPER + SHIFT + K", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
-o.bind("SUPER + SHIFT + L", "Swap window to the right", hl.dsp.window.swap({ direction = "r" }))
+-- SUPER + SHIFT + direction moves a window the same way whether or not it is
+-- in a stack: between the tabs while there is one to trade places with, and in
+-- or out of the stack at its edges.
+--
+-- No single dispatcher does that. `window.move` takes an undocumented
+-- `group_aware` flag -- the old movewindoworgroup -- which moves a window into
+-- a stack, out of one, or plainly moves it, but never reorders tabs.
+-- `group.move_window` only reorders, and wraps around the ends. So the tab the
+-- window sits on decides which of the two runs.
+local function move_window(direction)
+  return function()
+    local window = hl.get_active_window()
+    local stack = window and window.group
+
+    -- Tabs run left to right, so only horizontal moves reorder them; up and
+    -- down leave the stack, which is what group_aware already does with them.
+    if stack and stack.size > 1 and (direction == "l" or direction == "r") then
+      local index = stack.current_index
+      -- Guarded at both ends because group.move_window wraps: unguarded, a
+      -- move off the first tab would jump to the last instead of leaving.
+      if direction == "l" and index > 1 then
+        return hl.dispatch(hl.dsp.group.move_window({ forward = false }))
+      end
+      if direction == "r" and index < stack.size then
+        return hl.dispatch(hl.dsp.group.move_window({ forward = true }))
+      end
+    end
+
+    hl.dispatch(hl.dsp.window.move({ direction = direction, group_aware = true }))
+  end
+end
+
+-- Both key sets swapped before, and a swap knows nothing about stacks: aimed
+-- at one it trades places with the whole stack instead of joining it.
+hl.unbind("SUPER + SHIFT + LEFT")  -- was: Swap window to the left
+hl.unbind("SUPER + SHIFT + RIGHT") -- was: Swap window to the right
+hl.unbind("SUPER + SHIFT + UP")    -- was: Swap window up
+hl.unbind("SUPER + SHIFT + DOWN")  -- was: Swap window down
+
+o.bind("SUPER + SHIFT + LEFT", "Move window left", move_window("l"))
+o.bind("SUPER + SHIFT + RIGHT", "Move window right", move_window("r"))
+o.bind("SUPER + SHIFT + UP", "Move window up", move_window("u"))
+o.bind("SUPER + SHIFT + DOWN", "Move window down", move_window("d"))
+
+o.bind("SUPER + SHIFT + H", "Move window left", move_window("l"))
+o.bind("SUPER + SHIFT + J", "Move window down", move_window("d"))
+o.bind("SUPER + SHIFT + K", "Move window up", move_window("u"))
+o.bind("SUPER + SHIFT + L", "Move window right", move_window("r"))
 
 -- Input language switching on SUPER + SHIFT + SPACE (cycles kb_layout, see
 -- input.lua); the top-bar toggle it displaces moves to SUPER + SHIFT + T.
