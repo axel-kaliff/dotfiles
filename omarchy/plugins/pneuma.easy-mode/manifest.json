@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.easy-mode",
+  "name": "Easy mode",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Bar button for easy mode: the floating, mouse-driven desktop",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Easy mode",
+    "description": "Toggles the floating, mouse-driven desktop; lit while it is on",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

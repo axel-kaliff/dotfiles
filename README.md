@@ -213,6 +213,8 @@ switch themes. Tests:
 
 | Plugin | What it adds |
 |--------|--------------|
+| `pneuma.easy-mode` | Bar button that toggles easy mode; dimmed while it is off |
+| `pneuma.app-name` | The focused app's name, bold, for easy mode's macOS-shaped bar |
 | `pneuma.dock` | The app dock, shown while easy mode is on (`omarchy-shell pneuma.dock state`) |
 | `pneuma.switcher` | The Alt-Tab overlay (`omarchy-shell pneuma.switcher next / prev / commit / cancel / state`) |
 | `pneuma.pomodoro` | Focus timer; a ticking focus phase silences notifications (`focusDnd`) |
@@ -239,6 +241,12 @@ While it is on:
 - **Click to focus**, instead of Omarchy's focus-follows-mouse. The scroll wheel
   still scrolls the window under the pointer without raising it, as on macOS.
 - **Window buttons move to the left**, macOS-style.
+- **The top bar becomes a macOS menu bar**: the focused app's name in bold on the
+  left, no Spaces switcher, everything else on the right with the clock last, and
+  translucent over the wallpaper.
+
+The toggle itself is the mouse glyph at the right-hand end of the bar, lit while
+easy mode is on.
 
 Every keyboard shortcut keeps working; easy mode only removes the *need* for them.
 
@@ -256,8 +264,17 @@ Two Hyprland limitations are worth knowing, because they shape the design:
   ones Omarchy floats on purpose whatever the mode (pickers, 1Password, the TUI
   apps), which it recognises by their `floating-window` tag.
 
+The bar is the one part that is not a compositor setting. The shell reads a
+single `~/.config/omarchy/shell.json` with no override layer, so easy mode swaps
+the `bar` subtree in place and keeps a byte-for-byte copy of the whole file to
+put back -- a re-serialised restore would leave the stowed `shell.json`
+permanently reformatted. The easy-mode layout is `omarchy/bar-easy.json`. Two
+consequences: bar edits made *while* easy mode is on (dragging a widget,
+double-clicking for transparency) are discarded when it goes off, and the
+dotfiles auto-sync will commit the swapped `shell.json` if it fires mid-session.
+
 Turning it off restores the previous window-button layout, focus-follows-mouse,
-and tiling: the compositor half is one file that Omarchy sources last
+the bar, and tiling: the compositor half is one file that Omarchy sources last
 (`~/.local/state/omarchy/toggles/hypr/easy-mode.lua`), and removing it plus a
 reload rebuilds the session without it. The dock watches for that same file, so
 one command moves both halves. Pinned apps live in

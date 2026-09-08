@@ -6,41 +6,25 @@
   },
   "bar": {
     "position": "top",
-    "transparent": false,
-    "centerAnchor": "omarchy.clock",
+    "transparent": true,
+    "centerAnchor": "",
     "layout": {
       "left": [
         {
           "id": "pneuma.menu"
         },
         {
-          "id": "akaliff.workspaces"
+          "id": "pneuma.app-name"
         }
       ],
-      "center": [
+      "center": [],
+      "right": [
         {
           "id": "omarchy.indicators"
         },
         {
           "id": "pneuma.safeeyes"
         },
-        {
-          "id": "omarchy.clock",
-          "format": "yyyy-MM-dd HH:mm",
-          "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n—\nmm"
-        },
-        {
-          "id": "omarchy.keyboard-layout"
-        },
-        {
-          "id": "omarchy.weather"
-        },
-        {
-          "id": "omarchy.system-update"
-        }
-      ],
-      "right": [
         {
           "id": "pneuma.clipboard"
         },
@@ -51,12 +35,13 @@
           "id": "pneuma.pomodoro"
         },
         {
-          "id": "akaliff.agents",
-          "providers": {
-            "codex": {
-              "enabled": false
-            }
-          }
+          "id": "akaliff.media"
+        },
+        {
+          "id": "omarchy.weather"
+        },
+        {
+          "id": "omarchy.system-update"
         },
         {
           "id": "omarchy.bluetooth"
@@ -65,16 +50,23 @@
           "id": "omarchy.network"
         },
         {
-          "id": "akaliff.media"
-        },
-        {
           "id": "omarchy.audio"
         },
         {
           "id": "omarchy.monitor"
         },
         {
+          "id": "omarchy.keyboard-layout"
+        },
+        {
           "id": "omarchy.power"
+        },
+        {
+          "id": "pneuma.easy-mode"
+        },
+        {
+          "id": "omarchy.clock",
+          "format": "ddd d MMM  HH:mm"
         }
       ]
     },

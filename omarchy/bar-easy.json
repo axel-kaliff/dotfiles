@@ -1,0 +1,31 @@
+{
+  "position": "top",
+  "transparent": true,
+  "centerAnchor": "",
+  "layout": {
+    "left": [
+      { "id": "pneuma.menu" },
+      { "id": "pneuma.app-name" }
+    ],
+    "center": [],
+    "right": [
+      { "id": "omarchy.indicators" },
+      { "id": "pneuma.safeeyes" },
+      { "id": "pneuma.clipboard" },
+      { "id": "omarchy.tray" },
+      { "id": "pneuma.pomodoro" },
+      { "id": "akaliff.media" },
+      { "id": "omarchy.weather" },
+      { "id": "omarchy.system-update" },
+      { "id": "omarchy.bluetooth" },
+      { "id": "omarchy.network" },
+      { "id": "omarchy.audio" },
+      { "id": "omarchy.monitor" },
+      { "id": "omarchy.keyboard-layout" },
+      { "id": "omarchy.power" },
+      { "id": "pneuma.easy-mode" },
+      { "id": "omarchy.clock", "format": "ddd d MMM  HH:mm" }
+    ]
+  },
+  "id": "akaliff.bar"
+}

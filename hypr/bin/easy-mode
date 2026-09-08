@@ -12,9 +12,19 @@
 set -euo pipefail
 
 state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 flag="$state_home/omarchy/toggles/hypr/easy-mode.lua"
-source_file="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/toggles/easy-mode.lua"
+source_file="$config_home/hypr/toggles/easy-mode.lua"
 saved_buttons="$state_home/pneuma/easy-mode-buttons"
+
+# The bar's macOS half: app name on the left, no Spaces, everything else on the
+# right with the clock last, translucent over the wallpaper. The shell has one
+# config file and no override layer, so easy mode swaps the `bar` subtree in
+# place and keeps a byte-for-byte copy of the whole file to put back -- a
+# re-serialised restore would leave the stowed shell.json permanently reformatted.
+shell_json="$config_home/omarchy/shell.json"
+easy_bar="$config_home/omarchy/bar-easy.json"
+saved_shell="$state_home/pneuma/easy-mode-shell.json"
 
 # macOS keeps the window buttons on the left. Minimize is deliberately absent:
 # Hyprland ignores xdg_toplevel.set_minimized, so that button would be a dead
@@ -51,6 +61,22 @@ tile_open_windows() {
     end' >/dev/null
 }
 
+apply_easy_bar() {
+  [[ -f $easy_bar ]] || return 0
+  python3 - "$shell_json" "$easy_bar" <<'PY'
+import json, sys
+
+shell_path, bar_path = sys.argv[1], sys.argv[2]
+with open(shell_path) as handle:
+    config = json.load(handle)
+with open(bar_path) as handle:
+    config["bar"] = json.load(handle)
+with open(shell_path, "w") as handle:
+    json.dump(config, handle, indent=2)
+    handle.write("\n")
+PY
+}
+
 enable() {
   if [[ ! -f $source_file ]]; then
     echo "easy-mode: $source_file is missing (is the dotfiles hypr package stowed?)" >&2
@@ -58,12 +84,16 @@ enable() {
   fi
 
   mkdir -p "${flag%/*}" "${saved_buttons%/*}"
-  # Record the layout being replaced, so `off` restores what was actually there
+  # Record what is being replaced, so `off` restores what was actually there
   # rather than a guess. Only on the way in: a second `on` must not overwrite
-  # the saved value with easy mode's own.
-  is_on || gsettings get "${button_key[@]}" >"$saved_buttons"
+  # the saved originals with easy mode's own.
+  if ! is_on; then
+    gsettings get "${button_key[@]}" >"$saved_buttons"
+    cp "$shell_json" "$saved_shell"
+  fi
   cp "$source_file" "$flag"
   gsettings set "${button_key[@]}" "$easy_buttons"
+  apply_easy_bar
 }
 
 disable() {
@@ -73,6 +103,13 @@ disable() {
     rm -f "$saved_buttons"
   else
     gsettings reset "${button_key[@]}"
+  fi
+  # Restoring the whole file, not just the bar subtree: this is the copy taken
+  # before easy mode touched it, so the stowed shell.json comes back byte for
+  # byte. Bar edits made *during* easy mode are discarded with it.
+  if [[ -s $saved_shell ]]; then
+    cp "$saved_shell" "$shell_json"
+    rm -f "$saved_shell"
   fi
 }
 
