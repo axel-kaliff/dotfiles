@@ -58,4 +58,8 @@ o.bind("SUPER + ALT + M", "Show minimized windows",
 -- The dock is a bottom layer surface and overlaps windows, so it gets the same
 -- frosted backdrop as the other popup surfaces. Not `xray`, which the bar uses:
 -- that samples the wallpaper only, and would blank whatever the dock covers.
-hl.layer_rule({ match = { namespace = "pneuma-dock" }, blur = true, ignore_alpha = 0.5 })
+-- `blur_popups` matters as much as `blur` here: the icons' right-click menu is
+-- an xdg_popup of this surface, not a layer of its own, and the popup palette
+-- is 0.72 alpha (omarchy/shell.toml) on the assumption of a frosted backdrop.
+-- Without it the menu is 28% see-through over raw desktop and hard to read.
+hl.layer_rule({ match = { namespace = "pneuma-dock" }, blur = true, blur_popups = true, ignore_alpha = 0.5 })

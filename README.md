@@ -205,6 +205,7 @@ switch themes. Tests:
 
 - **Battery-aware blur** (`hypr/power.lua`): on battery the frost drops from three passes at 12px to two at 8px, and returns on the charger. A compositor timer polls sysfs; no daemon.
 - **Screen-share hygiene** (`hypr/privacy.lua`): notification toasts and the clipboard history never appear in a shared screen, and a running share holds off the idle lock. Screen-capture permissions are enforced: grim, hyprpicker, gpu-screen-recorder, quickshell and the portal are allowed, anything else prompts.
+- **Easy mode** (`hypr/bin/easy-mode`, `hypr/toggles/easy-mode.lua`): a floating, mouse-driven desktop for someone who expects macOS. `SUPER + ALT + E`, or Style ▸ Easy Mode in the launcher. See [Easy mode](#easy-mode).
 - **Scratchpads** (`hypr/scratchpads.lua`): named special workspaces that launch their app through `on_created_empty` and vanish when it closes.
 - Glass group tabs, pointer hiding after three idle seconds, floating-window snapping and back-and-forth workspace switching live in `hypr/looknfeel.lua` and `hypr/bindings.lua`.
 
@@ -212,12 +213,55 @@ switch themes. Tests:
 
 | Plugin | What it adds |
 |--------|--------------|
+| `pneuma.dock` | The app dock, shown while easy mode is on (`omarchy-shell pneuma.dock state`) |
 | `pneuma.switcher` | The Alt-Tab overlay (`omarchy-shell pneuma.switcher next / prev / commit / cancel / state`) |
 | `pneuma.pomodoro` | Focus timer; a ticking focus phase silences notifications (`focusDnd`) |
 | `pneuma.safeeyes` | Eye-break overlays |
 | `pneuma.clipboard` | Clipboard history entry point |
 | `akaliff.workspaces` | Workspace pills with the apps' icons |
 | `akaliff.bar`, `akaliff.notifications`, `akaliff.osd`, `akaliff.media` | Clones of the stock plugins wearing the glass material |
+
+### Easy mode
+
+A floating, mouse-driven desktop for someone who expects macOS, switchable while
+logged in. Toggle it with `SUPER + ALT + E`, from the launcher under Style ▸ Easy
+Mode, or with `easy-mode [on|off|toggle|status]`.
+
+While it is on:
+
+- **Nothing tiles.** Every window floats and opens centred, and drag any edge or
+  corner to resize -- no modifier held.
+- **A dock** along the bottom: pinned apps plus whatever else is running, a dot
+  under the ones with windows, and the screen reserved so no window covers it.
+  Left-click launches, switches, or -- on the app you are already in -- minimizes.
+  Right-click opens a menu: the app's windows, the actions its `.desktop` file
+  declares, Minimize/Show, Keep in Dock, and Quit.
+- **Click to focus**, instead of Omarchy's focus-follows-mouse. The scroll wheel
+  still scrolls the window under the pointer without raising it, as on macOS.
+- **Window buttons move to the left**, macOS-style.
+
+Every keyboard shortcut keeps working; easy mode only removes the *need* for them.
+
+Two Hyprland limitations are worth knowing, because they shape the design:
+
+- **There is no minimize.** Hyprland receives `xdg_toplevel.set_minimized` and
+  drops it ([#3984](https://github.com/hyprwm/Hyprland/issues/3984)), so a
+  titlebar minimize button could only ever be a dead control -- easy mode takes
+  it out of the button layout rather than leave it there. Minimizing is the dock
+  (click the front app, or its menu) and `SUPER + M`; `SUPER + ALT + M` shows
+  what is put away. A minimized window is parked on the `special:minimized`
+  workspace, which is also why the dock talks to Hyprland directly.
+- **Window rules only apply when a window opens.** So the script also floats the
+  windows already on screen, and re-tiles them on the way out -- skipping the
+  ones Omarchy floats on purpose whatever the mode (pickers, 1Password, the TUI
+  apps), which it recognises by their `floating-window` tag.
+
+Turning it off restores the previous window-button layout, focus-follows-mouse,
+and tiling: the compositor half is one file that Omarchy sources last
+(`~/.local/state/omarchy/toggles/hypr/easy-mode.lua`), and removing it plus a
+reload rebuilds the session without it. The dock watches for that same file, so
+one command moves both halves. Pinned apps live in
+`~/.local/state/pneuma/dock.json`.
 
 ---
 

@@ -148,3 +148,9 @@ local thunderbird = os.getenv("HOME") .. "/.config/hypr/bin/thunderbird"
 o.bind("SUPER + SHIFT + E", "Email", thunderbird .. " -mail")
 o.bind("SUPER + SHIFT + ALT + E", "New email", thunderbird .. " -compose")
 o.bind("SUPER + SHIFT + C", "Calendar", thunderbird .. " -calendar")
+
+-- Easy mode: floating windows, an app dock and click-to-focus, for someone who
+-- expects macOS. The script owns both halves of the switch (hypr/bin/easy-mode);
+-- the same toggle is in the launcher under Style, which is the route that does
+-- not need a keyboard. SUPER + M and SUPER + ALT + M appear while it is on.
+o.bind("SUPER + ALT + E", "Easy mode", os.getenv("HOME") .. "/.config/hypr/bin/easy-mode toggle")

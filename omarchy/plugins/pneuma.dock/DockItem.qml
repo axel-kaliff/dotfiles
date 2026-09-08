@@ -17,6 +17,8 @@ Item {
   // Every window this app has is parked on the minimized workspace.
   property bool minimized: false
   property bool active: false
+  // This icon's context menu is up: the menu is the label now.
+  property bool menuOpen: false
 
   signal chosen
   signal secondary
@@ -108,7 +110,7 @@ Item {
     radius: Math.max(0, Style.cornerRadius - Style.space(6))
     color: Color.tooltip.background
     borderSpec: Border.surfaceSpec("tooltip", "border", Color.tooltip.border, 1)
-    opacity: item.hovered ? 1 : 0
+    opacity: (item.hovered && !item.menuOpen) ? 1 : 0
     visible: opacity > 0
 
     Behavior on opacity {

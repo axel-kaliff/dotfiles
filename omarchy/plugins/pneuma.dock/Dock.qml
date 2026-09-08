@@ -35,7 +35,9 @@ Item {
   readonly property var toplevels: ToplevelManager.toplevels ? ToplevelManager.toplevels.values : []
   readonly property var rows: Model.rows(root.pinnedIds, root.toplevels)
 
-  readonly property int iconSize: Style.space(44)
+  // Close to the macOS default. Large targets are the point of easy mode: the
+  // dock is meant to be hit without aiming.
+  readonly property int iconSize: Style.space(56)
   readonly property int barPad: Style.space(10)
   readonly property int edgeGap: Style.space(8)
   // Empty space kept above the bar so a hover label has somewhere to go. It is
@@ -135,14 +137,56 @@ Item {
     else root.focusWindow(target)
   }
 
+  // Bring one window to the front, wherever it was put away.
+  function reveal(toplevel) {
+    if (root.isMinimized(toplevel)) root.restore(toplevel)
+    else root.focusWindow(toplevel)
+  }
+
+  function minimizeAll(row) {
+    for (var i = 0; i < row.toplevels.length; i++) {
+      if (!root.isMinimized(row.toplevels[i])) root.minimize(row.toplevels[i])
+    }
+  }
+
+  function showAll(row) {
+    for (var i = 0; i < row.toplevels.length; i++) {
+      if (root.isMinimized(row.toplevels[i])) root.restore(row.toplevels[i])
+    }
+  }
+
+  function quit(row) {
+    for (var i = 0; i < row.toplevels.length; i++) {
+      row.toplevels[i].close()
+    }
+  }
+
   function togglePin(row) {
     if (!pinFile.adapter) return
     pinFile.adapter.apps = Model.togglePin(root.pinnedIds, row.appId)
     pinFile.writeAdapter()
   }
 
-  // Which apps sit in the dock when nothing is running. Right-click an icon to
-  // add or remove one; the file is the record after that.
+  // PopupCard is built for bar widgets and reads a bar's edge and popout
+  // bookkeeping off it. The dock is a bar in every way that matters to it: one
+  // panel, pinned to an edge, with at most one popup open at a time.
+  QtObject {
+    id: dockEdge
+
+    readonly property string position: "bottom"
+    property var activePopout: null
+
+    function requestPopout(key) {
+      dockEdge.activePopout = key
+    }
+
+    function releasePopout(key) {
+      if (dockEdge.activePopout === key) dockEdge.activePopout = null
+    }
+  }
+
+  // Which apps sit in the dock when nothing is running. "Keep in Dock" in an
+  // icon's right-click menu adds or removes one; the file is the record after that.
   FileView {
     id: pinFile
 
@@ -156,7 +200,7 @@ Item {
       property list<string> apps: [
         "app.zen_browser.zen",
         "org.gnome.Nautilus",
-        "org.mozilla.Thunderbird",
+        "org.mozilla.thunderbird_esr",
         "com.spotify.Client",
         "com.slack.Slack"
       ]
@@ -212,6 +256,16 @@ Item {
 
       required property var modelData
 
+      // Which icon's right-click menu is up, on this screen.
+      property var menuRow: null
+      property var menuAnchor: null
+
+      function openMenu(row, anchor) {
+        panel.menuRow = row
+        panel.menuAnchor = anchor
+        contextMenu.open = true
+      }
+
       screen: panel.modelData
       visible: root.easyMode
       color: "transparent"
@@ -225,28 +279,40 @@ Item {
         right: true
       }
 
-      implicitHeight: bar.height + root.edgeGap + root.headroom
+      implicitHeight: dockBar.height + root.edgeGap + root.headroom
       // Windows are kept off the dock itself, not off the label headroom.
-      exclusiveZone: bar.height + root.edgeGap
+      exclusiveZone: dockBar.height + root.edgeGap
       // Everything outside the bar -- the headroom, and the gaps either side of
       // a centred dock -- stays clickable through to the window underneath.
       mask: Region {
-        item: bar
+        item: dockBar
+      }
+
+      DockMenu {
+        id: contextMenu
+
+        dock: root
+        row: panel.menuRow
+        // The card wants an Item in this window to hang off; before the first
+        // right-click there is no icon to name, so the dock itself stands in.
+        anchorItem: panel.menuAnchor || dockBar
+        owner: panel
+        bar: dockEdge
       }
 
       // The same material as the switcher and the OSD: the popup surface on one
       // soft drop shadow, frosted by the pneuma-dock layer rule in
       // hypr/toggles/easy-mode.lua.
       RectangularShadow {
-        anchors.fill: bar
-        radius: bar.radius
+        anchors.fill: dockBar
+        radius: dockBar.radius
         blur: Style.space(28)
         offset.y: Style.space(6)
         color: Qt.rgba(0, 0, 0, 0.3)
       }
 
       BorderSurface {
-        id: bar
+        id: dockBar
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
@@ -260,8 +326,8 @@ Item {
         Row {
           id: row
 
-          x: bar.borderLeft + root.barPad
-          y: bar.borderTop + root.barPad
+          x: dockBar.borderLeft + root.barPad
+          y: dockBar.borderTop + root.barPad
           spacing: Style.space(6)
 
           Repeater {
@@ -293,8 +359,9 @@ Item {
                 appLibrary: root.appLibrary
                 minimized: root.allMinimized(cell.modelData)
                 active: root.isActiveRow(cell.modelData)
+                menuOpen: contextMenu.open && panel.menuRow === cell.modelData
                 onChosen: root.activate(cell.modelData)
-                onSecondary: root.togglePin(cell.modelData)
+                onSecondary: panel.openMenu(cell.modelData, dockItem)
               }
             }
           }
