@@ -1,0 +1,103 @@
+#!/bin/bash
+# Easy mode: a floating, mouse-driven desktop for someone who expects macOS.
+#
+#   easy-mode [on|off|toggle|status]
+#
+# The compositor half is hypr/toggles/easy-mode.lua. Omarchy sources every .lua
+# file in ~/.local/state/omarchy/toggles/hypr/ after the rest of the config, so
+# this script only has to copy that file in, or take it out, and reload. The
+# dock plugin watches the same path, which is why one command flips both halves
+# and why neither of them needs to know about the other.
+
+set -euo pipefail
+
+state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
+flag="$state_home/omarchy/toggles/hypr/easy-mode.lua"
+source_file="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/toggles/easy-mode.lua"
+saved_buttons="$state_home/pneuma/easy-mode-buttons"
+
+# macOS keeps the window buttons on the left. Minimize is deliberately absent:
+# Hyprland ignores xdg_toplevel.set_minimized, so that button would be a dead
+# control. Minimizing lives on the dock (right-click an icon) and on SUPER + M.
+easy_buttons='close,maximize:'
+button_key=(org.gnome.desktop.wm.preferences button-layout)
+
+is_on() { [[ -f $flag ]]; }
+
+# Window rules are applied when a window opens, so the rules in easy-mode.lua
+# only reach windows opened from now on. These two bring the windows that are
+# already on screen across with them. `window.float` is a toggle, hence the
+# state guard on each one.
+float_open_windows() {
+  hyprctl eval '
+    for _, w in ipairs(hl.get_windows()) do
+      if not w.floating then hl.dispatch(hl.dsp.window.float({ window = w })) end
+    end' >/dev/null
+}
+
+# The reverse, minus the windows Omarchy floats on purpose whatever the mode --
+# pickers, 1Password, the TUI apps. They carry the `floating-window` tag, which
+# is reported with a trailing marker when the tag was applied by a rule.
+tile_open_windows() {
+  hyprctl eval '
+    for _, w in ipairs(hl.get_windows()) do
+      local keep_floating = false
+      for _, tag in ipairs(w.tags or {}) do
+        if tostring(tag):match("^floating%-window") then keep_floating = true end
+      end
+      if w.floating and not keep_floating then
+        hl.dispatch(hl.dsp.window.float({ window = w }))
+      end
+    end' >/dev/null
+}
+
+enable() {
+  if [[ ! -f $source_file ]]; then
+    echo "easy-mode: $source_file is missing (is the dotfiles hypr package stowed?)" >&2
+    exit 1
+  fi
+
+  mkdir -p "${flag%/*}" "${saved_buttons%/*}"
+  # Record the layout being replaced, so `off` restores what was actually there
+  # rather than a guess. Only on the way in: a second `on` must not overwrite
+  # the saved value with easy mode's own.
+  is_on || gsettings get "${button_key[@]}" >"$saved_buttons"
+  cp "$source_file" "$flag"
+  gsettings set "${button_key[@]}" "$easy_buttons"
+}
+
+disable() {
+  rm -f "$flag"
+  if [[ -s $saved_buttons ]]; then
+    gsettings set "${button_key[@]}" "$(<"$saved_buttons")"
+    rm -f "$saved_buttons"
+  else
+    gsettings reset "${button_key[@]}"
+  fi
+}
+
+case "${1:-toggle}" in
+  status)
+    is_on && echo on || echo off
+    exit 0
+    ;;
+  on) enable ;;
+  off) disable ;;
+  toggle)
+    if is_on; then disable; else enable; fi
+    ;;
+  *)
+    echo "Usage: easy-mode [on|off|toggle|status]" >&2
+    exit 1
+    ;;
+esac
+
+hyprctl reload >/dev/null
+
+if is_on; then
+  float_open_windows
+  notify-send -u low "Easy mode on" "Windows float, the dock is out, and clicking focuses."
+else
+  tile_open_windows
+  notify-send -u low "Easy mode off" "Back to tiling."
+fi

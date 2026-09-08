@@ -16,6 +16,12 @@
 -- `tile = true` it puts on Chromium-based browsers (default/hypr/apps/browser.lua).
 o.window(".*", { float = true })
 
+-- Omarchy suppresses client-initiated maximize requests for every window
+-- (default/hypr/windows.lua), which is right for a tiled desktop and wrong
+-- here: it leaves the green titlebar button and a titlebar double-click doing
+-- nothing. A floating window can maximize without disturbing a layout.
+o.window(".*", { suppress_event = "" })
+
 -- Hyprland places a new floating window at the centre of the work area and has
 -- no cascade, so this is mostly making the placement explicit; it also recentres
 -- the windows Omarchy's own rules would have positioned for a tiled layout.
