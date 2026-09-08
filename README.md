@@ -214,6 +214,8 @@ switch themes. Tests:
 | Plugin | What it adds |
 |--------|--------------|
 | `pneuma.easy-mode` | Bar button that toggles easy mode; dimmed while it is off |
+| `pneuma.tray` | Clone of `omarchy.tray` adding `alwaysExpanded`: no hover drawer, no chevron |
+| `pneuma.controls` | The indicator toggles as a labelled click dropdown instead of a hover reveal |
 | `pneuma.app-name` | The focused app's name, bold, for easy mode's macOS-shaped bar |
 | `pneuma.dock` | The app dock, shown while easy mode is on (`omarchy-shell pneuma.dock state`) |
 | `pneuma.switcher` | The Alt-Tab overlay (`omarchy-shell pneuma.switcher next / prev / commit / cancel / state`) |
@@ -242,8 +244,21 @@ While it is on:
   still scrolls the window under the pointer without raising it, as on macOS.
 - **Window buttons move to the left**, macOS-style.
 - **The top bar becomes a macOS menu bar**: the focused app's name in bold on the
-  left, no Spaces switcher, everything else on the right with the clock last, and
-  translucent over the wallpaper.
+  left next to the workspace pills, everything else on the right with the clock
+  last, and translucent over the wallpaper.
+- **The indicator toggles become a dropdown.** Instead of a strip of unlabelled
+  glyphs that reveals itself on hover, a sliders button opens a menu listing each
+  toggle with its icon *and* its name -- Silence Notifications, Night Light, Stay
+  Awake, Dictate, Screen Recording, Set Reminder. The rows are Omarchy's own
+  indicator components rather than reimplementations, so each one keeps its real
+  state and action; the glyph renders dim while its toggle is off.
+- **The system tray is always open.** `pneuma.tray` is a clone of `omarchy.tray`
+  whose only change is an `alwaysExpanded` setting: the drawer never collapses,
+  and the chevron goes with it, since it only ever meant "there is more behind
+  here". Its right-click route to pinning and hiding tray items goes too -- that
+  is a tuning job for the normal bar, which still runs the stock widget.
+- **Safe eyes is turned off**, widget and eye-break overlays both. A guest did not
+  ask to be interrupted.
 
 The toggle itself is the mouse glyph at the right-hand end of the bar, lit while
 easy mode is on.
@@ -268,10 +283,13 @@ The bar is the one part that is not a compositor setting. The shell reads a
 single `~/.config/omarchy/shell.json` with no override layer, so easy mode swaps
 the `bar` subtree in place and keeps a byte-for-byte copy of the whole file to
 put back -- a re-serialised restore would leave the stowed `shell.json`
-permanently reformatted. The easy-mode layout is `omarchy/bar-easy.json`. Two
-consequences: bar edits made *while* easy mode is on (dragging a widget,
+permanently reformatted. Two consequences: bar edits made *while* easy mode is on (dragging a widget,
 double-clicking for transparency) are discarded when it goes off, and the
 dotfiles auto-sync will commit the swapped `shell.json` if it fires mid-session.
+
+The overlay is `omarchy/shell-easy.json`: a `bar` subtree that replaces the live
+one, and a `removePlugins` list filtered out of `plugins[]` -- which is how safe
+eyes is switched off rather than merely hidden.
 
 Turning it off restores the previous window-button layout, focus-follows-mouse,
 the bar, and tiling: the compositor half is one file that Omarchy sources last

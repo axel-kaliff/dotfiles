@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.tray",
+  "name": "System tray (always open)",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "description": "Status notifier items, with an alwaysExpanded setting",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Tray.qml"
+  },
+  "barWidget": {
+    "displayName": "System tray",
+    "description": "Status notifier items; set alwaysExpanded to skip the hover drawer",
+    "category": "Status",
+    "allowMultiple": false
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.tray"
+  }
+}

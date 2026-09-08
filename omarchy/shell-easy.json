@@ -1,9 +1,4 @@
 {
-  "version": 1,
-  "idle": {
-    "screensaver": 150,
-    "lock": 300
-  },
   "bar": {
     "position": "top",
     "transparent": true,
@@ -73,28 +68,7 @@
     },
     "id": "akaliff.bar"
   },
-  "plugins": [
-    {
-      "id": "akaliff.notifications"
-    },
-    {
-      "id": "akaliff.osd"
-    },
-    {
-      "id": "pneuma.switcher"
-    },
-    {
-      "id": "pneuma.dock"
-    }
-  ],
-  "disabledPlugins": [
-    "omarchy.notifications",
-    "omarchy.media",
-    "omarchy.osd"
-  ],
-  "cloneSourceRestores": [
-    "akaliff.notifications",
-    "akaliff.media",
-    "akaliff.osd"
+  "removePlugins": [
+    "pneuma.safeeyes"
   ]
 }
