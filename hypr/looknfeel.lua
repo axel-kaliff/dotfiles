@@ -71,9 +71,13 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 1.5, spring = 
 -- layer fades) at half its speeds, so nothing lags behind the springs.
 hl.animation({ leaf = "border", enabled = true, speed = 2.7, bezier = "easeOutQuint" })
 -- The shadow colour switch lives on its own leaf (fadeShadow, a child of
--- fade), not on border, so it has to be matched to border by hand or the
--- rim and the shadow of a newly focused window settle at different times.
-hl.animation({ leaf = "fadeShadow", enabled = true, speed = 2.7, bezier = "easeOutQuint" })
+-- fade). Animating it flickers: the fade damages a region smaller than the
+-- shadow covers, so the cached blur framebuffer serves stale pixels for the
+-- rest. Forcing a full repaint (debug:damage_tracking 0) or dropping the blur
+-- cache (blur:new_optimizations) hides it equally well and both cost far more
+-- than the fade is worth; the shadow's colour, range, offset and falloff make
+-- no difference to it. So the shadow snaps while the rim keeps border's fade.
+hl.animation({ leaf = "fadeShadow", enabled = false })
 hl.animation({ leaf = "fade", enabled = true, speed = 1.5, bezier = "quick" })
 hl.animation({ leaf = "fadeIn", enabled = true, speed = 0.85, bezier = "almostLinear" })
 hl.animation({ leaf = "fadeOut", enabled = true, speed = 0.75, bezier = "almostLinear" })
