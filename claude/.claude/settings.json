@@ -13,7 +13,8 @@
       "Edit",
       "Write",
       "WebSearch",
-      "WebFetch"
+      "WebFetch",
+      "Bash(git push --force-with-lease:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
@@ -30,6 +31,7 @@
   },
   "model": "opus",
   "outputStyle": "ADHD",
+  "deniedMcpServers": [],
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -193,10 +195,5 @@
     "claude-fable-5-1": {
       "effortLevel": "xhigh"
     }
-  },
-  "deniedMcpServers": [
-    "claude.ai Gmail",
-    "claude.ai Google Calendar",
-    "claude.ai Google Drive"
-  ]
+  }
 }
