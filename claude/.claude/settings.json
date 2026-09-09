@@ -1,7 +1,5 @@
 {
   "env": {
-    "MAX_THINKING_TOKENS": "10000",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
     "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin",
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
@@ -30,7 +28,9 @@
     "defaultMode": "auto"
   },
   "model": "opus",
-  "deniedMcpServers": [],
+  "skillOverrides": {
+    "rethink": "user-invocable-only"
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -124,7 +124,6 @@
     "command": "bash /home/akaliff/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
-    "context7-plugin@context7-marketplace": false,
     "pyright-lsp@claude-plugins-official": true,
     "superpowers@claude-plugins-official": false,
     "rust-analyzer-lsp@claude-plugins-official": false,
@@ -135,12 +134,6 @@
     "mattpocock-skills@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
-    "context7-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "upstash/context7"
-      }
-    },
     "zombiesnack-plugins": {
       "source": {
         "source": "directory",

@@ -12,11 +12,6 @@ FG_GREEN='\033[32m'
 FG_YELLOW='\033[33m'
 FG_RED='\033[31m'
 FG_MAGENTA='\033[35m'
-FG_WHITE='\033[37m'
-
-# Separators
-SEP_LEFT=''   # Powerline left solid arrow
-SEP_THIN=''  # Powerline left thin arrow
 
 # Read JSON input
 input=$(cat)
@@ -25,7 +20,6 @@ input=$(cat)
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // "unknown"')
 model=$(echo "$input" | jq -r '.model.display_name // "Claude"')
 used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
-remaining_pct=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
 
 # Shorten the working directory: replace $HOME with ~
 home_dir="$HOME"
