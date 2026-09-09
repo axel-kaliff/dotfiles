@@ -1,6 +1,8 @@
 ---
 name: new-feature-branch
 description: Use when starting a new feature — checks out main/master, pulls latest from remote, creates a new worktree branch in $PROJECT_ROOT/.worktrees, and cd's into it
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # New Feature Branch

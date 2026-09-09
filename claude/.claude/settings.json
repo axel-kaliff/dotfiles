@@ -2,7 +2,8 @@
   "env": {
     "MAX_THINKING_TOKENS": "10000",
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
-    "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin"
+    "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "permissions": {
     "allow": [
@@ -28,13 +29,6 @@
     "defaultMode": "auto"
   },
   "model": "fable",
-  "skillOverrides": {
-    "complexity-trends": "off",
-    "debug": "off",
-    "doc-drift": "off",
-    "mutate": "off",
-    "root-cause": "off"
-  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -64,6 +58,15 @@
           {
             "type": "command",
             "command": "/home/akaliff/dotfiles/claude/.claude/hooks/bash-pretool.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/protect-frozen.sh"
           }
         ]
       }
@@ -100,6 +103,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/python-check.sh",
+            "timeout": 30
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -111,12 +126,11 @@
     "pyright-lsp@claude-plugins-official": true,
     "superpowers@claude-plugins-official": false,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "sics@zombiesnack-plugins": true,
     "ai-dev@sicsai-plugins": true,
     "hyperstar@sicsai-plugins": false,
     "sicsai@sicsai-plugins": true,
     "clangd-lsp@claude-plugins-official": false,
-    "mattpocock-skills@claude-plugins-official": true
+    "mattpocock-skills@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "context7-marketplace": {
@@ -178,5 +192,10 @@
     "claude-fable-5-1": {
       "effortLevel": "xhigh"
     }
-  }
+  },
+  "deniedMcpServers": [
+    "claude.ai Gmail",
+    "claude.ai Google Calendar",
+    "claude.ai Google Drive"
+  ]
 }

@@ -6,8 +6,28 @@
 
 input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // empty')
+cwd=$(echo "$input" | jq -r '.cwd // empty')
 
 [ -z "$command" ] && exit 0
+
+# --- Frozen paths (companion to protect-frozen.sh, which covers Edit/Write) ---
+# Block shell writes to any path listed in <repo>/.claude/frozen-paths: sed -i, rm, mv, cp,
+# tee, truncate, chmod, or a redirection into it. Reads stay allowed.
+root=$(git -C "${cwd:-.}" rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$root" ] && [ -f "$root/.claude/frozen-paths" ]; then
+  while IFS= read -r pat; do
+    { [ -z "$pat" ] || [[ "$pat" == \#* ]]; } && continue
+    lit=${pat%%[\*\?\[]*}          # literal prefix of the glob
+    [ -n "$lit" ] || continue
+    esc=$(printf '%s' "$lit" | sed 's/[][\.*^$/]/\\&/g')
+    if echo "$command" | grep -qF -- "$lit" && \
+       { echo "$command" | grep -qE '(^|[;&|[:space:]])(sed|rm|mv|cp|tee|truncate|chmod)([[:space:]]|$)' || \
+         echo "$command" | grep -qE ">>?[[:space:]]*['\"]?$esc"; }; then
+      echo "BLOCKED: command writes to frozen path '$lit' (.claude/frozen-paths)." >&2
+      exit 2
+    fi
+  done < "$root/.claude/frozen-paths"
+fi
 
 # --- Block dangerous commands ---
 
@@ -21,8 +41,10 @@ if echo "$command" | grep -qE 'rm\s+-[rRf]+\s+\.$'; then
   exit 2
 fi
 
-# Force push to main/master only
-if echo "$command" | grep -qE 'git\s+push\s+.*(-f|--force)' && echo "$command" | grep -qE '\b(main|master)\b'; then
+# Force push to main/master only: a force flag and the branch on the same `git push` invocation
+if echo "$command" | grep -oE 'git\s+push[^;&|]*' \
+   | grep -E '(^|\s)(-[a-zA-Z]*f[a-zA-Z]*|--force(-with-lease|-if-includes)?(=\S*)?|\+\S+)(\s|$)' \
+   | grep -qE '(^|[[:space:]:+/])(main|master)([[:space:]:]|$)'; then
   echo "BLOCKED: Force push to main/master detected: $command" >&2
   exit 2
 fi

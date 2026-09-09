@@ -3,6 +3,7 @@ name: commit
 description: Stage and commit changes with pre-commit validation. Handles formatting fixes and re-staging automatically. Use instead of manual git add/commit.
 argument-hint: "[files-or-pattern] [-m message]"
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # Commit
