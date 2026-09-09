@@ -160,7 +160,7 @@ defaults, in `hypr/*.lua` and `omarchy/`.
 
 | Shortcut | Action |
 |----------|--------|
-| `Super+H/J/K/L` (+`Shift`) | Focus / swap windows, vim-style |
+| `Super+H/J/K/L` (+`Shift`) | Focus / move windows, vim-style; `Shift` is stack-aware |
 | `Alt+Tab` / `Alt+Shift+Tab` | Window switcher: most recent first, live thumbnails; release `Alt` to land, `Esc` cancels |
 | `Super+R` then `H/J/K/L` | Resize mode (held keys repeat); `Esc` or any other key leaves, the OSD shows the mode |
 | `Super+U` | Focus the window asking for attention, or the last one |
@@ -205,6 +205,10 @@ switch themes. Tests:
 
 - **Battery-aware blur** (`hypr/power.lua`): on battery the frost drops from three passes at 12px to two at 8px, and returns on the charger. A compositor timer polls sysfs; no daemon.
 - **Screen-share hygiene** (`hypr/privacy.lua`): notification toasts and the clipboard history never appear in a shared screen, and a running share holds off the idle lock. Screen-capture permissions are enforced: grim, hyprpicker, gpu-screen-recorder, quickshell and the portal are allowed, anything else prompts.
+- **Easy mode** (`hypr/bin/easy-mode`, `hypr/toggles/easy-mode.lua`): a floating, mouse-driven desktop for someone who expects macOS. `SUPER + ALT + E`, or Style ▸ Easy Mode in the launcher. See [Easy mode](#easy-mode).
+- **Keyboard layout as a flag** (`omarchy/plugins/pneuma.keyboard-layout`): the input-source toggle shows 🇬🇧 / 🇸🇪 rather than EN / SV, in both modes. The `flags` entry in the widget's `shell.json` block maps the short code the model derives to whatever glyph should stand for it; anything unmapped keeps its code. Note the English layout is `us`, not `gb` — the flag names the language, not the keymap.
+- **Window menu** (`hypr/bindings.lua`, `omarchy/plugins/pneuma.window-menu`): SUPER + right-click on a window opens a menu — Float/Tile, Sticky (Hyprland's `pin`: on every workspace, above the rest, floating the window first if the layout owns it), Stack/Unstack, Move out of stack (stacks of more than one), Lock stack (stacked windows), Maximize, Fullscreen, Centre (floating windows only), Minimize, Close. SUPER + right-*drag* still resizes: Omarchy's held resize bind is left untouched and the menu is a second bind on the same button with `click`, which fires only on a press and release that never travelled past `binds.drag_threshold` (0 by default, which disables click detection, so it is set to 8). Adding `drag` to the resize bind instead breaks it — `mouse` is hold-to-act and the resize loop needs the button-down. The binding finds the window under the pointer itself — Hyprland has no "window at point" call, so it scans for the box containing the cursor and prefers the most recently focused one — and hands the plugin its state, so the row labels are right on open. Both modes.
+- **Window stacking** (`hypr/looknfeel.lua`, `omarchy/plugins/pneuma.window-menu`): Hyprland's window groups are COSMIC's stacks — several windows sharing one tile, switched by the tabs drawn above them. Most of it is stock and was already on: `SUPER + G` stacks the focused window, anything launched while a stack is focused joins it (`group:auto_group`), dragging a window onto a stack merges it (`group:drag_into_group`), scrolling over the tabs changes tab and middle-click closes one, `SUPER + ALT + TAB` and `SUPER + ALT + 1…5` move between tabs, and `SUPER + ALT + G` pops the current window out. Three things are ours. The menu rows above. `group:merge_floated_into_tiled_on_groupbar`, which lets a floating window be dropped onto a stack's tabs — off by default, and the only mouse gesture that puts a floating window into an existing stack. And `SUPER + SHIFT + direction` (arrows and `h/j/k/l` alike), which moves a window the same way in or out of a stack: between the tabs while there is one to trade places with, and in or out of the stack at its edges. No single dispatcher does that — `window.move` takes an undocumented `group_aware` flag (the old `movewindoworgroup`) that moves a window into a stack, out of one, or plainly moves it but never reorders tabs, while `group.move_window({ forward = … })` only reorders and wraps around the ends, so `hypr/bindings.lua` picks between them on the window's tab position. Leaving a stack places the window **beside the stack, on the side it was moved toward**, splitting the space the stack had and leaving every other tile alone. `group_aware` will not do that — it hands the window to whatever tile already lies in that direction, so with a neighbour present the window flies across into that neighbour's column while the stack keeps all its old space. Leaving with no direction (`out_of_group = true`) splits the stack's own tile instead, and the split is then pointed the right way: dwindle divides a tile along its longer side and, at `dwindle:force_split = 2`, puts the new window second, so the axis is flipped with `togglesplit` when it disagrees with the direction and the window is swapped past the stack when the direction asks for the first side. (That last step assumes `force_split = 2`, which is what Omarchy sets.) These keys used to *swap*, which knows nothing about stacks: aimed at one it traded places with the whole stack instead of joining it. **A stack only draws its tab bar while tiled.** Floating windows can be grouped — the state is real and `SUPER + ALT + TAB` still cycles them — but nothing is drawn and there is no tab to click, so the menu's Stack row tiles a floating window on the way in. Tabs carry the window title and no app icon; Hyprland's groupbar has no icon support, so two windows of the same app are told apart only by their titles. Stacking is a tiling feature, so it is of little use in easy mode, where everything floats.
 - **Scratchpads** (`hypr/scratchpads.lua`): named special workspaces that launch their app through `on_created_empty` and vanish when it closes.
 - Glass group tabs, pointer hiding after three idle seconds, floating-window snapping and back-and-forth workspace switching live in `hypr/looknfeel.lua` and `hypr/bindings.lua`.
 
@@ -212,12 +216,92 @@ switch themes. Tests:
 
 | Plugin | What it adds |
 |--------|--------------|
+| `pneuma.easy-mode` | Bar button that toggles easy mode; dimmed while it is off |
+| `pneuma.keyboard-layout` | Clone of `omarchy.keyboard-layout` adding `flags`: shows 🇬🇧 / 🇸🇪 instead of EN / SV |
+| `pneuma.tray` | Clone of `omarchy.tray` adding `alwaysExpanded`: no hover drawer, no chevron |
+| `pneuma.controls` | The indicator toggles as a labelled click dropdown instead of a hover reveal |
+| `pneuma.app-name` | The focused app's name, bold, for easy mode's macOS-shaped bar |
+| `pneuma.window-menu` | SUPER + right-click menu for a window: float, sticky, stack, maximize, minimize, close |
+| `pneuma.dock` | The app dock, shown while easy mode is on (`omarchy-shell pneuma.dock state`) |
 | `pneuma.switcher` | The Alt-Tab overlay (`omarchy-shell pneuma.switcher next / prev / commit / cancel / state`) |
 | `pneuma.pomodoro` | Focus timer; a ticking focus phase silences notifications (`focusDnd`) |
 | `pneuma.safeeyes` | Eye-break overlays |
 | `pneuma.clipboard` | Clipboard history entry point |
 | `akaliff.workspaces` | Workspace pills with the apps' icons |
 | `akaliff.bar`, `akaliff.notifications`, `akaliff.osd`, `akaliff.media` | Clones of the stock plugins wearing the glass material |
+
+### Easy mode
+
+A floating, mouse-driven desktop for someone who expects macOS, switchable while
+logged in. Toggle it with `SUPER + ALT + E`, from the launcher under Style ▸ Easy
+Mode, or with `easy-mode [on|off|toggle|status]`.
+
+While it is on:
+
+- **Nothing tiles.** Every window floats and opens centred, and drag any edge or
+  corner to resize -- no modifier held.
+- **A dock** along the bottom: pinned apps plus whatever else is running, a dot
+  under the ones with windows, and the screen reserved so no window covers it.
+  Left-click launches, switches, or -- on the app you are already in -- minimizes.
+  Right-click opens a menu: the app's windows, the actions its `.desktop` file
+  declares, Minimize/Show, Keep in Dock, and Quit.
+- **Click to focus**, instead of Omarchy's focus-follows-mouse. The scroll wheel
+  still scrolls the window under the pointer without raising it, as on macOS.
+- **Window buttons move to the left**, macOS-style.
+- **The top bar becomes a macOS menu bar**: the focused app's name in bold on the
+  left next to the workspace pills, everything else on the right with the clock
+  last, and translucent over the wallpaper.
+- **The indicator toggles become a dropdown.** Instead of a strip of unlabelled
+  glyphs that reveals itself on hover, a sliders button opens a menu listing each
+  toggle with its icon *and* its name -- Silence Notifications, Night Light, Stay
+  Awake, Dictate, Screen Recording, Set Reminder. The rows are Omarchy's own
+  indicator components rather than reimplementations, so each one keeps its real
+  state and action; the glyph renders dim while its toggle is off.
+- **The system tray is always open.** `pneuma.tray` is a clone of `omarchy.tray`
+  whose only change is an `alwaysExpanded` setting: the drawer never collapses,
+  and the chevron goes with it, since it only ever meant "there is more behind
+  here". Its right-click route to pinning and hiding tray items goes too -- that
+  is a tuning job for the normal bar, which still runs the stock widget.
+- **Safe eyes is turned off**, widget and eye-break overlays both. A guest did not
+  ask to be interrupted.
+
+The toggle itself is the mouse glyph at the right-hand end of the bar, lit while
+easy mode is on.
+
+Every keyboard shortcut keeps working; easy mode only removes the *need* for them.
+
+Two Hyprland limitations are worth knowing, because they shape the design:
+
+- **There is no minimize.** Hyprland receives `xdg_toplevel.set_minimized` and
+  drops it ([#3984](https://github.com/hyprwm/Hyprland/issues/3984)), so a
+  titlebar minimize button could only ever be a dead control -- easy mode takes
+  it out of the button layout rather than leave it there. Minimizing is the dock
+  (click the front app, or its menu) and `SUPER + M`; `SUPER + ALT + M` shows
+  what is put away. A minimized window is parked on the `special:minimized`
+  workspace, which is also why the dock talks to Hyprland directly.
+- **Window rules only apply when a window opens.** So the script also floats the
+  windows already on screen, and re-tiles them on the way out -- skipping the
+  ones Omarchy floats on purpose whatever the mode (pickers, 1Password, the TUI
+  apps), which it recognises by their `floating-window` tag.
+
+The bar is the one part that is not a compositor setting. The shell reads a
+single `~/.config/omarchy/shell.json` with no override layer, so easy mode swaps
+the `bar` subtree in place and keeps a byte-for-byte copy of the whole file to
+put back -- a re-serialised restore would leave the stowed `shell.json`
+permanently reformatted. Two consequences: bar edits made *while* easy mode is on (dragging a widget,
+double-clicking for transparency) are discarded when it goes off, and the
+dotfiles auto-sync will commit the swapped `shell.json` if it fires mid-session.
+
+The overlay is `omarchy/shell-easy.json`: a `bar` subtree that replaces the live
+one, and a `removePlugins` list filtered out of `plugins[]` -- which is how safe
+eyes is switched off rather than merely hidden.
+
+Turning it off restores the previous window-button layout, focus-follows-mouse,
+the bar, and tiling: the compositor half is one file that Omarchy sources last
+(`~/.local/state/omarchy/toggles/hypr/easy-mode.lua`), and removing it plus a
+reload rebuilds the session without it. The dock watches for that same file, so
+one command moves both halves. Pinned apps live in
+`~/.local/state/pneuma/dock.json`.
 
 ---
 

@@ -129,6 +129,11 @@ hl.config({
   },
 
   group = {
+    -- Dropping a floating window onto a stack's tabs adds it to the stack.
+    -- Off by default, and the only mouse gesture that puts a floating window
+    -- into an existing stack -- the rest of grouping already assumes tiles.
+    merge_floated_into_tiled_on_groupbar = true,
+
     col = {
       border_active = rim_active,
       border_inactive = rim_inactive,

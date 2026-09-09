@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.controls",
+  "name": "Controls",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Click-to-open dropdown of the bar's toggles, with icons and labels",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Controls",
+    "description": "The indicator toggles as a labelled dropdown instead of a hover reveal",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

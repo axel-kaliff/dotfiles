@@ -31,7 +31,11 @@
           "verticalFormat": "HH\n—\nmm"
         },
         {
-          "id": "omarchy.keyboard-layout"
+          "id": "pneuma.keyboard-layout",
+          "flags": {
+            "EN": "🇬🇧",
+            "SV": "🇸🇪"
+          }
         },
         {
           "id": "omarchy.weather"
@@ -48,10 +52,11 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "pneuma.pomodoro"
+          "id": "pneuma.pomodoro",
+          "workMinutes": 10
         },
         {
-          "id": "omarchy.agents",
+          "id": "akaliff.agents",
           "providers": {
             "codex": {
               "enabled": false
@@ -75,6 +80,9 @@
         },
         {
           "id": "omarchy.power"
+        },
+        {
+          "id": "pneuma.easy-mode"
         }
       ]
     },
@@ -92,6 +100,12 @@
     },
     {
       "id": "pneuma.switcher"
+    },
+    {
+      "id": "pneuma.dock"
+    },
+    {
+      "id": "pneuma.window-menu"
     }
   ],
   "disabledPlugins": [

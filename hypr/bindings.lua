@@ -28,7 +28,7 @@
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
 
--- Vim-style window navigation: SUPER + h/j/k/l focuses, + SHIFT swaps.
+-- Vim-style window navigation: SUPER + h/j/k/l focuses, + SHIFT moves.
 -- Displaced defaults move to the same key with ALT added. SUPER + ALT + K was
 -- already the terminal-multiplexer cheatsheet, so the Omarchy keybindings menu
 -- takes SHIFT + ALT.
@@ -52,10 +52,81 @@ o.bind("SUPER + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
 o.bind("SUPER + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))
 o.bind("SUPER + L", "Focus on right window", hl.dsp.focus({ direction = "r" }))
 
-o.bind("SUPER + SHIFT + H", "Swap window to the left", hl.dsp.window.swap({ direction = "l" }))
-o.bind("SUPER + SHIFT + J", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
-o.bind("SUPER + SHIFT + K", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
-o.bind("SUPER + SHIFT + L", "Swap window to the right", hl.dsp.window.swap({ direction = "r" }))
+-- Focus moves between tiles, and a stack is one tile -- so on a workspace whose
+-- only tile is a stack, SUPER + direction has nowhere to go and does nothing.
+-- This makes it step through the stack's tabs first and leave the stack at its
+-- edges, which is what SUPER + SHIFT + direction does for moving a window.
+hl.config({ binds = { movefocus_cycles_groupfirst = true } })
+
+-- SUPER + SHIFT + direction moves a window the same way whether or not it is
+-- in a stack: between the tabs while there is one to trade places with, and in
+-- or out of the stack at its edges.
+--
+-- No single dispatcher does that. `window.move` takes an undocumented
+-- `group_aware` flag -- the old movewindoworgroup -- which moves a window into
+-- a stack, out of one, or plainly moves it, but never reorders tabs.
+-- `group.move_window` only reorders, and wraps around the ends. So the tab the
+-- window sits on decides which of the two runs.
+local function move_window(direction)
+  return function()
+    local window = hl.get_active_window()
+    local stack = window and window.group
+
+    if stack and stack.size > 1 then
+      local horizontal = direction == "l" or direction == "r"
+      local index = stack.current_index
+
+      -- Tabs run left to right, so only horizontal moves trade places with a
+      -- neighbouring tab. Guarded at both ends because group.move_window
+      -- wraps: unguarded, a move off the first tab would jump to the last
+      -- instead of leaving the stack.
+      if horizontal and direction == "l" and index > 1 then
+        return hl.dispatch(hl.dsp.group.move_window({ forward = false }))
+      end
+      if horizontal and direction == "r" and index < stack.size then
+        return hl.dispatch(hl.dsp.group.move_window({ forward = true }))
+      end
+
+      -- Leaving. `group_aware` hands the window to whatever tile lies in that
+      -- direction, which throws it across the screen into a neighbour's column
+      -- and leaves the stack holding all its old space. Leaving with no
+      -- direction instead splits the stack's own tile, so the window stays
+      -- beside it; the split then has to be pointed the right way. dwindle
+      -- divides a tile along its longer side and, at force_split = 2, puts the
+      -- new window second -- so the axis is flipped when it disagrees with the
+      -- direction, and the window is swapped past the stack when the direction
+      -- asks for the first side.
+      local tile_is_wide = window.size.x > window.size.y
+      hl.dispatch(hl.dsp.window.move({ out_of_group = true }))
+      if horizontal ~= tile_is_wide then
+        hl.dispatch(hl.dsp.layout("togglesplit"))
+      end
+      if direction == "l" or direction == "u" then
+        hl.dispatch(hl.dsp.window.swap({ direction = direction }))
+      end
+      return
+    end
+
+    hl.dispatch(hl.dsp.window.move({ direction = direction, group_aware = true }))
+  end
+end
+
+-- Both key sets swapped before, and a swap knows nothing about stacks: aimed
+-- at one it trades places with the whole stack instead of joining it.
+hl.unbind("SUPER + SHIFT + LEFT")  -- was: Swap window to the left
+hl.unbind("SUPER + SHIFT + RIGHT") -- was: Swap window to the right
+hl.unbind("SUPER + SHIFT + UP")    -- was: Swap window up
+hl.unbind("SUPER + SHIFT + DOWN")  -- was: Swap window down
+
+o.bind("SUPER + SHIFT + LEFT", "Move window left", move_window("l"))
+o.bind("SUPER + SHIFT + RIGHT", "Move window right", move_window("r"))
+o.bind("SUPER + SHIFT + UP", "Move window up", move_window("u"))
+o.bind("SUPER + SHIFT + DOWN", "Move window down", move_window("d"))
+
+o.bind("SUPER + SHIFT + H", "Move window left", move_window("l"))
+o.bind("SUPER + SHIFT + J", "Move window down", move_window("d"))
+o.bind("SUPER + SHIFT + K", "Move window up", move_window("u"))
+o.bind("SUPER + SHIFT + L", "Move window right", move_window("r"))
 
 -- Input language switching on SUPER + SHIFT + SPACE (cycles kb_layout, see
 -- input.lua); the top-bar toggle it displaces moves to SUPER + SHIFT + T.
@@ -148,3 +219,72 @@ local thunderbird = os.getenv("HOME") .. "/.config/hypr/bin/thunderbird"
 o.bind("SUPER + SHIFT + E", "Email", thunderbird .. " -mail")
 o.bind("SUPER + SHIFT + ALT + E", "New email", thunderbird .. " -compose")
 o.bind("SUPER + SHIFT + C", "Calendar", thunderbird .. " -calendar")
+
+-- Easy mode: floating windows, an app dock and click-to-focus, for someone who
+-- expects macOS. The script owns both halves of the switch (hypr/bin/easy-mode);
+-- the same toggle is in the launcher under Style, which is the route that does
+-- not need a keyboard. SUPER + M and SUPER + ALT + M appear while it is on.
+o.bind("SUPER + ALT + E", "Easy mode", os.getenv("HOME") .. "/.config/hypr/bin/easy-mode toggle")
+
+-- SUPER + right-click opens a menu for the window under the pointer; SUPER +
+-- right-drag still resizes. One button doing both needs a drag threshold:
+-- at 0 (the default) every press counts as a drag and the click bind never
+-- fires. SUPER + left-drag to move is left alone -- it has no click half.
+hl.config({ binds = { drag_threshold = 8 } })
+
+-- Which window the pointer is over. Hyprland has no "window at point" call, so
+-- it is a scan: the candidates are the mapped, visible windows whose box holds
+-- the cursor, and the winner is the one focused most recently (focus_history_id
+-- counts up from 0), which is the one on top of any stack.
+local function window_at_cursor()
+  local cursor = hl.get_cursor_pos()
+  if not cursor then return nil end
+
+  local found, found_rank = nil, nil
+  for _, window in ipairs(hl.get_windows()) do
+    local at, size = window.at, window.size
+    if window.mapped and window.visible and at and size then
+      local inside = cursor.x >= at.x and cursor.x <= at.x + size.x
+        and cursor.y >= at.y and cursor.y <= at.y + size.y
+      local rank = window.focus_history_id or math.huge
+      if inside and (found_rank == nil or rank < found_rank) then
+        found, found_rank = window, rank
+      end
+    end
+  end
+
+  return found
+end
+
+-- The menu is a shell plugin (omarchy/plugins/pneuma.window-menu). It is handed
+-- the state its rows need rather than looking it up, so the labels are correct
+-- the moment it appears.
+local function open_window_menu()
+  local window = window_at_cursor()
+  if not window then return end
+
+  local cursor = hl.get_cursor_pos()
+  -- window.group is nil unless the window is stacked, so size 0 stands for
+  -- "not in a stack" and the menu has one number to read rather than two.
+  local stack = window.group
+  local payload = string.format(
+    '{"address":"%s","x":%d,"y":%d,"floating":%s,"pinned":%s,"fullscreen":%d,"stackSize":%d,"stackLocked":%s}',
+    window.address,
+    math.floor(cursor.x),
+    math.floor(cursor.y),
+    tostring(window.floating == true),
+    tostring(window.pinned == true),
+    window.fullscreen or 0,
+    stack and stack.size or 0,
+    tostring(stack ~= nil and stack.locked == true))
+
+  hl.exec_cmd("omarchy-shell pneuma.window-menu open " .. o.shell_quote(payload))
+end
+
+-- Omarchy's resize binding is left exactly as it is: `mouse = true` is a held
+-- bind and the resize loop needs the button-down it starts from. (Adding `drag`
+-- to it made the bind fire once after the threshold with nothing holding the
+-- resize open, which stopped it resizing at all.) The menu is a second, separate
+-- bind on the same button: `click` fires on a press and release that never
+-- travelled past binds.drag_threshold, so a drag stays a resize.
+hl.bind("SUPER + mouse:273", open_window_menu, { click = true, description = "Window menu" })
