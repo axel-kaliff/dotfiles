@@ -11,13 +11,24 @@ for h in 'Goal' 'In Progress' 'Next Steps'; do
   grep -qE "^## $h( |$)" "$f" || err "missing mandatory section '## $h'"
 done
 
+# Without a Worktree line the next session cannot tell whether the work lived in the main tree or
+# under .worktrees/, and picks up in the wrong one.
+wt=$(grep -m1 '^- Worktree:' "$f" | sed 's/^- Worktree:[[:space:]]*//; s/`//g')
+if [ -z "$wt" ]; then
+  err "missing '- Worktree:' in the '## Session' block — the next session needs the absolute path the work happened in"
+elif [ ! -d "$wt" ]; then
+  warn "Worktree '$wt' does not exist (fine only if Next Steps recreates it)"
+fi
+
 lines=$(wc -l < "$f")
 [ "$lines" -gt 100 ] && warn "$lines lines (target under 100) — cut what the code already says"
 
 filler=$(grep -nE '^(None|N/A|n/a|Nothing)\.?$' "$f")
 [ -n "$filler" ] && { warn "filler under an optional heading — drop the heading instead:"; echo "$filler" | sed 's/^/  /'; }
 
-dead=$(grep -nE '/tmp/claude-|scratchpad' "$f")
+# The Worktree line records where work happened, not a file to read later, and has its own -d
+# check above; exempt it or a worktree under a scratchpad path trips a rule aimed at references.
+dead=$(grep -nE '/tmp/claude-|scratchpad' "$f" | grep -v '^[0-9]*:- Worktree:')
 [ -n "$dead" ] && { err "references the session scratchpad, which dies with the session — copy into claude_session/notes/sources/ and point there:"; echo "$dead" | sed 's/^/  /'; }
 
 # Referenced paths should exist. Heuristic: tokens with a file extension, or a leading / ~/ ./ ../ prefix.

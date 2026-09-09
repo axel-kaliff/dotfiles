@@ -39,13 +39,13 @@ Read `git diff` before writing. It is the truth for *What Was Done*, *In Progres
 
 ### Step 2: Choose the path, supersede any prior handoff
 
-Handoffs live under `claude_session/handoffs/` at the repo root (the worktree root in a worktree). Keep exactly **one active** handoff — archive the current one before writing the new file.
+Handoffs live under `claude_session/handoffs/` at the **main repo root** — one directory shared by every worktree, so a handoff written while working in `.worktrees/x` is still found by a session that starts at the root. Keep exactly **one active** handoff — archive the current one before writing the new file.
 
 ```bash
-root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+root=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" 2>/dev/null) || root=$PWD
 mkdir -p "$root/claude_session/handoffs/archive"
 find "$root/claude_session/handoffs" -maxdepth 1 -name '*.md' -exec mv {} "$root/claude_session/handoffs/archive/" \;
-HANDOFF="$root/claude_session/handoffs/$(date +%Y-%m-%d_%H-%M).md"
+HANDOFF="$root/claude_session/handoffs/$(date +%Y-%m-%d_%H-%M-%S).md"
 # keep claude_session/ out of git without touching tracked files (common dir: covers worktrees too)
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   ex="$(git rev-parse --git-common-dir)/info/exclude"; mkdir -p "$(dirname "$ex")"
@@ -62,6 +62,7 @@ Write to `$HANDOFF` with this structure:
 
 ## Session
 - Written: <YYYY-MM-DD HH:MM>
+- Worktree: `<absolute path from the ground truth's Worktree line — where the work actually happened>`
 - Branch: `<branch — or "no git">`
 - HEAD: `<short sha — or "no git">`
 - Session: `<session id>` — transcript `<path from ground truth>` (last resort; expires after ~30 days)
@@ -155,4 +156,4 @@ Before stopping, confirm the falsifiable test: **could a fresh agent execute Nex
 - **User decisions from brainstorming/Q&A are lost** — rejected alternatives and approved sections belong in Decisions (or DECISIONS.md), with the approved content pasted into In Progress so the next agent doesn't re-present it.
 - **What Was Done claims work you never ran** — tag it [unverified].
 - **Research findings pasted into the handoff** — they belong in `claude_session/notes/`; the handoff names the note under Read First.
-- **Reached for it just to free up context** — use /compact instead.
+- **Reached for it just to free up context** — use /compact instead. The exception is a supervised session-rotation loop (`scripts/claude-session-loop.sh`), where a handoff at the token budget *is* the mechanism and compaction is what it exists to avoid.

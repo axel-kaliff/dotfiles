@@ -5,7 +5,12 @@ input=$(cat)
 sid=$(echo "$input" | jq -r '.session_id // empty')
 src=$(echo "$input" | jq -r '.source // empty')
 cwd=$(echo "$input" | jq -r '.cwd // empty'); [ -d "$cwd" ] || cwd=$PWD
+# Anchor on the main repo root (identical from every worktree) so a handoff written in
+# .worktrees/x is still announced to a session that starts at the repo root.
 root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || echo "$cwd")
+if common=$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+  root=$(dirname "$common")
+fi
 
 h=$(ls -t "$root"/claude_session/handoffs/*.md 2>/dev/null | head -1)
 if [ -n "$h" ] && [ "$src" != compact ]; then

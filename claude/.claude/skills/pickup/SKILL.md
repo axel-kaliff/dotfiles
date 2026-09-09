@@ -33,6 +33,12 @@ The block above shows the newest handoff under `claude_session/handoffs/` (legac
 - **Stale extras listed** → the newest is active; note the others and offer to archive them.
 - **Already picked up** by a session other than this one → another session or machine may be mid-work on it. Ask before continuing.
 
+### Step 1b: Move to the handoff's worktree
+
+The block above prints `Handoff worktree:` whenever the handoff was written somewhere other than where this session started. `cd` there before reading files or running anything — otherwise every relative path in the handoff resolves against the wrong tree.
+
+If it prints the worktree as **GONE**, stop and say so: the tree was removed since the handoff, so its Next Steps and Key Files are suspect. Ask whether to recreate it or archive the handoff.
+
 ### Step 2: Detect drift
 
 Compare the handoff's `## Session` block against the live git state in the block above:

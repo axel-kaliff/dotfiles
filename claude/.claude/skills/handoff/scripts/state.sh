@@ -2,16 +2,25 @@
 # Ground truth for a handoff. Injected into SKILL.md at invocation; the agent never runs it by hand.
 # Usage: state.sh [project-dir]
 proj=$1; [ -d "${proj:-}" ] || proj=$PWD
-root=$(git -C "$proj" rev-parse --show-toplevel 2>/dev/null || echo "$proj")
+# Live git state is per-worktree; the handoff directory is anchored to the main repo root, which
+# --git-common-dir resolves to identically from the main worktree and from any linked one. Without
+# that split a handoff written in .worktrees/x is invisible to a session started at the repo root.
+wt=$(git -C "$proj" rev-parse --show-toplevel 2>/dev/null || echo "$proj")
+root=$wt
+if common=$(git -C "$proj" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+  root=$(dirname "$common")
+fi
 echo "Now: $(date '+%Y-%m-%d %H:%M')"
 echo "Root: $root"
-if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "Branch: $(git -C "$root" branch --show-current)"
-  echo "HEAD: $(git -C "$root" rev-parse --short HEAD)"
-  echo "Status:";         git -C "$root" status --short     | sed 's/^/  /'
-  echo "Diff stat:";      git -C "$root" diff --stat        | sed 's/^/  /'
-  echo "Recent commits:"; git -C "$root" log --oneline -10  | sed 's/^/  /'
-  echo "Stashes:";        git -C "$root" stash list         | sed 's/^/  /'
+echo "Worktree: $wt"
+if git -C "$wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "Branch: $(git -C "$wt" branch --show-current)"
+  echo "HEAD: $(git -C "$wt" rev-parse --short HEAD)"
+  echo "Status:";         git -C "$wt" status --short     | sed 's/^/  /'
+  echo "Diff stat:";      git -C "$wt" diff --stat        | sed 's/^/  /'
+  echo "Recent commits:"; git -C "$wt" log --oneline -10  | sed 's/^/  /'
+  echo "Stashes:";        git -C "$wt" stash list         | sed 's/^/  /'
+  echo "Worktrees:";      git -C "$wt" worktree list      | sed 's/^/  /'
 else
   echo "Git: none"
 fi
