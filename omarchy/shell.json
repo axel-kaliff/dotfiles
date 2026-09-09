@@ -28,13 +28,13 @@
           "id": "omarchy.clock",
           "format": "yyyy-MM-dd HH:mm",
           "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n\u2014\nmm"
+          "verticalFormat": "HH\n—\nmm"
         },
         {
           "id": "pneuma.keyboard-layout",
           "flags": {
-            "EN": "\ud83c\uddec\ud83c\udde7",
-            "SV": "\ud83c\uddf8\ud83c\uddea"
+            "EN": "🇬🇧",
+            "SV": "🇸🇪"
           }
         },
         {
@@ -52,7 +52,8 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "pneuma.pomodoro"
+          "id": "pneuma.pomodoro",
+          "workMinutes": 10
         },
         {
           "id": "akaliff.agents",
