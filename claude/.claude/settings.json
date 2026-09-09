@@ -29,6 +29,7 @@
     "defaultMode": "auto"
   },
   "model": "fable",
+  "outputStyle": "ADHD",
   "hooks": {
     "UserPromptSubmit": [
       {
