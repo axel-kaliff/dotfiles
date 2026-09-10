@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "akaliff.icons",
+  "name": "Icon Paths",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "description": "Resolves XDG icon names to file paths, because Qt's icon theme lookup finds nothing in this Quickshell build",
+  "kinds": [
+    "service"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}

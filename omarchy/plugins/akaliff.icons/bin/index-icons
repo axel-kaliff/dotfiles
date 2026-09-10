@@ -1,0 +1,32 @@
+#!/bin/bash
+# Emit "<icon name>\t<path>", best file per name, for application icons.
+# Qt's icon-theme lookup is dead in this Quickshell build, so the shell
+# resolves names to paths itself.
+set -u
+dirs=()
+IFS=: read -r -a data <<<"${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+for d in "${XDG_DATA_HOME:-$HOME/.local/share}" "${data[@]}"; do
+  [[ -d $d/icons ]] && dirs+=("$d/icons")
+done
+[[ -d /usr/share/pixmaps ]] && dirs+=(/usr/share/pixmaps)
+(( ${#dirs[@]} )) || exit 0
+
+# -L follows the symlinks flatpak exports its icons as.
+find -L "${dirs[@]}" \( -name '*.svg' -o -name '*.png' \) -type f 2>/dev/null |
+  grep -v -- '-symbolic\.' | grep -v '/symbolic/' |
+  awk -F/ '
+    {
+      path = $0
+      n = split(path, part, "/")
+      name = part[n]
+      sub(/\.(svg|png)$/, "", name)
+      # scalable beats every fixed size; a fixed size ranks by its pixels.
+      rank = 1
+      if (path ~ /\/scalable\//) rank = 100000
+      else if (match(path, /\/([0-9]+)x[0-9]+\//, m)) rank = m[1]
+      # svg is preferred at equal rank
+      if (path ~ /\.svg$/) rank += 1
+      if (!(name in best) || rank > bestrank[name]) { best[name] = path; bestrank[name] = rank }
+    }
+    END { for (name in best) printf "%s\t%s\n", name, best[name] }
+  '

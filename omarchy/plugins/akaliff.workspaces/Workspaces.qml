@@ -45,10 +45,17 @@ BarWidget {
     return ipc && ipc.class ? String(ipc.class) : ""
   }
 
+  // Qt's icon theme resolves nothing in this Quickshell build, so the name a
+  // desktop entry gives goes through akaliff.icons, which keeps its own
+  // name-to-path index built off the XDG icon directories.
+  readonly property var iconPaths: bar?.shell?.serviceFor("akaliff.icons")
+
   function iconForAppId(appId) {
     var entry = DesktopEntries.heuristicLookup(appId)
     var name = entry && entry.icon ? entry.icon : ""
-    return name ? Quickshell.iconPath(name, true) : ""
+    if (name === "" || !root.iconPaths) return ""
+    var path = root.iconPaths.pathFor(name)
+    return path ? Util.fileUrl(path) : ""
   }
 
   function iconsFor(workspace) {
