@@ -19,7 +19,14 @@
       ],
       "center": [
         {
-          "id": "akaliff.indicators"
+          "id": "omarchy.indicators",
+          "items": [
+            "Dictation",
+            "ScreenRecording",
+            "Reminder",
+            "NightLight",
+            "StayAwake"
+          ]
         },
         {
           "id": "pneuma.safeeyes"
@@ -50,6 +57,9 @@
         },
         {
           "id": "omarchy.tray"
+        },
+        {
+          "id": "jankeesvw.notification-center"
         },
         {
           "id": "pneuma.pomodoro",
