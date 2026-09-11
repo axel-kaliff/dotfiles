@@ -23,6 +23,10 @@
       "center": [],
       "right": [
         {
+          "id": "omarchy.clock",
+          "format": "ddd d MMM  HH:mm"
+        },
+        {
           "id": "pneuma.controls"
         },
         {
@@ -68,10 +72,6 @@
         },
         {
           "id": "pneuma.easy-mode"
-        },
-        {
-          "id": "omarchy.clock",
-          "format": "ddd d MMM  HH:mm"
         }
       ]
     },
