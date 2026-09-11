@@ -26,6 +26,19 @@ shell_json="$config_home/omarchy/shell.json"
 easy_shell="$config_home/omarchy/shell-easy.json"
 saved_shell="$state_home/pneuma/easy-mode-shell.json"
 
+# That path is a symlink into the dotfiles repo, which a 15-minute timer
+# auto-commits and pushes to every machine (scripts/dotfiles-sync.sh). Left
+# alone, the rewrite above ships a guest-mode bar as everyone's permanent
+# config, and the copy that undoes it lives in ~/.local/state, which does not
+# travel -- so no other machine can put it back. Marking the file skip-worktree
+# for the duration keeps `git add -A` off it; HEAD stays the real config.
+shell_repo=$(git -C "$(dirname "$(realpath "$shell_json")")" rev-parse --show-toplevel 2>/dev/null || true)
+
+track_shell() {
+  [[ -n $shell_repo ]] || return 0
+  git -C "$shell_repo" update-index "$1" -- "$(realpath --relative-to="$shell_repo" "$shell_json")"
+}
+
 # macOS keeps the window buttons on the left. Minimize is deliberately absent:
 # Hyprland ignores xdg_toplevel.set_minimized, so that button would be a dead
 # control. Minimizing lives on the dock (right-click an icon) and on SUPER + M.
@@ -100,6 +113,7 @@ enable() {
   fi
   cp "$source_file" "$flag"
   gsettings set "${button_key[@]}" "$easy_buttons"
+  track_shell --skip-worktree
   apply_easy_shell
 }
 
@@ -118,6 +132,7 @@ disable() {
     cp "$saved_shell" "$shell_json"
     rm -f "$saved_shell"
   fi
+  track_shell --no-skip-worktree
 }
 
 case "${1:-toggle}" in

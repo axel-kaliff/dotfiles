@@ -7,46 +7,71 @@
   "bar": {
     "position": "top",
     "transparent": false,
-    "centerAnchor": "",
+    "centerAnchor": "omarchy.clock",
     "layout": {
       "left": [
         {
           "id": "pneuma.menu"
         },
         {
-          "id": "pneuma.app-name"
-        },
-        {
           "id": "akaliff.workspaces"
         }
       ],
-      "center": [],
-      "right": [
+      "center": [
+        {
+          "id": "omarchy.indicators",
+          "items": [
+            "Dictation",
+            "ScreenRecording",
+            "Reminder",
+            "NightLight",
+            "StayAwake"
+          ]
+        },
+        {
+          "id": "pneuma.safeeyes"
+        },
         {
           "id": "omarchy.clock",
-          "format": "ddd d MMM  HH:mm"
+          "format": "yyyy-MM-dd HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm"
         },
         {
-          "id": "pneuma.controls"
-        },
-        {
-          "id": "pneuma.clipboard"
-        },
-        {
-          "id": "pneuma.tray",
-          "alwaysExpanded": true
-        },
-        {
-          "id": "pneuma.pomodoro"
-        },
-        {
-          "id": "akaliff.media"
+          "id": "pneuma.keyboard-layout",
+          "flags": {
+            "EN": "🇬🇧",
+            "SV": "🇸🇪"
+          }
         },
         {
           "id": "omarchy.weather"
         },
         {
           "id": "omarchy.system-update"
+        }
+      ],
+      "right": [
+        {
+          "id": "pneuma.clipboard"
+        },
+        {
+          "id": "omarchy.tray"
+        },
+        {
+          "id": "jankeesvw.notification-center"
+        },
+        {
+          "id": "pneuma.pomodoro",
+          "workMinutes": 10
+        },
+        {
+          "id": "akaliff.agents",
+          "providers": {
+            "codex": {
+              "enabled": false
+            }
+          }
         },
         {
           "id": "omarchy.bluetooth"
@@ -55,17 +80,13 @@
           "id": "omarchy.network"
         },
         {
+          "id": "akaliff.media"
+        },
+        {
           "id": "omarchy.audio"
         },
         {
           "id": "omarchy.monitor"
-        },
-        {
-          "id": "pneuma.keyboard-layout",
-          "flags": {
-            "EN": "🇬🇧",
-            "SV": "🇸🇪"
-          }
         },
         {
           "id": "omarchy.power"
@@ -83,6 +104,9 @@
     },
     {
       "id": "akaliff.notifications"
+    },
+    {
+      "id": "pneuma.safeeyes"
     },
     {
       "id": "akaliff.osd"
