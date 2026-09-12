@@ -89,9 +89,15 @@ Item {
   // So the choice is remembered, the overview dismissed, and the window acted
   // on once the overlay has actually let go of the keyboard.
   property var pending: null
+  // Kept past the handover: the pick has to collapse in front of the others,
+  // or it slides back underneath one of them on the way down and the window
+  // that was clicked is the one you cannot see. Spread thumbnails never
+  // overlap, so this only has any effect while they are in motion.
+  property var raised: null
 
   function choose(toplevel) {
     root.pending = toplevel
+    root.raised = toplevel
     root.settle(false)
     if (toplevel) handover.restart()
   }
@@ -99,8 +105,13 @@ Item {
   Timer {
     id: handover
 
-    // Just past the close, so the layer is down before the window is touched.
-    interval: root.settleDuration + 60
+    // Only long enough for the compositor to see the overview let go of the
+    // keyboard, which happens the instant `opened` goes false -- not for the
+    // close animation to finish. Waiting out the animation left a visible
+    // pause after the windows had come down; two frames is under the eye.
+    // Measured: a dispatch as little as a round-trip after the close begins
+    // already sticks, while one sent a moment before it is swallowed whole.
+    interval: 32
 
     onTriggered: {
       var toplevel = root.pending
@@ -250,6 +261,7 @@ Item {
           width: thumbnail.modelData.target.width
           height: thumbnail.modelData.target.height
           transformOrigin: Item.TopLeft
+          z: thumbnail.modelData.toplevel === root.raised ? 1 : 0
           x: Model.lerp(thumbnail.modelData.actual.x, thumbnail.modelData.target.x, root.separation)
           y: Model.lerp(thumbnail.modelData.actual.y, thumbnail.modelData.target.y, root.separation)
           scale: Model.lerp(thumbnail.modelData.actual.width / thumbnail.modelData.target.width,
