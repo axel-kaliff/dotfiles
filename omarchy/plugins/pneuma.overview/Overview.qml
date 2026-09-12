@@ -41,6 +41,12 @@ Item {
     root.dragging = ""
     root.opened = open
     root.progress = open ? 1 : 0
+    // Window geometry is what places every thumbnail, and tiling moves windows
+    // without Hyprland volunteering their new boxes. Asking once the overview
+    // has shut, rather than as it opens, keeps the answer from landing in the
+    // middle of a swipe: it arrives as a new toplevel list, which rebuilds
+    // every thumbnail, which is a visible hitch if anything is moving.
+    if (!open) Hyprland.refreshToplevels()
   }
 
   function drag(distance) {
@@ -52,12 +58,7 @@ Item {
 
   function handle(message) {
     if (message === "start:up") {
-      if (root.opened) return
-      // Window geometry is what places every thumbnail, and tiling moves
-      // windows without Hyprland volunteering their new boxes, so it is asked
-      // once here rather than trusted from whenever it was last seen.
-      Hyprland.refreshToplevels()
-      root.dragging = "up"
+      if (!root.opened) root.dragging = "up"
     } else if (message === "start:down") {
       if (root.opened) root.dragging = "down"
     } else if (message.indexOf("move:") === 0) {
@@ -70,10 +71,20 @@ Item {
     }
   }
 
+  // Focus alone does not raise a floating window: focusing four different
+  // windows in turn on this desktop never changed which one was drawn on top.
+  // So a clicked thumbnail has to be lifted as well, or the window you picked
+  // keeps its place in the pile and the click reads as having done nothing.
+  //
+  // Both are aimed at the window by address rather than at whatever happens to
+  // be active, so neither depends on the other having landed first. Focus also
+  // carries you to the window's workspace when it is on another one.
   function choose(toplevel) {
     root.settle(false)
     if (!toplevel) return
-    Hyprland.dispatch('hl.dsp.focus({ window = hl.get_window("address:0x' + toplevel.address + '") })')
+    var target = 'hl.get_window("address:0x' + toplevel.address + '")'
+    Hyprland.dispatch("hl.dsp.focus({ window = " + target + " })")
+    Hyprland.dispatch("hl.dsp.window.bring_to_top({ window = " + target + " })")
   }
 
   function show(workspace) {
@@ -170,13 +181,18 @@ Item {
           readonly property var resting: Model.tileRect(slot.index, panel.tiles.length,
             panel.width, panel.height, Style.space(20), Style.space(56),
             panel.height > 0 ? panel.width / panel.height : 1.6)
-          // The workspace you are on grows out of the screen it is covering,
-          // which is what makes the swipe read as the desktop shrinking
-          // rather than a panel appearing over it. The rest arrive in place.
-          readonly property var placed: slot.modelData.active
-            ? Model.lerpRect({ x: 0, y: 0, width: panel.width, height: panel.height },
-                slot.resting, root.progress)
-            : slot.resting
+          // Where the tile comes from. The workspace you are on grows out of
+          // the whole screen it is covering, which is what makes the swipe
+          // read as the desktop shrinking rather than a panel appearing over
+          // it; the rest ease up from just under their resting size.
+          readonly property var entry: slot.modelData.active
+            ? ({ x: 0, y: 0, width: panel.width, height: panel.height })
+            : ({
+                x: slot.resting.x + slot.resting.width * 0.04,
+                y: slot.resting.y + slot.resting.height * 0.04,
+                width: slot.resting.width * 0.92,
+                height: slot.resting.height * 0.92
+              })
 
           workspace: slot.modelData
           monitor: panel.hyprMonitor
@@ -184,10 +200,15 @@ Item {
           active: slot.modelData.active
           progress: root.progress
 
-          x: slot.placed.x
-          y: slot.placed.y
-          width: slot.placed.width
-          height: slot.placed.height
+          // Laid out once at its resting size and scaled from there. Binding
+          // width and height to the swipe instead would relayout the tile's
+          // whole contents on every frame of it -- see WorkspaceTile.
+          width: slot.resting.width
+          height: slot.resting.height
+          transformOrigin: Item.TopLeft
+          x: Model.lerp(slot.entry.x, slot.resting.x, root.progress)
+          y: Model.lerp(slot.entry.y, slot.resting.y, root.progress)
+          scale: Model.lerp(slot.entry.width / slot.resting.width, 1, root.progress)
           opacity: slot.modelData.active ? 1 : root.progress
 
           onWindowChosen: function (toplevel) { root.choose(toplevel) }

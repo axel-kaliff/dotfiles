@@ -10,6 +10,13 @@ import "OverviewModel.js" as Model
 // pulled far enough apart that none covers another. Swiping flies each window
 // from where it actually sits to its slot, so the tile comes apart out of the
 // real desktop rather than replacing it.
+//
+// Nothing here resizes while a swipe is running. The tile is built once at the
+// size it will rest at and the parent scales it; every thumbnail is likewise
+// fixed and moved by transform. That is not a micro-optimisation -- resizing
+// the tile re-derives `placed`, which hands the Repeater a new array, which
+// destroys and rebuilds every delegate and restarts every screen capture, on
+// every frame of the gesture. It reads as lag and flicker.
 Item {
   id: tile
 
@@ -22,8 +29,12 @@ Item {
   signal windowChosen(var toplevel)
   signal chosen()
 
+  // Windows come apart ahead of the swipe rather than in step with it: eased
+  // this way they are already legible around the halfway mark, where a linear
+  // separation still has them piled up at exactly the moment you are looking.
+  readonly property real separation: 1 - Math.pow(1 - tile.progress, 3)
   readonly property bool hovered: hoverTracker.hovered
-  readonly property var frameBox: ({ x: 0, y: 0, width: frame.width, height: frame.height })
+  readonly property var frameBox: ({ x: 0, y: 0, width: tile.width, height: tile.height })
 
   // Each window with both of its boxes worked out in the same pass: where it
   // really is, and the slot it spreads into. Deriving them together is what
@@ -33,7 +44,7 @@ Item {
   // `lastIpcObject` is an empty, and so still truthy, map until it has been,
   // which is why the geometry itself is what gets checked.
   readonly property var placed: {
-    if (!tile.monitor) return []
+    if (!tile.monitor || tile.width <= 0) return []
     var all = tile.workspace && tile.workspace.toplevels ? tile.workspace.toplevels.values : []
 
     var described = []
@@ -52,12 +63,6 @@ Item {
     return described
   }
 
-  // Windows come apart ahead of the swipe rather than in step with it: eased
-  // this way they are already legible around the halfway mark, where a linear
-  // separation still has them piled up at exactly the moment you are looking.
-  // Only the windows lead -- the tile itself keeps tracking the fingers.
-  readonly property real separation: 1 - Math.pow(1 - tile.progress, 3)
-
   HoverHandler { id: hoverTracker }
 
   // A click on the part of a tile no window covers means "just take me there".
@@ -71,12 +76,11 @@ Item {
     id: frame
 
     anchors.fill: parent
-    // Both grow with the swipe: a square, transparent tile at the start lines
-    // the active workspace up with the real desktop showing through it, and a
-    // rounded, opaque card once the grid has arrived. Opaque matters -- left
-    // even slightly translucent, the lit desktop behind reads straight
-    // through a tile and the grid stops being legible.
-    radius: Math.max(0, Style.cornerRadius - Style.space(4)) * tile.progress
+    radius: Math.max(0, Style.cornerRadius - Style.space(4))
+    // Opaque by the time the grid arrives: left even slightly translucent, the
+    // lit desktop behind reads straight through a tile and the grid stops
+    // being legible. Transparent at the start so the active workspace lines up
+    // with the real desktop showing through it.
     color: Util.alpha(Color.background, tile.progress)
 
     Repeater {
@@ -87,24 +91,25 @@ Item {
 
         required property var modelData
 
-        readonly property var box: Model.lerpRect(thumbnail.modelData.actual,
-          thumbnail.modelData.target, tile.separation)
+        readonly property var actual: thumbnail.modelData.actual
+        readonly property var target: thumbnail.modelData.target
 
-        x: thumbnail.box.x
-        y: thumbnail.box.y
-        width: thumbnail.box.width
-        height: thumbnail.box.height
+        // Built at the size it rests at, then moved and scaled into place.
+        // Both boxes carry the same window aspect, so a uniform scale is the
+        // exact interpolation between them -- and the capture below never has
+        // to renegotiate a size mid-gesture.
+        width: thumbnail.target.width
+        height: thumbnail.target.height
+        transformOrigin: Item.TopLeft
+        x: Model.lerp(thumbnail.actual.x, thumbnail.target.x, tile.separation)
+        y: Model.lerp(thumbnail.actual.y, thumbnail.target.y, tile.separation)
+        scale: Model.lerp(thumbnail.actual.width / thumbnail.target.width, 1, tile.separation)
 
-        // Constrained to the size it is drawn at, not the window's real size:
-        // a grid of live full-resolution captures is not worth paying for when
-        // every one of them lands in a box this small. The box already carries
-        // the window's true aspect, so fitting inside it fills it.
         ScreencopyView {
-          anchors.centerIn: parent
+          anchors.fill: parent
           captureSource: tile.capturing ? thumbnail.modelData.toplevel.wayland : null
           live: true
           paintCursor: false
-          constraintSize: Qt.size(Math.max(1, thumbnail.width), Math.max(1, thumbnail.height))
         }
 
         MouseArea {
