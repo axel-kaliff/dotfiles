@@ -32,9 +32,11 @@ Item {
 
   // Only while nothing is being dragged, so the grid tracks the fingers one
   // to one and animates only when it is left to settle on its own.
+  readonly property int settleDuration: 220
+
   Behavior on progress {
     enabled: root.dragging === ""
-    NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: root.settleDuration; easing.type: Easing.OutCubic }
   }
 
   function settle(open) {
@@ -79,12 +81,42 @@ Item {
   // Both are aimed at the window by address rather than at whatever happens to
   // be active, so neither depends on the other having landed first. Focus also
   // carries you to the window's workspace when it is on another one.
+  // Picking a window has to wait for the overview to be gone. An exclusive
+  // keyboard-focus layer takes the focus outright -- while the overview is up
+  // Hyprland reports no active window at all -- so a focus dispatched from
+  // under it is swallowed, and when the layer goes away Hyprland hands the
+  // focus back to whatever held it before, overwriting anything set in the
+  // meantime. Measured: clicking a thumbnail produced no activewindow event
+  // for the clicked window at all, only a restore to the previous one.
+  //
+  // So the choice is remembered, the overview dismissed, and the window acted
+  // on once the overlay has actually let go of the keyboard.
+  property var pending: null
+
   function choose(toplevel) {
+    root.pending = toplevel
     root.settle(false)
-    if (!toplevel) return
-    var target = 'hl.get_window("address:0x' + toplevel.address + '")'
-    Hyprland.dispatch("hl.dsp.focus({ window = " + target + " })")
-    Hyprland.dispatch("hl.dsp.window.bring_to_top({ window = " + target + " })")
+    if (toplevel) handover.restart()
+  }
+
+  Timer {
+    id: handover
+
+    // Just past the close, so the layer is down before the window is touched.
+    interval: root.settleDuration + 60
+
+    onTriggered: {
+      var toplevel = root.pending
+      root.pending = null
+      if (!toplevel) return
+      // Focus alone does not raise a floating window -- focusing four windows
+      // in turn never changed which was drawn on top -- so the pick is lifted
+      // as well, or it stays buried and the click reads as having done
+      // nothing. Focus also carries you to its workspace when it is on one.
+      var target = 'hl.get_window("address:0x' + toplevel.address + '")'
+      Hyprland.dispatch("hl.dsp.focus({ window = " + target + " })")
+      Hyprland.dispatch("hl.dsp.window.bring_to_top({ window = " + target + " })")
+    }
   }
 
   function show(workspace) {
