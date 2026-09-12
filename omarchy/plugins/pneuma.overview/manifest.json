@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.overview",
+  "name": "Overview",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Mission Control: swipe up for a grid of workspaces with live window thumbnails",
+  "kinds": [
+    "panel"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "panel": "Overview.qml"
+  }
+}
