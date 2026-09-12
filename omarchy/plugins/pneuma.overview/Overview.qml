@@ -52,7 +52,12 @@ Item {
 
   function handle(message) {
     if (message === "start:up") {
-      if (!root.opened) root.dragging = "up"
+      if (root.opened) return
+      // Window geometry is what places every thumbnail, and tiling moves
+      // windows without Hyprland volunteering their new boxes, so it is asked
+      // once here rather than trusted from whenever it was last seen.
+      Hyprland.refreshToplevels()
+      root.dragging = "up"
     } else if (message === "start:down") {
       if (root.opened) root.dragging = "down"
     } else if (message.indexOf("move:") === 0) {
@@ -127,10 +132,12 @@ Item {
         : WlrKeyboardFocus.None
       exclusionMode: ExclusionMode.Ignore
 
+      // Deep enough that the desktop, the bar and the dock all fall away
+      // behind the grid, which is the whole point of standing back from them.
       Rectangle {
         anchors.fill: parent
         color: Color.background
-        opacity: root.progress * 0.6
+        opacity: root.progress * 0.92
       }
 
       // A click on the space around the grid closes it, same as the desktop

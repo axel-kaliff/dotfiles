@@ -70,3 +70,42 @@ hl.config({
 -- Navigate workspaces by swiping horizontally with either three or four fingers.
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
+
+-- Mission Control: swipe up with three or four fingers for the window
+-- overview, down with three to put it back (omarchy/plugins/pneuma.overview).
+--
+-- These forward raw finger travel and nothing else. Whether the overview is
+-- up is the shell's to know, so a `hyprctl reload` -- which wipes everything
+-- these closures hold -- cannot leave the two halves disagreeing about what
+-- is on screen, and Escape or a click can close it without telling Hyprland.
+local function overview_swipe(direction, sign)
+  local travel = 0
+  local announced = 0
+
+  local function announce(message)
+    hl.dispatch(hl.dsp.event("overview>>" .. message))
+  end
+
+  return {
+    start = function()
+      travel = 0
+      announced = 0
+      announce("start:" .. direction)
+    end,
+    -- A touchpad reports motion far finer than the overview can show, so
+    -- only a step worth redrawing is worth waking the shell for.
+    update = function(event)
+      travel = travel + sign * event.delta.y
+      if math.abs(travel - announced) < 6 then return end
+      announced = travel
+      announce("move:" .. math.floor(travel))
+    end,
+    finish = function(event)
+      announce("end:" .. (event.cancelled and "1" or "0"))
+    end,
+  }
+end
+
+hl.gesture({ fingers = 3, direction = "up", action = overview_swipe("up", -1) })
+hl.gesture({ fingers = 4, direction = "up", action = overview_swipe("up", -1) })
+hl.gesture({ fingers = 3, direction = "down", action = overview_swipe("down", 1) })

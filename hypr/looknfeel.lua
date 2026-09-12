@@ -238,5 +238,10 @@ hl.layer_rule({
   blur = true,
   ignore_alpha = 0.2,
 })
+-- The overview's own swipe drives every pixel of its appearance, so the
+-- compositor's layer fade would only fight it: the grid would be fading in
+-- while the fingers are already placing it.
+hl.layer_rule({ match = { namespace = "pneuma-overview" }, no_anim = true })
+
 -- Toasts enter from the screen edge like macOS notifications.
 hl.layer_rule({ match = { namespace = "omarchy-notifications" }, animation = "slide right" })

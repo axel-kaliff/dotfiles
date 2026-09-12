@@ -87,3 +87,63 @@ function lerpRect(from, to, t) {
     height: lerp(from.height, to.height, t)
   }
 }
+
+// The part that makes an overview worth opening: inside a tile the windows are
+// pulled apart until none covers another. Drawing them where they really sit
+// is faithful and useless -- a stack of overlapping windows photographs as one
+// window, which is the whole of what the desktop already showed.
+//
+// Slots are handed out in the windows' own reading order, so a window lands
+// near where the eye last left it, and each keeps its true aspect ratio inside
+// its slot so a thumbnail still looks like the window it stands for.
+// Returns one rect per placement, in the order given.
+function exposeRects(placements, tile, gap) {
+  var count = placements.length
+  if (count === 0) return []
+
+  var area = {
+    x: tile.x + gap,
+    y: tile.y + gap,
+    width: Math.max(1, tile.width - gap * 2),
+    height: Math.max(1, tile.height - gap * 2)
+  }
+  var shape = gridShape(count)
+  var cellWidth = (area.width - gap * (shape.cols - 1)) / shape.cols
+  var cellHeight = (area.height - gap * (shape.rows - 1)) / shape.rows
+
+  var order = []
+  for (var i = 0; i < count; i++) order.push(i)
+  order.sort(function (left, right) {
+    var first = placements[left]
+    var second = placements[right]
+    var byRow = (first.at[1] + first.size[1] / 2) - (second.at[1] + second.size[1] / 2)
+    // Windows within a whisker of the same height read as one row, so they are
+    // ordered left to right rather than by a pixel of vertical difference.
+    if (Math.abs(byRow) > 1) return byRow
+    return (first.at[0] + first.size[0] / 2) - (second.at[0] + second.size[0] / 2)
+  })
+
+  var rects = new Array(count)
+  for (var slot = 0; slot < count; slot++) {
+    var index = order[slot]
+    var row = Math.floor(slot / shape.cols)
+    var col = slot % shape.cols
+    var inRow = Math.min(shape.cols, count - row * shape.cols)
+    var rowWidth = cellWidth * inRow + gap * (inRow - 1)
+    var cellX = area.x + (area.width - rowWidth) / 2 + col * (cellWidth + gap)
+    var cellY = area.y + row * (cellHeight + gap)
+
+    var size = placements[index].size
+    var aspect = size[1] > 0 ? size[0] / size[1] : 1
+    var width = Math.min(cellWidth, cellHeight * aspect)
+    var height = width / aspect
+
+    rects[index] = {
+      x: cellX + (cellWidth - width) / 2,
+      y: cellY + (cellHeight - height) / 2,
+      width: width,
+      height: height
+    }
+  }
+  return rects
+}
