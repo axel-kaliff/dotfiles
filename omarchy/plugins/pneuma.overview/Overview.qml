@@ -7,15 +7,16 @@ import qs.Commons
 import qs.Ui
 import "OverviewModel.js" as Model
 
-// Mission Control: swiping up spreads the workspaces out as a grid of live
-// miniatures, swiping down puts them back, and the grid follows the fingers
-// the whole way rather than snapping at the end.
+// Mission Control: swiping up spreads the windows on the workspace you are on
+// far enough apart that none covers another, swiping down puts them back, and
+// they follow the fingers the whole way rather than snapping at the end.
+// Clicking one focuses it, raises it, and dismisses the overview.
 //
 // The compositor half is three live gestures in hypr/input.lua that forward
 // nothing but raw finger travel over socket2. Every bit of state -- whether
 // the overview is up, how far the swipe has carried it -- lives here, so a
 // `hyprctl reload` cannot leave the two halves disagreeing about what is on
-// screen, and Escape or a click can close it without the gesture ever knowing.
+// screen, and Escape or a click can close it without the gesture knowing.
 Item {
   id: root
 
@@ -23,17 +24,21 @@ Item {
   // How far a finger has to travel to carry the overview all the way open.
   // Short enough that the flick a Mac user already has in their hands lands.
   readonly property int travelToOpen: 240
+  readonly property int settleDuration: 220
 
   // The single source of truth for every visual: 0 is the bare desktop, 1 the
-  // settled grid, and a live gesture drives the values in between.
+  // settled spread, and a live gesture drives the values in between.
   property real progress: 0
   property bool opened: false
   property string dragging: ""  // "up", "down", or "" when no gesture is live
 
-  // Only while nothing is being dragged, so the grid tracks the fingers one
-  // to one and animates only when it is left to settle on its own.
-  readonly property int settleDuration: 220
+  // Windows come apart ahead of the swipe rather than in step with it: eased
+  // this way they are already legible around the halfway mark, where a linear
+  // separation still has them piled up at exactly the moment you are looking.
+  readonly property real separation: 1 - Math.pow(1 - root.progress, 3)
 
+  // Animated only when the overview is left to settle on its own, so that
+  // during a gesture the windows track the fingers one to one.
   Behavior on progress {
     enabled: root.dragging === ""
     NumberAnimation { duration: root.settleDuration; easing.type: Easing.OutCubic }
@@ -73,14 +78,6 @@ Item {
     }
   }
 
-  // Focus alone does not raise a floating window: focusing four different
-  // windows in turn on this desktop never changed which one was drawn on top.
-  // So a clicked thumbnail has to be lifted as well, or the window you picked
-  // keeps its place in the pile and the click reads as having done nothing.
-  //
-  // Both are aimed at the window by address rather than at whatever happens to
-  // be active, so neither depends on the other having landed first. Focus also
-  // carries you to the window's workspace when it is on another one.
   // Picking a window has to wait for the overview to be gone. An exclusive
   // keyboard-focus layer takes the focus outright -- while the overview is up
   // Hyprland reports no active window at all -- so a focus dispatched from
@@ -111,17 +108,11 @@ Item {
       if (!toplevel) return
       // Focus alone does not raise a floating window -- focusing four windows
       // in turn never changed which was drawn on top -- so the pick is lifted
-      // as well, or it stays buried and the click reads as having done
-      // nothing. Focus also carries you to its workspace when it is on one.
+      // as well, or it stays buried and the click reads as having done nothing.
       var target = 'hl.get_window("address:0x' + toplevel.address + '")'
       Hyprland.dispatch("hl.dsp.focus({ window = " + target + " })")
       Hyprland.dispatch("hl.dsp.window.bring_to_top({ window = " + target + " })")
     }
-  }
-
-  function show(workspace) {
-    root.settle(false)
-    if (workspace) workspace.activate()
   }
 
   Connections {
@@ -159,8 +150,50 @@ Item {
       required property var modelData
 
       readonly property var hyprMonitor: Hyprland.monitorFor(panel.modelData)
-      readonly property var tiles: Model.gridWorkspaces(Hyprland.workspaces.values,
-        String(panel.modelData.name))
+      // Only the workspace you are on. Its windows are the ones already in
+      // front of you, and spreading just those is what keeps each thumbnail
+      // big enough to pick out at a glance.
+      readonly property var workspace: panel.hyprMonitor ? panel.hyprMonitor.activeWorkspace : null
+      readonly property int margin: Style.space(56)
+
+      // Each window with both of its boxes worked out in the same pass: where
+      // it really is, and the slot it spreads into. Deriving them together is
+      // what makes it impossible to index one apart from the other, and
+      // neither depends on the swipe, so the list below stays put while the
+      // gesture runs -- rebuilding it would restart every screen capture.
+      //
+      // A window Hyprland has not described yet is simply not in the list --
+      // `lastIpcObject` is an empty, and so still truthy, map until it has
+      // been, which is why the geometry itself is what gets checked.
+      readonly property var placed: {
+        if (!panel.hyprMonitor || panel.width <= 0) return []
+        var all = panel.workspace && panel.workspace.toplevels
+          ? panel.workspace.toplevels.values : []
+
+        var described = []
+        for (var i = 0; i < all.length; i++) {
+          var box = all[i].lastIpcObject
+          if (!box || !box.at || !box.size) continue
+          described.push({ toplevel: all[i], at: box.at, size: box.size })
+        }
+
+        var screen = { x: 0, y: 0, width: panel.width, height: panel.height }
+        var room = {
+          x: panel.margin,
+          y: panel.margin,
+          width: Math.max(1, panel.width - panel.margin * 2),
+          height: Math.max(1, panel.height - panel.margin * 2)
+        }
+        var spread = Model.exposeRects(described, room, Style.space(16))
+        for (var j = 0; j < described.length; j++) {
+          // Against the whole screen, so at rest the thumbnail sits exactly
+          // over the window it stands for and the swipe starts from nothing.
+          described[j].actual = Model.windowRect(described[j].at, described[j].size,
+            panel.hyprMonitor, screen)
+          described[j].target = spread[j]
+        }
+        return described
+      }
 
       screen: panel.modelData
       visible: root.progress > 0.001
@@ -176,15 +209,15 @@ Item {
       exclusionMode: ExclusionMode.Ignore
 
       // Deep enough that the desktop, the bar and the dock all fall away
-      // behind the grid, which is the whole point of standing back from them.
+      // behind the windows, which is the whole point of standing back.
       Rectangle {
         anchors.fill: parent
         color: Color.background
         opacity: root.progress * 0.92
       }
 
-      // A click on the space around the grid closes it, same as the desktop
-      // click that closes the switcher.
+      // A click on the space around the windows closes it, same as the
+      // desktop click that closes the switcher.
       MouseArea {
         anchors.fill: parent
         onClicked: root.settle(false)
@@ -202,49 +235,50 @@ Item {
       }
 
       Repeater {
-        model: panel.tiles
+        model: panel.placed
 
-        WorkspaceTile {
-          id: slot
+        // Built at the size it rests at, then moved and scaled into place.
+        // Both boxes carry the same window aspect, so a uniform scale is the
+        // exact interpolation between them -- and binding width and height to
+        // the swipe instead would relayout, and restart the capture, every
+        // frame of the gesture.
+        Item {
+          id: thumbnail
 
           required property var modelData
-          required property int index
 
-          readonly property var resting: Model.tileRect(slot.index, panel.tiles.length,
-            panel.width, panel.height, Style.space(20), Style.space(56),
-            panel.height > 0 ? panel.width / panel.height : 1.6)
-          // Where the tile comes from. The workspace you are on grows out of
-          // the whole screen it is covering, which is what makes the swipe
-          // read as the desktop shrinking rather than a panel appearing over
-          // it; the rest ease up from just under their resting size.
-          readonly property var entry: slot.modelData.active
-            ? ({ x: 0, y: 0, width: panel.width, height: panel.height })
-            : ({
-                x: slot.resting.x + slot.resting.width * 0.04,
-                y: slot.resting.y + slot.resting.height * 0.04,
-                width: slot.resting.width * 0.92,
-                height: slot.resting.height * 0.92
-              })
-
-          workspace: slot.modelData
-          monitor: panel.hyprMonitor
-          capturing: panel.visible
-          active: slot.modelData.active
-          progress: root.progress
-
-          // Laid out once at its resting size and scaled from there. Binding
-          // width and height to the swipe instead would relayout the tile's
-          // whole contents on every frame of it -- see WorkspaceTile.
-          width: slot.resting.width
-          height: slot.resting.height
+          width: thumbnail.modelData.target.width
+          height: thumbnail.modelData.target.height
           transformOrigin: Item.TopLeft
-          x: Model.lerp(slot.entry.x, slot.resting.x, root.progress)
-          y: Model.lerp(slot.entry.y, slot.resting.y, root.progress)
-          scale: Model.lerp(slot.entry.width / slot.resting.width, 1, root.progress)
-          opacity: slot.modelData.active ? 1 : root.progress
+          x: Model.lerp(thumbnail.modelData.actual.x, thumbnail.modelData.target.x, root.separation)
+          y: Model.lerp(thumbnail.modelData.actual.y, thumbnail.modelData.target.y, root.separation)
+          scale: Model.lerp(thumbnail.modelData.actual.width / thumbnail.modelData.target.width,
+            1, root.separation)
 
-          onWindowChosen: function (toplevel) { root.choose(toplevel) }
-          onChosen: root.show(slot.modelData)
+          ScreencopyView {
+            anchors.fill: parent
+            captureSource: panel.visible ? thumbnail.modelData.toplevel.wayland : null
+            live: true
+            paintCursor: false
+          }
+
+          // Says which window a click is about to land on.
+          Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            radius: Math.max(0, Style.cornerRadius - Style.space(4))
+            border.width: Math.max(1, Style.space(2))
+            border.color: picker.containsMouse ? Style.hoverBorderColor : "transparent"
+          }
+
+          MouseArea {
+            id: picker
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.choose(thumbnail.modelData.toplevel)
+          }
         }
       }
     }
