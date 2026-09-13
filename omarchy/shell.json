@@ -119,6 +119,9 @@
     },
     {
       "id": "pneuma.window-menu"
+    },
+    {
+      "id": "pneuma.overview"
     }
   ],
   "disabledPlugins": [
