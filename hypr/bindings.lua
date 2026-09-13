@@ -288,3 +288,9 @@ end
 -- bind on the same button: `click` fires on a press and release that never
 -- travelled past binds.drag_threshold, so a drag stays a resize.
 hl.bind("SUPER + mouse:273", open_window_menu, { click = true, description = "Window menu" })
+
+-- Mission Control on a bare SUPER tap (the physical Alt key, which
+-- altwin:swap_lalt_lwin turns into SUPER -- see input.lua). On release, so a
+-- SUPER combo does not toggle the overview on the way out of the shortcut;
+-- the swipe gestures and Escape close it just the same.
+hl.bind("SUPER + Super_L", function() hl.exec_cmd("omarchy-shell -q pneuma.overview toggle") end, { release = true })
