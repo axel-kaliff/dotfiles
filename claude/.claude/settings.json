@@ -149,7 +149,7 @@
     }
   },
   "outputStyle": "ADHD",
-  "effortLevel": "medium",
+  "effortLevel": "xhigh",
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
