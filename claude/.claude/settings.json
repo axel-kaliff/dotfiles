@@ -30,7 +30,6 @@
     "defaultMode": "auto"
   },
   "model": "opus",
-  "outputStyle": "ADHD",
   "deniedMcpServers": [],
   "hooks": {
     "UserPromptSubmit": [
@@ -149,7 +148,8 @@
       }
     }
   },
-  "effortLevel": "xhigh",
+  "outputStyle": "ADHD",
+  "effortLevel": "medium",
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
