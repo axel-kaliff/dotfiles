@@ -32,29 +32,71 @@ Item {
   property bool opened: false
   property string dragging: ""  // "up", "down", or "" when no gesture is live
 
+  // Raising the panel is the slow half of opening the overview: a fresh layer
+  // surface costs a configure round-trip, a scene graph, and a screencopy
+  // session per window. Raised by the animation itself, as it used to be, that
+  // came to 75ms before the panel presented a frame and 90ms before a capture
+  // carried one -- and the animation runs on the clock, so it had spent a
+  // third of itself by then: the overview arrived already a third spread, and
+  // arrived blank, the thumbnails filling in a frame later. Armed means the
+  // panel is up and holding at progress 0, where there is nothing to see: each
+  // thumbnail sits exactly over the window it stands for, and one still
+  // without a frame draws nothing at all. The cost is paid there, before
+  // anything moves, which measures 30ms from armed to the first captures.
+  property bool armed: false
+
   // Windows come apart ahead of the swipe rather than in step with it: eased
   // this way they are already legible around the halfway mark, where a linear
   // separation still has them piled up at exactly the moment you are looking.
   readonly property real separation: 1 - Math.pow(1 - root.progress, 3)
 
   // Animated only when the overview is left to settle on its own, so that
-  // during a gesture the windows track the fingers one to one.
+  // during a gesture the windows track the fingers one to one. The curve is
+  // chosen per settle, in `settle`.
   Behavior on progress {
     enabled: root.dragging === ""
-    NumberAnimation { duration: root.settleDuration; easing.type: Easing.OutCubic }
+    NumberAnimation { id: settling; duration: root.settleDuration }
   }
 
   function settle(open) {
+    // `separation` eases the spread out on its own, so an ease-out here
+    // compounds into a snap: measured, the first frame of an ease-out open
+    // landed at half the spread, and 96% of it was over in a third of the
+    // duration. Opening from rest is therefore eased in and left to the
+    // separation to ease out, which is one smooth curve across the whole
+    // 220ms. Closing runs that same pair backwards, where an ease-out is
+    // already the gentle end, and a swipe let go mid-flight is moving
+    // anyway, so it carries on and decelerates.
+    var resting = root.progress === 0 || root.progress === 1
+    settling.easing.type = open && resting ? Easing.InCubic : Easing.OutCubic
     root.dragging = ""
     root.opened = open
     root.progress = open ? 1 : 0
-    // Window geometry is what places every thumbnail, and tiling moves windows
-    // without Hyprland volunteering their new boxes. Asking once the overview
-    // has shut, rather than as it opens, keeps the answer from landing in the
-    // middle of a swipe: it arrives as a new toplevel list, which rebuilds
-    // every thumbnail, which is a visible hitch if anything is moving.
-    if (!open) Hyprland.refreshToplevels()
+    // A swipe that began and died without travel leaves progress where it
+    // already was, so no animation will carry the overview home for us.
+    if (!open && root.progress === 0) root.rest()
   }
+
+  // Called by a panel once every thumbnail it shows has a frame to draw.
+  function warmed() {
+    if (root.armed && !root.opened && root.dragging === "") root.settle(true)
+  }
+
+  // None of the overview is on screen any more: the panel comes down, and the
+  // geometry the next one is laid out from is asked for. Window geometry is
+  // what places every thumbnail, and tiling moves windows without Hyprland
+  // volunteering their new boxes; asking here rather than while the overview
+  // opens keeps the answer -- a new toplevel list, which rebuilds every
+  // thumbnail -- out of the middle of anything moving.
+  function rest() {
+    root.armed = false
+    Hyprland.refreshToplevels()
+  }
+
+  // Not while a gesture is live: a swipe down carried past the desktop sits at
+  // 0 with the fingers still on the pad, and taking the panel away there
+  // leaves nothing to show if they come back up.
+  onProgressChanged: if (root.progress === 0 && root.dragging === "") root.rest()
 
   function drag(distance) {
     if (root.dragging === "") return
@@ -65,7 +107,11 @@ Item {
 
   function handle(message) {
     if (message === "start:up") {
-      if (!root.opened) root.dragging = "up"
+      if (root.opened) return
+      root.dragging = "up"
+      // Fingers down, nothing carried yet: the cheapest moment there is to pay
+      // for the panel, and the travel that follows covers what is left of it.
+      root.armed = true
     } else if (message === "start:down") {
       if (root.opened) root.dragging = "down"
     } else if (message.indexOf("move:") === 0) {
@@ -142,7 +188,13 @@ Item {
   IpcHandler {
     target: "pneuma.overview"
 
-    function toggle(): string { root.settle(!root.opened); return "ok" }
+    function toggle(): string {
+      // No fingers to cover the wait, so this only raises the panel; the
+      // spread follows once the captures have pixels (see `armed`).
+      if (root.opened || root.armed) root.settle(false)
+      else root.armed = true
+      return "ok"
+    }
     function state(): string {
       return JSON.stringify({
         opened: root.opened,
@@ -170,14 +222,24 @@ Item {
       // Each window with both of its boxes worked out in the same pass: where
       // it really is, and the slot it spreads into. Deriving them together is
       // what makes it impossible to index one apart from the other, and
-      // neither depends on the swipe, so the list below stays put while the
-      // gesture runs -- rebuilding it would restart every screen capture.
+      // neither depends on the swipe, so the list stays put while the gesture
+      // runs -- rebuilding it would restart every screen capture.
+      //
+      // Worked out when the panel goes up, not bound: as a binding it was
+      // re-evaluated on every frame of the animation, which hands the Repeater
+      // a new model each time, and a rebuilt thumbnail loses its capture.
       //
       // A window Hyprland has not described yet is simply not in the list --
       // `lastIpcObject` is an empty, and so still truthy, map until it has
       // been, which is why the geometry itself is what gets checked.
-      readonly property var placed: {
-        if (!panel.hyprMonitor || panel.width <= 0) return []
+      property var placed: []
+
+      // Thumbnails that have a frame to draw. What the overview waits on
+      // before it spreads: see `armed`.
+      property int warm: 0
+
+      function relayout() {
+        if (!panel.hyprMonitor || panel.width <= 0) return
         var all = panel.workspace && panel.workspace.toplevels
           ? panel.workspace.toplevels.values : []
 
@@ -203,13 +265,31 @@ Item {
             panel.hyprMonitor, screen)
           described[j].target = spread[j]
         }
-        return described
+
+        panel.warm = 0
+        panel.placed = described
+        // A bare workspace has no capture to wait for.
+        if (described.length === 0) root.warmed()
       }
 
+      // Captures stop with the panel and report their first frame again when it
+      // comes back, so what was warm before it went away counts for nothing.
+      onVisibleChanged: {
+        panel.warm = 0
+        if (panel.visible) panel.relayout()
+      }
+      onWidthChanged: if (panel.visible) panel.relayout()
+      onHeightChanged: if (panel.visible) panel.relayout()
+
+      Region { id: untouchable }
+
       screen: panel.modelData
-      visible: root.progress > 0.001
+      visible: root.armed
       anchors { top: true; bottom: true; left: true; right: true }
       color: "transparent"
+      // An armed overview stands invisibly in front of the windows, so until
+      // it has something to show it takes no pointer from them either.
+      mask: root.progress > 0 ? null : untouchable
       WlrLayershell.namespace: "pneuma-overview"
       WlrLayershell.layer: WlrLayer.Overlay
       // Taken only once the overview has settled open: a swipe the user
@@ -272,6 +352,12 @@ Item {
             captureSource: panel.visible ? thumbnail.modelData.toplevel.wayland : null
             live: true
             paintCursor: false
+
+            onHasContentChanged: {
+              if (!hasContent) return
+              panel.warm++
+              if (panel.warm >= panel.placed.length) root.warmed()
+            }
           }
 
           // Says which window a click is about to land on.

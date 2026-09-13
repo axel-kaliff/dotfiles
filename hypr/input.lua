@@ -92,11 +92,13 @@ local function overview_swipe(direction, sign)
       announced = 0
       announce("start:" .. direction)
     end,
-    -- A touchpad reports motion far finer than the overview can show, so
-    -- only a step worth redrawing is worth waking the shell for.
+    -- A touchpad reports motion finer than a 60Hz screen can show, so only a
+    -- step worth redrawing is worth waking the shell for. Two pixels of 240:
+    -- coarser than that and a slow swipe stair-steps, because the overview
+    -- tracks the fingers with no animation of its own to smooth the gaps.
     update = function(event)
       travel = travel + sign * event.delta.y
-      if math.abs(travel - announced) < 6 then return end
+      if math.abs(travel - announced) < 2 then return end
       announced = travel
       announce("move:" .. math.floor(travel))
     end,
