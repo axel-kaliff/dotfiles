@@ -159,3 +159,13 @@ if command -v just &>/dev/null; then
         exit 1
     fi
 fi
+
+# A pull that rewrites omarchy/shell.json, or a stow that re-links it, swaps the
+# file under omarchy-shell's config watcher. When the shell's reload lands while
+# the path is momentarily gone it reads empty, silently adopts the packaged
+# defaults, and stays there until it is restarted — every custom bar widget
+# disappears. Re-read on every run, so a tick that lost the config repairs it.
+if command -v qs &>/dev/null; then
+    qs -p /usr/share/omarchy/shell ipc call shell reloadConfig >/dev/null 2>&1 \
+        && log "OK: omarchy-shell config reloaded"
+fi
