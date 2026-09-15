@@ -45,10 +45,10 @@
           }
         },
         {
-          "id": "omarchy.weather"
+          "id": "omarchy.system-update"
         },
         {
-          "id": "omarchy.system-update"
+          "id": "omarchy.weather"
         }
       ],
       "right": [
