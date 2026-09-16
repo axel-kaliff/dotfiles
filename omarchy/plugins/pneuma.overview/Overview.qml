@@ -41,6 +41,8 @@ Item {
   // Hyprspace's dragAlpha: what a window fades to where it used to be, so the
   // one under the cursor reads as the one being placed.
   readonly property real dragAlpha: 0.2
+  // How far the expose insets its spread from the screen edge.
+  readonly property int exposeMargin: Style.space(56)
   // Hyprspace's click-to-exit timeout: a press and release further apart than
   // this was a drag that ended over nothing, not a click meaning "close".
   readonly property int clickMillis: 200
@@ -49,6 +51,11 @@ Item {
   // settled strip, and a live gesture drives the values in between.
   property real progress: 0
   property bool opened: false
+  // Which overview the last gesture asked for. "strip" is Hyprspace's shape,
+  // every workspace at once; "expose" spreads just this workspace's windows,
+  // which the strip cannot do -- it draws windows where they really are, and
+  // on an untiled workspace that is a pile that photographs as one window.
+  property string mode: "expose"
   property string dragging: ""  // "up", "down", or "" when no gesture is live
 
   // Raising the panel is the slow half of opening the overview: a fresh layer
@@ -152,8 +159,11 @@ Item {
   }
 
   function handle(message) {
-    if (message === "start:up") {
+    if (message.indexOf("start:up") === 0) {
       if (root.opened) return
+      // The gesture names which overview it wants, in "start:up:<mode>".
+      var wanted = message.substring(9)
+      if (wanted !== "") root.mode = wanted
       root.dragging = "up"
       // Fingers down, nothing carried yet: the cheapest moment there is to pay
       // for the panel, and the travel that follows covers what is left of it.
@@ -185,10 +195,17 @@ Item {
     handover.restart()
   }
 
+  // Kept past the handover: in an expose the pick has to collapse in front of
+  // the others, or it slides back underneath one of them on the way down and
+  // the window that was clicked is the one you cannot see. Spread thumbnails
+  // never overlap, so this only has any effect while they are in motion.
+  property var raised: null
+
   // Focus alone does not raise a floating window -- focusing four windows in
   // turn never changed which was drawn on top -- so the pick is lifted as
   // well, or it stays buried and the click reads as having done nothing.
   function choose(toplevel) {
+    root.raised = toplevel
     var target = 'hl.get_window("address:0x' + toplevel.address + '")'
     root.commit(["hl.dsp.focus({ window = " + target + " })",
       "hl.dsp.window.bring_to_top({ window = " + target + " })"])
@@ -235,43 +252,33 @@ Item {
   IpcHandler {
     target: "pneuma.overview"
 
-    function toggle(): string {
-      // No fingers to cover the wait, so this only raises the panel; the
-      // strip follows once the captures have pixels (see `armed`).
+    function toggle(mode: string): string {
+      // No fingers to cover the wait, so this only raises the panel; what it
+      // shows follows once the captures have pixels (see `armed`).
       if (root.opened || root.armed) root.settle(false)
-      else root.armed = true
+      else {
+        if (mode !== "") root.mode = mode
+        root.armed = true
+      }
       return "ok"
     }
-    function go(id: string): string {
-      root.switchTo(Number(id))
-      return "asked for " + id
-    }
-    function probe(): string {
-      var out = []
-      for (var i = 0; i < root.panels.length; i++) {
-        out.push(root.panels[i].modelData.name + "=" + root.panels[i].probe)
-        root.panels[i].probe = 0
-      }
-      return out.join(" ")
-    }
-    function hover(): string {
-      var out = []
+    // The state machine, for driving the overview from a terminal when there
+    // is no touchpad to hand: `omarchy-shell pneuma.overview state`. The
+    // capture counts are here because "it opened" and "it opened with every
+    // thumbnail drawn" are different answers, and only the second one is good.
+    function state(): string {
+      var screens = []
       for (var i = 0; i < root.panels.length; i++) {
         var p = root.panels[i]
-        var boxes = []
-        for (var b = 0; b < p.slots.length; b++) {
-          boxes.push({ id: p.slots[b].id, x: Math.round(p.slots[b].box.x + p.pan),
-            y: Math.round(p.slots[b].box.y), w: Math.round(p.slots[b].box.width) })
-        }
-        out.push({ monitor: p.modelData.name, hover: p.hover, pan: Math.round(p.pan), boxes: boxes })
+        screens.push({ monitor: p.modelData.name, warm: p.warm, captures: p.captures,
+          ready: p.ready })
       }
-      return JSON.stringify(out)
-    }
-    function state(): string {
       return JSON.stringify({
+        mode: root.mode,
         opened: root.opened,
         progress: root.progress,
-        dragging: root.dragging
+        dragging: root.dragging,
+        screens: screens
       })
     }
   }
@@ -295,6 +302,9 @@ Item {
       // Repeater a new model each time, and a rebuilt thumbnail loses its
       // capture.
       property var slots: []
+      // The expose's tiles: one per window on the current workspace, each with
+      // where it really sits and the slot it spreads into.
+      property var spread: []
       // The same boxes on their own, for the hit test that runs on every frame
       // of a drag -- rebuilding that list per frame is allocation on the one
       // path that cannot afford it.
@@ -316,8 +326,6 @@ Item {
       property var holding: null
       property rect ghost: Qt.rect(0, 0, 0, 0)
       property int dropTarget: -1
-      property int hover: -1
-      property int probe: 0
 
       // Hyprland's own stacking, which is Hyprspace's too: tiled windows at the
       // bottom, floating above them, and the one focused last on top of those,
@@ -325,7 +333,7 @@ Item {
       //
       // Rects come out relative to the box, because each workspace clips its
       // own windows and a clip has to be the windows' parent.
-      function windowsIn(workspace, box) {
+      function windowsIn(workspace, box, counted) {
         if (!workspace || !workspace.toplevels) return []
 
         var area = { x: 0, y: 0, width: box.width, height: box.height }
@@ -342,6 +350,7 @@ Item {
 
           var entry = {
             toplevel: all[i],
+            counted: counted,
             depth: ipc.floating ? 1 : 0,
             rect: Model.windowRect(ipc.at, ipc.size, panel.hyprMonitor, area)
           }
@@ -355,8 +364,58 @@ Item {
         return built
       }
 
+      // The current workspace's windows, each with both of its boxes worked
+      // out in the same pass: where it really is, and the slot it spreads into.
+      // Deriving them together is what makes it impossible to index one apart
+      // from the other, and neither depends on the swipe, so the list stays put
+      // while the gesture runs -- rebuilding it would restart every capture.
+      function layOutExpose() {
+        var workspace = panel.hyprMonitor.activeWorkspace
+        var all = workspace && workspace.toplevels ? workspace.toplevels.values : []
+
+        var described = []
+        for (var i = 0; i < all.length; i++) {
+          var ipc = all[i].lastIpcObject
+          if (!ipc || !ipc.at || !ipc.size) continue
+          described.push({ toplevel: all[i], at: ipc.at, size: ipc.size })
+        }
+
+        var screen = { x: 0, y: 0, width: panel.width, height: panel.height }
+        var room = {
+          x: root.exposeMargin,
+          y: root.exposeMargin,
+          width: Math.max(1, panel.width - root.exposeMargin * 2),
+          height: Math.max(1, panel.height - root.exposeMargin * 2)
+        }
+        var slotted = Model.exposeRects(described, room, Style.space(16))
+        for (var j = 0; j < described.length; j++) {
+          // Against the whole screen, so at rest the thumbnail sits exactly
+          // over the window it stands for and the swipe starts from nothing.
+          described[j].actual = Model.windowRect(described[j].at, described[j].size,
+            panel.hyprMonitor, screen)
+          described[j].target = slotted[j]
+        }
+        return described
+      }
+
       function relayout(recentre) {
         if (!panel.hyprMonitor || panel.width <= 0) return
+
+        if (root.mode === "expose") {
+          var flying = panel.layOutExpose()
+          panel.warm = 0
+          panel.captures = flying.length
+          panel.ready = flying.length === 0
+          // Emptied so the strip builds no delegates, and starts no captures,
+          // for an overview that is not on screen.
+          panel.slots = []
+          panel.boxes = []
+          panel.spread = flying
+          if (panel.ready) root.warmed()
+          return
+        }
+
+        panel.spread = []
 
         var mine = []
         var elsewhere = []
@@ -374,20 +433,6 @@ Item {
         var laid = Model.stripLayout(ids.length, { width: panel.width, height: panel.height },
           root.panelHeight, root.workspaceMargin)
 
-        var built = []
-        var total = 0
-        for (var slot = 0; slot < ids.length; slot++) {
-          var workspace = null
-          for (var w = 0; w < mine.length; w++) if (mine[w].id === ids[slot]) workspace = mine[w]
-
-          var windows = panel.windowsIn(workspace, laid.boxes[slot])
-          total += windows.length
-          built.push({ id: ids[slot], workspace: workspace, box: laid.boxes[slot], windows: windows })
-        }
-
-        panel.warm = 0
-        panel.captures = total
-        panel.ready = total === 0
         panel.panLimit = laid.limit
 
         // Only on the way in. Hyprspace centres the whole group and leaves it
@@ -398,14 +443,38 @@ Item {
         // was for. Doing it on every relayout would instead yank the strip out
         // from under the pointer each time a window was dropped somewhere.
         var middle = panel.pan
-        if (recentre) {
-          for (var a = 0; a < built.length; a++) {
-            if (panel.hyprMonitor.activeWorkspace === built[a].workspace) {
+        var active = panel.hyprMonitor.activeWorkspace
+        if (recentre && active) {
+          for (var a = 0; a < ids.length; a++) {
+            if (ids[a] === active.id) {
               middle = panel.width / 2 - (laid.boxes[a].x + laid.boxes[a].width / 2)
             }
           }
         }
         panel.pan = Model.clamp(middle, -laid.limit, laid.limit)
+
+        // Built after the pan settles, because whether a workspace is on screen
+        // decides whether the strip waits for its thumbnails. A strip wider than
+        // the monitor keeps boxes past the edge, and a capture for a tile that is
+        // never painted never starts: waiting on one pinned the strip at 6 of 7
+        // for as long as it was open, and only the 400ms deadline ever got it up.
+        // Panning to such a box fills it in then.
+        var built = []
+        var total = 0
+        for (var slot = 0; slot < ids.length; slot++) {
+          var workspace = null
+          for (var w = 0; w < mine.length; w++) if (mine[w].id === ids[slot]) workspace = mine[w]
+
+          var box = laid.boxes[slot]
+          var onScreen = box.x + panel.pan < panel.width && box.x + box.width + panel.pan > 0
+          var windows = panel.windowsIn(workspace, box, onScreen)
+          if (onScreen) total += windows.length
+          built.push({ id: ids[slot], workspace: workspace, box: box, windows: windows })
+        }
+
+        panel.warm = 0
+        panel.captures = total
+        panel.ready = total === 0
         panel.boxes = laid.boxes
         panel.slots = built
         // A monitor with nothing on it anywhere has no capture to wait for.
@@ -447,8 +516,6 @@ Item {
       Component.onCompleted: root.enrol(panel, true)
       Component.onDestruction: root.enrol(panel, false)
 
-      HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 1 }
-
       Region { id: untouchable }
 
       screen: panel.modelData
@@ -469,14 +536,15 @@ Item {
         : WlrKeyboardFocus.None
       exclusionMode: ExclusionMode.Ignore
 
-      // Enough that the desktop falls back behind the strip without going
-      // black: unlike Hyprspace this cannot hide the bar and the dock outright,
-      // and at the 0.92 the full-screen spread used to want, a 250px band of
-      // miniatures was the only thing left to look at on an unreadable screen.
+      // Deep behind an expose, which covers the screen and wants the desktop,
+      // the bar and the dock to fall away entirely. Only a wash behind the
+      // strip: unlike Hyprspace this cannot hide the bar and the dock outright,
+      // and at the 0.92 the spread wants, a 250px band of miniatures was the
+      // only thing left to look at on an otherwise unreadable screen.
       Rectangle {
         anchors.fill: parent
         color: Color.background
-        opacity: root.progress * 0.6
+        opacity: root.progress * (root.mode === "expose" ? 0.92 : 0.6)
       }
 
       // A click on the space around the strip closes it, same as the desktop
@@ -506,14 +574,13 @@ Item {
       Item {
         id: strip
 
+        visible: root.mode === "strip"
         width: panel.width
         height: root.panelHeight
         // The whole strip slides down from off the top of the screen. Moving
         // one item is the entire open animation: nothing is laid out again, so
         // no capture is restarted on the way in.
         y: Model.lerp(-root.panelHeight, 0, root.slide)
-
-        HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 2 }
 
         // The strip's own ground, so it reads as a panel laid over the desktop
         // rather than a few boxes adrift in a dimmed screen. Hyprspace reserves
@@ -543,8 +610,6 @@ Item {
           height: strip.height
           x: panel.pan
 
-          HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 4 }
-
           Repeater {
             model: panel.slots
 
@@ -562,8 +627,6 @@ Item {
               readonly property bool current: !!space.modelData.workspace && !!panel.hyprMonitor
                 && panel.hyprMonitor.activeWorkspace === space.modelData.workspace
               readonly property bool wanted: panel.dropTarget === space.index
-
-              HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 8 }
 
               // Hyprspace's palette in this theme's colours: the workspace you
               // are on sits lighter than the rest, and the one a drag is about
@@ -601,29 +664,34 @@ Item {
                 font.family: Style.fontFamily
               }
 
-              // Beneath the windows, so a click on one of them is the window's
-              // and a click anywhere else in the box is the workspace's.
-              MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                onEntered: panel.hover = space.modelData.id
-                onExited: if (panel.hover === space.modelData.id) panel.hover = -1
-
-                property double pressedAt: 0
-
-                onPressed: pressedAt = Date.now()
-                onReleased: {
-                  if (panel.holding !== null) return
-                  if (Date.now() - pressedAt >= root.clickMillis) return
-                  root.switchTo(space.modelData.id)
-                }
-              }
-
               Item {
                 anchors.fill: parent
                 // A window hanging off the edge of its miniature must not spill
                 // into the workspace next to it.
                 clip: true
+
+                // Beneath the windows, so a click on one of them is the
+                // window's and a click on the space around them is the
+                // workspace's. Inside this clip rather than beside it: as a
+                // sibling declared under the clipping item it received no
+                // pointer events whatsoever -- not a press, not even a hover --
+                // including over an empty workspace where the clip holds
+                // nothing at all. A HoverHandler on the very same box did fire
+                // throughout, which is what separated "the box is not being
+                // hit" from "the MouseArea is not being reached".
+                MouseArea {
+                  anchors.fill: parent
+                  hoverEnabled: true
+
+                  property double pressedAt: 0
+
+                  onPressed: pressedAt = Date.now()
+                  onReleased: {
+                    if (panel.holding !== null) return
+                    if (Date.now() - pressedAt >= root.clickMillis) return
+                    root.switchTo(space.modelData.id)
+                  }
+                }
 
                 Repeater {
                   model: space.modelData.windows
@@ -647,7 +715,7 @@ Item {
                       paintCursor: false
 
                       onHasContentChanged: {
-                        if (!hasContent) return
+                        if (!hasContent || !tile.modelData.counted) return
                         panel.warm++
                         if (panel.warm < panel.captures) return
                         panel.ready = true
@@ -735,6 +803,78 @@ Item {
               captureSource: panel.holding ? panel.holding.wayland : null
               live: true
               paintCursor: false
+            }
+          }
+        }
+      }
+
+      // The expose: this workspace's windows pulled apart until none covers
+      // another. The strip cannot do this -- it draws every window where it
+      // really sits, and on an untiled workspace that is a pile, which
+      // photographs as one window and tells you exactly what the desktop
+      // already showed. Hyprspace has no answer for it either.
+      //
+      // Each window flies from where it actually sits to its slot, so at
+      // progress 0 the spread lines up pixel for pixel with the desktop behind.
+      Item {
+        id: expose
+
+        anchors.fill: parent
+        visible: root.mode === "expose"
+
+        Repeater {
+          model: panel.spread
+
+          // Built at the size it rests at, then moved and scaled into place.
+          // Both boxes carry the same window aspect, so a uniform scale is the
+          // exact interpolation between them -- and binding width and height to
+          // the swipe instead would relayout, and restart the capture, every
+          // frame of the gesture.
+          Item {
+            id: flown
+
+            required property var modelData
+
+            width: flown.modelData.target.width
+            height: flown.modelData.target.height
+            transformOrigin: Item.TopLeft
+            z: flown.modelData.toplevel === root.raised ? 1 : 0
+            x: Model.lerp(flown.modelData.actual.x, flown.modelData.target.x, root.slide)
+            y: Model.lerp(flown.modelData.actual.y, flown.modelData.target.y, root.slide)
+            scale: Model.lerp(flown.modelData.actual.width / flown.modelData.target.width,
+              1, root.slide)
+
+            ScreencopyView {
+              anchors.fill: parent
+              captureSource: panel.visible ? flown.modelData.toplevel.wayland : null
+              live: true
+              paintCursor: false
+
+              onHasContentChanged: {
+                if (!hasContent) return
+                panel.warm++
+                if (panel.warm < panel.captures) return
+                panel.ready = true
+                root.warmed()
+              }
+            }
+
+            // Says which window a click is about to land on.
+            Rectangle {
+              anchors.fill: parent
+              color: "transparent"
+              radius: Math.max(0, Style.cornerRadius - Style.space(4))
+              border.width: Math.max(1, Style.space(2))
+              border.color: chooser.containsMouse ? Style.hoverBorderColor : "transparent"
+            }
+
+            MouseArea {
+              id: chooser
+
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.choose(flown.modelData.toplevel)
             }
           }
         }

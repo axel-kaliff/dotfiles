@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url"
 
 const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "OverviewModel.js"), "utf8")
 const Model = new Function(`${source.split("\n").slice(1).join("\n")}
-  return { stripWorkspaces, stripLayout, boxAt, windowRect, clamp, lerp }`)()
+  return { stripWorkspaces, stripLayout, boxAt, gridShape, exposeRects, windowRect, onMonitor, clamp, lerp }`)()
 
 const MONITOR = { x: 0, y: 0, width: 1920, height: 1200, scale: 1.0 }
 const PANEL = { width: 1920, height: 1200 }
@@ -131,4 +131,79 @@ test("the slide's endpoints are exact, so a settled panel rests where it belongs
 
 test("clamp holds a value inside its bounds", () => {
   assert.deepEqual([-1, 0, 0.5, 1, 2].map((n) => Model.clamp(n, 0, 1)), [0, 0, 0.5, 1, 1])
+})
+
+// --- the expose ----------------------------------------------------------
+
+const SCREEN = { x: 0, y: 0, width: PANEL.width, height: PANEL.height }
+const ROOM = { x: 56, y: 56, width: PANEL.width - 112, height: PANEL.height - 112 }
+// Three windows stacked almost exactly on top of one another: the case the
+// expose exists for, and the one the strip cannot help with.
+const STACKED = [
+  { at: [100, 100], size: [900, 600] },
+  { at: [120, 130], size: [900, 600] },
+  { at: [140, 160], size: [900, 600] },
+]
+
+test("the grid stays as square as the count allows", () => {
+  assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map((n) => Model.gridShape(n)), [
+    { cols: 1, rows: 1 }, { cols: 2, rows: 1 }, { cols: 2, rows: 2 }, { cols: 2, rows: 2 },
+    { cols: 3, rows: 2 }, { cols: 3, rows: 2 }, { cols: 3, rows: 3 },
+  ])
+  assert.deepEqual(Model.gridShape(0), { cols: 1, rows: 1 })
+})
+
+test("windows that covered each other come apart so none covers another", () => {
+  const rects = Model.exposeRects(STACKED, ROOM, 16)
+  assert.equal(rects.length, STACKED.length)
+  for (let i = 0; i < rects.length; i++) {
+    for (let j = i + 1; j < rects.length; j++) {
+      const a = rects[i], b = rects[j]
+      const overlaps = a.x < b.x + b.width && b.x < a.x + a.width
+        && a.y < b.y + b.height && b.y < a.y + a.height
+      assert.ok(!overlaps, `spread windows ${i} and ${j} still overlap`)
+    }
+  }
+})
+
+test("a spread window keeps its own proportions and stays inside the room", () => {
+  for (const rect of Model.exposeRects(STACKED, ROOM, 16)) {
+    assert.ok(Math.abs(rect.width / rect.height - 900 / 600) < 1e-9,
+      "a thumbnail that is not the window's shape stops looking like it")
+    assert.ok(rect.x >= ROOM.x - EPSILON && rect.y >= ROOM.y - EPSILON)
+    assert.ok(rect.x + rect.width <= ROOM.x + ROOM.width + EPSILON)
+    assert.ok(rect.y + rect.height <= ROOM.y + ROOM.height + EPSILON)
+  }
+})
+
+test("slots are handed out in reading order, so a window lands near where it was", () => {
+  const corners = [
+    { at: [1400, 800], size: [400, 300] },  // bottom right
+    { at: [100, 100], size: [400, 300] },   // top left
+    { at: [1400, 100], size: [400, 300] },  // top right
+    { at: [100, 800], size: [400, 300] },   // bottom left
+  ]
+  const rects = Model.exposeRects(corners, ROOM, 16)
+  assert.ok(rects[1].y < rects[3].y, "the top-left window did not stay above the bottom-left one")
+  assert.ok(rects[1].x < rects[2].x, "the top-left window did not stay left of the top-right one")
+})
+
+test("an empty workspace spreads to nothing rather than dividing by zero", () => {
+  assert.deepEqual(Model.exposeRects([], ROOM, 16), [])
+})
+
+test("a window scrolled off its monitor is known to be uncapturable", () => {
+  // The real case: a 3440-wide monitor at x=-760, and a scrolling layout that
+  // parks the third window at 3763 -- past the right edge at 2680. Its capture
+  // never arrives, so the overview must not wait for it.
+  const wide = { x: -760, y: -1440, width: 3440, height: 1440, scale: 1.0 }
+  assert.equal(Model.onMonitor([-745, -1399], [2823, 1384], wide), true)
+  assert.equal(Model.onMonitor([2092, -1399], [1657, 1384], wide), true, "straddles the edge")
+  assert.equal(Model.onMonitor([3763, -1399], [1664, 1384], wide), false)
+})
+
+test("a window on a hidden workspace still counts, being within the monitor", () => {
+  // Hidden is not the same as off-monitor: Hyprland renders a hidden window
+  // offscreen on request, so its thumbnail does arrive.
+  assert.equal(Model.onMonitor([0, 0], [1920, 1200], MONITOR), true)
 })

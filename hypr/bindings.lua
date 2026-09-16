@@ -293,4 +293,4 @@ hl.bind("SUPER + mouse:273", open_window_menu, { click = true, description = "Wi
 -- altwin:swap_lalt_lwin turns into SUPER -- see input.lua). On release, so a
 -- SUPER combo does not toggle the overview on the way out of the shortcut;
 -- the swipe gestures and Escape close it just the same.
-hl.bind("SUPER + Super_L", function() hl.exec_cmd("omarchy-shell -q pneuma.overview toggle") end, { release = true })
+hl.bind("SUPER + Super_L", function() hl.exec_cmd("omarchy-shell -q pneuma.overview toggle expose") end, { release = true })
