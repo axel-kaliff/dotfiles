@@ -76,6 +76,18 @@ function boxAt(boxes, x, y) {
   return -1
 }
 
+// Where a drop lands. A hit on a strip box is that box. A miss below the
+// strip band is the active workspace: its windows are spread across the
+// centre, and dropping into that spread means "put it on the workspace I'm
+// looking at", the way GNOME's centre area does. A miss inside or above the
+// band targets nothing, so a drag let go over the strip's own gaps is a
+// no-op rather than a surprise move.
+function dropSlot(boxes, stripX, stripY, panelY, stripHeight, activeSlot) {
+  var hit = boxAt(boxes, stripX, stripY)
+  if (hit >= 0) return hit
+  return panelY > stripHeight ? activeSlot : -1
+}
+
 // --- the expose ----------------------------------------------------------
 //
 // The other half of the overview, and the one Hyprspace has no answer for: it

@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url"
 
 const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "OverviewModel.js"), "utf8")
 const Model = new Function(`${source.split("\n").slice(1).join("\n")}
-  return { stripWorkspaces, stripLayout, boxAt, gridShape, exposeRects, windowRect, onMonitor, clamp, lerp, springCurve }`)()
+  return { stripWorkspaces, stripLayout, boxAt, gridShape, exposeRects, windowRect, onMonitor, clamp, lerp, springCurve, dropSlot }`)()
 
 const MONITOR = { x: 0, y: 0, width: 1920, height: 1200, scale: 1.0 }
 const PANEL = { width: 1920, height: 1200 }
@@ -239,4 +239,30 @@ test("the spring arrives at the desktop's pace: most of the way by half time, ho
   const at = (segment) => SPRING[segment * 6 - 1]
   assert.ok(at(5) > 0.9, `at 150ms: ${at(5)}`)
   assert.ok(Math.abs(at(8) - 1) < 0.01, `at 240ms: ${at(8)}`)
+})
+
+// Three boxes in a row at y 12..238 (strip band 250 tall), the middle one active.
+const DROP_BOXES = [
+  { x: 0, y: 12, width: 300, height: 226 },
+  { x: 320, y: 12, width: 300, height: 226 },
+  { x: 640, y: 12, width: 300, height: 226 },
+]
+
+test("a drop on a strip box lands on that box, wherever the active slot is", () => {
+  assert.equal(Model.dropSlot(DROP_BOXES, 100, 120, 120, 250, 1), 0)
+  assert.equal(Model.dropSlot(DROP_BOXES, 700, 120, 120, 250, 1), 2)
+})
+
+test("a drop below the strip lands on the active workspace, whose spread fills the centre", () => {
+  // Missed every box (in the gap), but well below the band: the spread's owner.
+  assert.equal(Model.dropSlot(DROP_BOXES, 310, 700, 700, 250, 1), 1)
+})
+
+test("a drop in the strip's own gaps, still within the band, targets nothing", () => {
+  // Between boxes, above the band's foot: a no-op, not a surprise move.
+  assert.equal(Model.dropSlot(DROP_BOXES, 310, 120, 120, 250, 1), -1)
+})
+
+test("a strip-box hit wins even below the band, so an overlapping tall box still counts", () => {
+  assert.equal(Model.dropSlot(DROP_BOXES, 100, 120, 700, 250, 2), 0)
 })

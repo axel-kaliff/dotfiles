@@ -340,6 +340,9 @@ Item {
       // of a drag -- rebuilding that list per frame is allocation on the one
       // path that cannot afford it.
       property var boxes: []
+      // Which slot is the active workspace, the one the expose spreads out
+      // below. A drop anywhere in that spread lands here (see `carry`).
+      property int activeSlot: -1
 
       // How far the strip is panned and how far it may be. A transform on the
       // whole strip, never a relayout, for the same reason.
@@ -494,9 +497,11 @@ Item {
         // Panning to such a box fills it in then.
         var built = []
         var total = 0
+        var activeSlot = -1
         for (var slot = 0; slot < ids.length; slot++) {
           var workspace = null
           for (var w = 0; w < mine.length; w++) if (mine[w].id === ids[slot]) workspace = mine[w]
+          if (active && ids[slot] === active.id) activeSlot = slot
 
           var box = laid.boxes[slot]
           var onScreen = box.x + panel.pan < panel.width && box.x + box.width + panel.pan > 0
@@ -507,6 +512,7 @@ Item {
           for (var c = 0; c < windows.length; c++) if (windows[c].counted) total++
           built.push({ id: ids[slot], workspace: workspace, box: box, windows: windows })
         }
+        panel.activeSlot = activeSlot
 
         var flying = panel.layOutExpose()
         for (var f = 0; f < flying.length; f++) if (flying[f].counted) total++
@@ -542,7 +548,12 @@ Item {
         panel.ghost = Qt.rect(onPanel.x - wide / 2, onPanel.y - tall / 2, wide, tall)
 
         var inStrip = area.mapToItem(panned, mouse.x, mouse.y)
-        panel.dropTarget = Model.boxAt(panel.boxes, inStrip.x, inStrip.y)
+        // A drop below the strip lands on the active workspace, whose windows
+        // fill the spread there: the big centre area is the obvious place to
+        // aim "put this on the workspace I'm in", and hit-testing only the
+        // strip left it inert -- a window dragged into it went nowhere.
+        panel.dropTarget = Model.dropSlot(panel.boxes, inStrip.x, inStrip.y,
+          onPanel.y, root.panelHeight, panel.activeSlot)
       }
 
       function release() {
