@@ -1,13 +1,69 @@
 .pragma library
 
 // Pure layout math for the overview: no QML types, no state.
+//
+// The shape is Hyprspace's (github.com/KZDKM/Hyprspace, src/Render.cpp
+// `CHyprspaceWidget::draw`): a strip of miniature monitors, one per
+// workspace, rather than the windows of one workspace spread into a grid.
 
-// Kept as square as the count allows, which is what keeps each window big
-// enough to still be recognisable once they are spread out.
-function gridShape(count) {
-  if (count <= 0) return { cols: 1, rows: 1 }
-  var cols = Math.ceil(Math.sqrt(count))
-  return { cols: cols, rows: Math.ceil(count / cols) }
+// Which workspaces the strip shows. Hyprspace's rule, and the reason the
+// strip is worth swiping to: every workspace in use, every empty one below
+// the highest so the numbering never jumps a gap, and one fresh workspace
+// past the end -- that last slot is what turns "put this window somewhere
+// new" into a drag instead of a keybind.
+//
+// Special workspaces (negative ids) are left out: they are summoned, not
+// switched to, so a slot in a left-to-right strip misrepresents them.
+function stripWorkspaces(occupied) {
+  var highest = 1
+  for (var i = 0; i < occupied.length; i++) {
+    if (occupied[i] > highest) highest = occupied[i]
+  }
+
+  var ids = []
+  // Through the first free id past the last one in use, so the strip always
+  // ends on an empty workspace whatever the gaps below it.
+  for (var id = 1; id <= highest + 1; id++) ids.push(id)
+  return ids
+}
+
+// The strip itself: each workspace as a miniature of the whole monitor, laid
+// out left to right and centred. Every box keeps the monitor's aspect, which
+// is what lets a window be drawn at its true relative position inside one and
+// still read as the desktop it stands for.
+//
+// `scroll` is returned clamped rather than trusted, so a strip that already
+// fits on screen cannot be panned out from under the pointer.
+function stripLayout(count, panel, panelHeight, margin, scroll) {
+  var scale = panel.height > 0 ? (panelHeight - 2 * margin) / panel.height : 0
+  var boxWidth = panel.width * scale
+  var boxHeight = panel.height * scale
+  var groupWidth = boxWidth * count + margin * Math.max(0, count - 1)
+
+  var limit = Math.max((groupWidth - panel.width) / 2 + margin, 0)
+  var panned = clamp(scroll, -limit, limit)
+
+  var boxes = []
+  for (var i = 0; i < count; i++) {
+    boxes.push({
+      x: panned + (panel.width - groupWidth) / 2 + i * (boxWidth + margin),
+      y: margin,
+      width: boxWidth,
+      height: boxHeight
+    })
+  }
+  return { boxes: boxes, scroll: panned }
+}
+
+// Which workspace box a point is over, or -1. Hyprspace runs its click target
+// and its drop target through the same hit test, so a release that lands on a
+// workspace means the same thing whether or not a window came with it.
+function boxAt(boxes, x, y) {
+  for (var i = 0; i < boxes.length; i++) {
+    var box = boxes[i]
+    if (x >= box.x && x < box.x + box.width && y >= box.y && y < box.y + box.height) return i
+  }
+  return -1
 }
 
 // Where a window really is, expressed inside `area`. `at` and `size` are
@@ -24,78 +80,13 @@ function windowRect(at, size, monitor, area) {
   }
 }
 
-function clamp01(value) {
-  return value < 0 ? 0 : value > 1 ? 1 : value
+function clamp(value, low, high) {
+  return value < low ? low : value > high ? high : value
 }
 
 // Weighted rather than `from + (to - from) * t`: this form is exact at t=0
-// and t=1, so an open tile rests precisely on its grid slot instead of a
+// and t=1, so a settled panel rests precisely where it belongs instead of a
 // fraction of a pixel off it, which a thumbnail would show as blur.
 function lerp(from, to, t) {
   return from * (1 - t) + to * t
-}
-
-// Each window flies from where it actually sits to its slot, so at progress 0
-// the overview lines up pixel for pixel with the desktop behind it.
-function lerpRect(from, to, t) {
-  return {
-    x: lerp(from.x, to.x, t),
-    y: lerp(from.y, to.y, t),
-    width: lerp(from.width, to.width, t),
-    height: lerp(from.height, to.height, t)
-  }
-}
-
-// The part that makes an overview worth opening: the windows are pulled apart
-// until none covers another. Drawing them where they really sit is faithful
-// and useless -- a stack of overlapping windows photographs as one window,
-// which is the whole of what the desktop already showed.
-//
-// Slots are handed out in the windows' own reading order, so a window lands
-// near where the eye last left it, and each keeps its true aspect ratio inside
-// its slot so a thumbnail still looks like the window it stands for.
-// Returns one rect per placement, in the order given.
-function exposeRects(placements, area, gap) {
-  var count = placements.length
-  if (count === 0) return []
-
-  var shape = gridShape(count)
-  var cellWidth = (area.width - gap * (shape.cols - 1)) / shape.cols
-  var cellHeight = (area.height - gap * (shape.rows - 1)) / shape.rows
-
-  var order = []
-  for (var i = 0; i < count; i++) order.push(i)
-  order.sort(function (left, right) {
-    var first = placements[left]
-    var second = placements[right]
-    var byRow = (first.at[1] + first.size[1] / 2) - (second.at[1] + second.size[1] / 2)
-    // Windows within a whisker of the same height read as one row, so they are
-    // ordered left to right rather than by a pixel of vertical difference.
-    if (Math.abs(byRow) > 1) return byRow
-    return (first.at[0] + first.size[0] / 2) - (second.at[0] + second.size[0] / 2)
-  })
-
-  var rects = new Array(count)
-  for (var slot = 0; slot < count; slot++) {
-    var index = order[slot]
-    var row = Math.floor(slot / shape.cols)
-    var col = slot % shape.cols
-    var inRow = Math.min(shape.cols, count - row * shape.cols)
-    var rowWidth = cellWidth * inRow + gap * (inRow - 1)
-    var cellX = area.x + (area.width - rowWidth) / 2 + col * (cellWidth + gap)
-    var cellY = area.y + row * (cellHeight + gap)
-
-    var size = placements[index].size
-    var aspect = size[1] > 0 ? size[0] / size[1] : 1
-    var width = Math.min(cellWidth, cellHeight * aspect)
-    var height = width / aspect
-
-    rects[index] = {
-      x: cellX + (cellWidth - width) / 2,
-      y: cellY + (cellHeight - height) / 2,
-      width: width,
-      height: height
-    }
-  }
-  return rects
 }
