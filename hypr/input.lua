@@ -71,18 +71,18 @@ hl.config({
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
 
--- Mission Control: swipe up for an overview, down to put it back
--- (omarchy/plugins/pneuma.overview). Three fingers spread the windows of the
--- workspace you are on far enough apart that none covers another; four show
--- every workspace at once, as a strip of miniature desktops you can drag a
--- window between. The two answer different questions -- "what is buried under
--- this pile" and "where is everything" -- so they get a gesture each.
+-- Mission Control: swipe up with three or four fingers for the overview, down
+-- with three to put it back (omarchy/plugins/pneuma.overview). One view, laid
+-- out the way GNOME lays its own out: every workspace as a strip of miniature
+-- desktops along the top, and the workspace you are on spread out beneath them
+-- so that no window covers another. A window is dragged from the spread onto a
+-- workspace to move it there.
 --
 -- These forward raw finger travel and nothing else. Whether the overview is
 -- up is the shell's to know, so a `hyprctl reload` -- which wipes everything
 -- these closures hold -- cannot leave the two halves disagreeing about what
 -- is on screen, and Escape or a click can close it without telling Hyprland.
-local function overview_swipe(direction, sign, mode)
+local function overview_swipe(direction, sign)
   local travel = 0
   local announced = 0
 
@@ -94,9 +94,7 @@ local function overview_swipe(direction, sign, mode)
     start = function()
       travel = 0
       announced = 0
-      -- The mode rides on the opening message and nothing else: a swipe down
-      -- closes whichever overview is up, so it has none to name.
-      announce("start:" .. direction .. (mode and (":" .. mode) or ""))
+      announce("start:" .. direction)
     end,
     -- A touchpad reports motion finer than a 60Hz screen can show, so only a
     -- step worth redrawing is worth waking the shell for. Two pixels of 240:
@@ -114,8 +112,8 @@ local function overview_swipe(direction, sign, mode)
   }
 end
 
-hl.gesture({ fingers = 3, direction = "up", action = overview_swipe("up", -1, "expose") })
-hl.gesture({ fingers = 4, direction = "up", action = overview_swipe("up", -1, "strip") })
--- Three down closes whichever is up. Four down is the music scratchpad's
--- (hypr/scratchpads.lua), and claiming it here only shadowed that gesture.
+hl.gesture({ fingers = 3, direction = "up", action = overview_swipe("up", -1) })
+hl.gesture({ fingers = 4, direction = "up", action = overview_swipe("up", -1) })
+-- Four down is the music scratchpad's (hypr/scratchpads.lua); claiming it here
+-- only shadowed that gesture, so closing is three fingers.
 hl.gesture({ fingers = 3, direction = "down", action = overview_swipe("down", 1) })
