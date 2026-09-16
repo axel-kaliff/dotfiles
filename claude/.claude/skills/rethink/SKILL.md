@@ -158,7 +158,8 @@ Wait for all agents. Using their combined findings, design what the code WOULD l
 ### Estimated Complexity
 - Commits needed: <N>
 - Files touched: <N>
-- Net lines changed: <roughly>
+- Lines added vs current: <roughly, to minimize>
+- Lines removed vs current: <roughly, to maximize>
 ```
 
 ## Step 3: Assess Whether to Act

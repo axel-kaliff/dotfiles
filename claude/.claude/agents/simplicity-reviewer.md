@@ -38,7 +38,7 @@ The orchestrator verifies your list and WILL reject sloppy entries. Make verific
 - The simpler design in ≤3 lines, plus a concrete sketch (signatures and shape, not essays) for top entries.
 - **Preservation:** enumerate the behaviors and callers of the current construct (grep them — including dynamic references: config module paths, string dispatch, entry points) and state that each survives the sketch — or name the one that doesn't.
 - **Cost, honestly stated:** `cost: none` / `cost: <exactly what flexibility or property is lost>` / `cost: BREAKS <what>`.
-- Estimated `−lines` and `−parts` per entry.
+- Estimated `−lines` and `−parts` per entry. `−lines` is added lines the sketch deletes, net of what it adds back; a sketch that rewrites pre-existing code adds lines and pays for them here.
 
 ## Constraints
 
