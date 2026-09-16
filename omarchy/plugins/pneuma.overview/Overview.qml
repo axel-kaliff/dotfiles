@@ -86,18 +86,31 @@ Item {
     if (!open && root.progress === 0) root.rest()
   }
 
+  // One entry per screen, each panel adding and removing itself, so unplugging
+  // a monitor cannot leave a destroyed panel behind that is never ready again.
+  // `Variants.instances` looked like the way to avoid keeping this by hand and
+  // is not: it read as empty every time, which silently turned the check below
+  // into "no panels, so everyone is ready".
+  property var panels: []
+
+  function enrol(panel, joining) {
+    var kept = []
+    for (var i = 0; i < root.panels.length; i++) {
+      if (root.panels[i] !== panel) kept.push(root.panels[i])
+    }
+    if (joining) kept.push(panel)
+    root.panels = kept
+  }
+
   // Called by a panel once every thumbnail it shows has a frame to draw. The
   // strip waits for every screen: a monitor with nothing on it is ready the
   // instant it is laid out, and left to speak for the whole overview it slid
   // the strip in over another screen's blank boxes -- measured, one screen had
-  // 6 of its 7 thumbnails when that happened. Asked of the Variants rather
-  // than a list the panels add themselves to, so unplugging a monitor cannot
-  // leave a destroyed panel behind that is never ready again.
+  // 6 of its 7 thumbnails when that happened.
   function warmed() {
     if (!root.armed || root.opened || root.dragging !== "") return
-    var panels = screens.instances ? screens.instances.values : []
-    for (var i = 0; i < panels.length; i++) {
-      if (!panels[i].ready) return
+    for (var i = 0; i < root.panels.length; i++) {
+      if (!root.panels[i].ready) return
     }
     deadline.stop()
     root.settle(true)
@@ -229,6 +242,31 @@ Item {
       else root.armed = true
       return "ok"
     }
+    function go(id: string): string {
+      root.switchTo(Number(id))
+      return "asked for " + id
+    }
+    function probe(): string {
+      var out = []
+      for (var i = 0; i < root.panels.length; i++) {
+        out.push(root.panels[i].modelData.name + "=" + root.panels[i].probe)
+        root.panels[i].probe = 0
+      }
+      return out.join(" ")
+    }
+    function hover(): string {
+      var out = []
+      for (var i = 0; i < root.panels.length; i++) {
+        var p = root.panels[i]
+        var boxes = []
+        for (var b = 0; b < p.slots.length; b++) {
+          boxes.push({ id: p.slots[b].id, x: Math.round(p.slots[b].box.x + p.pan),
+            y: Math.round(p.slots[b].box.y), w: Math.round(p.slots[b].box.width) })
+        }
+        out.push({ monitor: p.modelData.name, hover: p.hover, pan: Math.round(p.pan), boxes: boxes })
+      }
+      return JSON.stringify(out)
+    }
     function state(): string {
       return JSON.stringify({
         opened: root.opened,
@@ -278,6 +316,8 @@ Item {
       property var holding: null
       property rect ghost: Qt.rect(0, 0, 0, 0)
       property int dropTarget: -1
+      property int hover: -1
+      property int probe: 0
 
       // Hyprland's own stacking, which is Hyprspace's too: tiled windows at the
       // bottom, floating above them, and the one focused last on top of those,
@@ -404,6 +444,11 @@ Item {
       onWidthChanged: if (panel.visible) panel.relayout(true)
       onHeightChanged: if (panel.visible) panel.relayout(true)
 
+      Component.onCompleted: root.enrol(panel, true)
+      Component.onDestruction: root.enrol(panel, false)
+
+      HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 1 }
+
       Region { id: untouchable }
 
       screen: panel.modelData
@@ -468,6 +513,8 @@ Item {
         // no capture is restarted on the way in.
         y: Model.lerp(-root.panelHeight, 0, root.slide)
 
+        HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 2 }
+
         // The strip's own ground, so it reads as a panel laid over the desktop
         // rather than a few boxes adrift in a dimmed screen. Hyprspace reserves
         // this band from the layout outright; a layer surface cannot, so the
@@ -496,6 +543,8 @@ Item {
           height: strip.height
           x: panel.pan
 
+          HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 4 }
+
           Repeater {
             model: panel.slots
 
@@ -513,6 +562,8 @@ Item {
               readonly property bool current: !!space.modelData.workspace && !!panel.hyprMonitor
                 && panel.hyprMonitor.activeWorkspace === space.modelData.workspace
               readonly property bool wanted: panel.dropTarget === space.index
+
+              HoverHandler { onHoveredChanged: if (hovered) panel.probe |= 8 }
 
               // Hyprspace's palette in this theme's colours: the workspace you
               // are on sits lighter than the rest, and the one a drag is about
@@ -554,6 +605,9 @@ Item {
               // and a click anywhere else in the box is the workspace's.
               MouseArea {
                 anchors.fill: parent
+                hoverEnabled: true
+                onEntered: panel.hover = space.modelData.id
+                onExited: if (panel.hover === space.modelData.id) panel.hover = -1
 
                 property double pressedAt: 0
 
