@@ -1,7 +1,7 @@
 # Deployed into the local config through Codex's config API; runtime state stays local.
 model = "gpt-6-astra"
 model_reasoning_effort = "high"
-model_auto_compact_token_limit = 630000
+model_auto_compact_token_limit = 190400  # 70% of gpt-6-astra's 272k window; Codex clamps anything above 90%
 approvals_reviewer = "auto_review"
 
 [tui]
