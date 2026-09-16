@@ -184,3 +184,37 @@ function clamp(value, low, high) {
 function lerp(from, to, t) {
   return from * (1 - t) + to * t
 }
+
+// The desktop's motion is a spring (hypr/looknfeel.lua: appleSpring), and Qt
+// has no spring easing, only bezier splines. This solves the underdamped
+// spring x'' = -(k/m) x - (c/m) x' let go from one unit out and writes its
+// path over `seconds` as the cubic Hermite spline Qt's BezierSpline easing
+// takes, so the overview arrives with the same shape and pace as a window
+// appearing. Qt requires the spline to end exactly at 1, so the tail is
+// rescaled to: over 0.3s the appleSpring is within 0.4% of home, under a
+// pixel anywhere on screen.
+function springCurve(stiffness, damping, mass, seconds, segments) {
+  var natural = Math.sqrt(stiffness / mass)
+  var ratio = damping / (2 * Math.sqrt(stiffness * mass))
+  var damped = natural * Math.sqrt(1 - ratio * ratio)
+  var decay = ratio * natural
+  function position(t) {
+    return 1 - Math.exp(-decay * t) * (Math.cos(damped * t) + (decay / damped) * Math.sin(damped * t))
+  }
+  function velocity(t) {
+    return Math.exp(-decay * t) * (natural * natural / damped) * Math.sin(damped * t)
+  }
+  var end = position(seconds)
+  var curve = []
+  for (var i = 0; i < segments; i++) {
+    var u0 = i / segments
+    var u1 = (i + 1) / segments
+    var third = (u1 - u0) / 3
+    var p0 = position(u0 * seconds) / end
+    var p1 = position(u1 * seconds) / end
+    var v0 = velocity(u0 * seconds) * seconds / end
+    var v1 = velocity(u1 * seconds) * seconds / end
+    curve.push(u0 + third, p0 + v0 * third, u1 - third, p1 - v1 * third, u1, p1)
+  }
+  return curve
+}

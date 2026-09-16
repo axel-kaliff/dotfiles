@@ -207,3 +207,36 @@ test("a window on a hidden workspace still counts, being within the monitor", ()
   // offscreen on request, so its thumbnail does arrive.
   assert.equal(Model.onMonitor([0, 0], [1920, 1200], MONITOR), true)
 })
+
+// The desktop's spring: hypr/looknfeel.lua's appleSpring, over the 300ms the
+// overview takes to open.
+const SPRING = Model.springCurve(520, 38, 1, 0.3, 10)
+
+test("the spring is a bezier spline Qt accepts: six numbers a segment, ending exactly at 1,1", () => {
+  assert.equal(SPRING.length, 60)
+  assert.equal(SPRING[58], 1)
+  assert.equal(SPRING[59], 1)
+})
+
+test("the spline runs forward in time: every x, control points included, follows the last", () => {
+  for (let i = 0; i + 4 < SPRING.length; i += 2) {
+    const x = SPRING[i]
+    const next = SPRING[i + 2]
+    assert.ok(next > x, `x at ${i + 2} (${next}) does not follow ${x}`)
+  }
+})
+
+test("the spring leaves from rest and never swings past home by more than a pixel would show", () => {
+  // From rest: the first control point sits on the floor, so nothing jumps.
+  assert.equal(SPRING[1], 0)
+  for (let i = 1; i < SPRING.length; i += 2) {
+    assert.ok(SPRING[i] >= 0 && SPRING[i] <= 1.02, `y at ${i} is ${SPRING[i]}`)
+  }
+})
+
+test("the spring arrives at the desktop's pace: most of the way by half time, home by the last fifth", () => {
+  // Segment endpoints are every 30ms: the fifth is 150ms in, the eighth 240ms.
+  const at = (segment) => SPRING[segment * 6 - 1]
+  assert.ok(at(5) > 0.9, `at 150ms: ${at(5)}`)
+  assert.ok(Math.abs(at(8) - 1) < 0.01, `at 240ms: ${at(8)}`)
+})
