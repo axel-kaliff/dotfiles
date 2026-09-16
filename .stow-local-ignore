@@ -22,6 +22,7 @@ docs
 # Packages stowed separately, to ~ rather than ~/.config
 bash
 claude
+codex
 
 # Not XDG config: helper scripts, container/server definitions, editor state
 scripts

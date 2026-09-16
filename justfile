@@ -146,7 +146,12 @@ stow-dotfiles:
   @echo "Stowing claude config to ~..."
   @$HOME/dotfiles/scripts/stow-resolve-conflicts.sh -d ~/dotfiles -t ~ claude
   @stow -d ~/dotfiles -t ~ --restow --no-folding claude
+  @just stow-codex
   @echo "Dotfiles stowed."
+
+stow-codex:
+  @bash "$HOME/dotfiles/codex/install.sh"
+  @if command -v codex >/dev/null; then bash "$HOME/dotfiles/codex/apply-config.sh"; else echo "Codex is not installed; linked files only. Re-run just stow-codex after installing it."; fi
 
 # Explicit, interactive counterpart to stow-dotfiles: pulls conflicting on-disk
 # files INTO the repo. Never run from the sync timer — always review the diff.
@@ -164,6 +169,7 @@ unstow-dotfiles:
   @stow -d ~ -t ~/.config -D dotfiles
   @stow -d ~/dotfiles -t ~ -D bash
   @stow -d ~/dotfiles -t ~ -D claude
+  @stow -d ~/dotfiles -t ~ -D --no-folding codex
 
 setup-git-config:
   @echo "Setting Git global username and email..."

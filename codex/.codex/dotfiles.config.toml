@@ -1,0 +1,27 @@
+# Deployed into the local config through Codex's config API; runtime state stays local.
+model = "gpt-6-astra"
+model_reasoning_effort = "high"
+model_auto_compact_token_limit = 630000
+approvals_reviewer = "auto_review"
+
+[tui]
+status_line = ["model-with-reasoning", "current-dir", "thread-name", "git-branch", "pull-request-number", "branch-changes", "approval-mode", "context-used"]
+status_line_use_colors = true
+
+[plugins."ai-dev@sicsai-plugins"]
+enabled = true
+
+[plugins."support@sicsai-plugins"]
+enabled = true
+
+[plugins."pap-rob@sicsai-plugins"]
+enabled = true
+
+[plugins."hyperstar@sicsai-plugins"]
+enabled = true
+
+[plugins."systools@sicsai-plugins"]
+enabled = true
+
+[plugins."sicsai@sicsai-plugins"]
+enabled = true

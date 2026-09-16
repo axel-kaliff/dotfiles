@@ -1,0 +1,1 @@
+prefix_rule(pattern=["gh", "pr", "create"], decision="prompt", justification="PR creation requires explicit user approval.")

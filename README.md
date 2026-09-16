@@ -87,8 +87,9 @@ ujust update-all
 
 ### AI/LLM
 
-Claude Code is the agent in use; it is installed via `mise` (`~/.config/mise/config.toml`),
-not Homebrew. `zj ide` pairs it with a git worktree — see [Zellij](#zellij).
+Claude Code is installed via `mise` (`~/.config/mise/config.toml`), not Homebrew.
+Codex's repo-owned configuration and skills deploy with `just stow-codex`; see
+[Codex](codex/README.md). `zj ide` pairs the agent with a git worktree — see [Zellij](#zellij).
 ollama and aider were removed in Aug 2026: neither was installed, and aider
 upstream has been dormant since Aug 2025.
 

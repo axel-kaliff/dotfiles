@@ -1,0 +1,27 @@
+# Experiment loop: {{TAG}}
+
+## Objective
+{{DIRECTION}} `{{METRIC}}` as printed by `{{METRIC_CMD}}`. This sentence is the contract; do not answer a different question.
+
+## Scope
+Editable: {{EDITABLE}}
+Frozen (hook-enforced via .claude/frozen-paths): {{FROZEN}}
+Budget: {{BUDGET_PER_RUN}} per run, {{BUDGET_TOTAL}} total. Stop when the budget is spent or after {{STALL_K}} consecutive discards.
+
+## Noise floor
+Baseline {{BASELINE_MEAN}} ± {{BASELINE_SPREAD}} over {{SEEDS}} seeds. A candidate counts only if a single run beats the established baseline by more than the spread, and then repeats that over {{SEEDS}} seeds.
+
+## Loop
+1. Pick one change. Check the ledger first and reject near-duplicates of earlier rows. Explore new families early; exploit the best family once the ledger shows a leader.
+2. Apply it to the editable files only, then `git commit -m "exp({{TAG}}): <one line>"`.
+3. `bash experiments/{{TAG}}/checks.sh` must pass; otherwise record status `crash` with the reason, `git reset --hard HEAD~1`, and continue.
+4. Run `{{METRIC_CMD}} > run.log 2>&1` and parse the metric.
+5. Append a row to `experiments/{{TAG}}/results.tsv`: commit, metric, seeds, status, description. Statuses: baseline, discard, crash, promising, established.
+6. Decide:
+   - Equal to or worse than the established baseline, or better by less than the noise floor: `discard`, `git reset --hard HEAD~1`.
+   - Better by more than the noise floor: `promising`; re-run over {{SEEDS}} seeds. If the mean still clears the floor, `established`, and it becomes the new baseline; otherwise `discard`.
+   - A change that adds complexity for a gain inside the noise is a discard. A deletion with an equal result is established.
+7. Continue without asking whether to continue. Stop only on the budget or stall rule, or if the objective would have to change.
+
+## After compaction
+Re-read this file and the last 20 ledger rows before the next change.
