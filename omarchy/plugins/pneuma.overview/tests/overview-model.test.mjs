@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url"
 
 const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "OverviewModel.js"), "utf8")
 const Model = new Function(`${source.split("\n").slice(1).join("\n")}
-  return { stripWorkspaces, stripLayout, boxAt, gridShape, exposeRects, windowRect, onMonitor, clamp, lerp }`)()
+  return { stripWorkspaces, stripLayout, boxAt, gridShape, exposeRects, windowRect, onMonitor, clamp, lerp, springCurve }`)()
 
 const MONITOR = { x: 0, y: 0, width: 1920, height: 1200, scale: 1.0 }
 const PANEL = { width: 1920, height: 1200 }

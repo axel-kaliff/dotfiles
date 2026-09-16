@@ -1,7 +1,9 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Widgets
 import Quickshell.Hyprland
 import qs.Commons
 import qs.Ui
@@ -32,7 +34,6 @@ Item {
   // How far a finger has to travel to carry the overview all the way open.
   // Short enough that the flick a Mac user already has in their hands lands.
   readonly property int travelToOpen: 240
-  readonly property int settleDuration: 220
 
   // Hyprspace's own defaults (src/main.cpp): a 250px strip of miniatures with
   // 12px between them, scaled here the way every other length in the shell is.
@@ -50,46 +51,75 @@ Item {
   // every click held longer than 200ms.
   readonly property int clickMillis: 200
 
-  // The single source of truth for every visual: 0 is the bare desktop, 1 the
-  // settled strip, and a live gesture drives the values in between.
+  // The gesture's own account of things: 0 is the bare desktop, 1 the settled
+  // overview, and a live swipe carries it between.
   property real progress: 0
   property bool opened: false
   property string dragging: ""  // "up", "down", or "" when no gesture is live
 
+  // What is actually drawn, on the same scale. Under a finger it runs ahead
+  // of `progress` (see `drag`); let go, `settling` carries it home. Every
+  // visual hangs off this one value.
+  property real shown: 0
+
   // Raising the panel is the slow half of opening the overview: a fresh layer
   // surface costs a configure round-trip, a scene graph, and a screencopy
-  // session per window. Armed means the panel is up and holding at progress 0,
+  // session per window. Armed means the panel is up and holding at shown 0,
   // where the strip is still off the top of the screen and there is nothing to
   // see. The cost is paid there, before anything moves.
   property bool armed: false
 
-  // The strip comes down ahead of the swipe rather than in step with it: eased
-  // this way it is already readable around the halfway mark, where a linear
-  // slide still has it mostly off screen at exactly the moment you are looking.
-  readonly property real slide: 1 - Math.pow(1 - root.progress, 3)
+  // The desktop's own motion (hypr/looknfeel.lua): anything arriving rides
+  // appleSpring, anything leaving takes appleExit, a short accelerating
+  // bezier. The spring is solved in OverviewModel.js and handed to Qt as a
+  // spline, so the overview opens with the shape and pace of a window
+  // appearing. Leaving is slower than a window's 75ms: the thumbnails cross
+  // the whole screen on the way back, and at 75ms that is four frames.
+  readonly property var springCurve: Model.springCurve(520, 38, 1, 0.3, 10)
+  readonly property var exitCurve: [0.3, 0, 0.8, 0.15, 1, 1]
+  readonly property int openDuration: 300
+  readonly property int closeDuration: 180
 
-  // Animated only when the overview is left to settle on its own, so that
-  // during a gesture the strip tracks the fingers one to one.
-  Behavior on progress {
-    enabled: root.dragging === ""
-    NumberAnimation { id: settling; duration: root.settleDuration }
+  NumberAnimation {
+    id: settling
+
+    target: root
+    property: "shown"
+    easing.type: Easing.BezierSpline
+    // Only a settle that ran to its end takes the panel down; one cut short
+    // by a new swipe has handed `shown` to the fingers.
+    onFinished: if (!root.opened) root.rest()
   }
 
   function settle(open) {
-    // `slide` eases the strip in on its own, so an ease-out here compounds
-    // into a snap. Opening from rest is eased in and left to the slide to ease
-    // out, which is one smooth curve across the whole 220ms. Closing runs that
-    // pair backwards, where an ease-out is already the gentle end, and a swipe
-    // let go mid-flight is moving anyway, so it carries on and decelerates.
-    var resting = root.progress === 0 || root.progress === 1
-    settling.easing.type = open && resting ? Easing.InCubic : Easing.OutCubic
     root.dragging = ""
     root.opened = open
     root.progress = open ? 1 : 0
-    // A swipe that began and died without travel leaves progress where it
-    // already was, so no animation will carry the overview home for us.
-    if (!open && root.progress === 0) root.rest()
+    settling.stop()
+    settling.to = open ? 1 : 0
+    settling.duration = open ? root.openDuration : root.closeDuration
+    settling.easing.bezierCurve = open ? root.springCurve : root.exitCurve
+    settling.restart()
   }
+
+  // The desktop's wallpaper, drawn frosted behind the overview the way GNOME
+  // and Mission Control both do: the real windows fade out beneath their
+  // thumbnails as those fly into place, and what is left is a place of its
+  // own rather than a wash over the desktop. Resolved the way the background
+  // plugin resolves it, once at start and again each time the overview is
+  // raised, since the wallpaper can change while the shell runs.
+  property string wallpaper: ""
+
+  Process {
+    id: wallpaperLookup
+
+    command: ["readlink", "-f", Quickshell.env("HOME") + "/.local/state/omarchy/current/background"]
+    stdout: StdioCollector {
+      onStreamFinished: root.wallpaper = String(text).trim()
+    }
+  }
+
+  Component.onCompleted: wallpaperLookup.running = true
 
   // One entry per screen, each panel adding and removing itself, so unplugging
   // a monitor cannot leave a destroyed panel behind that is never ready again.
@@ -121,7 +151,14 @@ Item {
     root.settle(true)
   }
 
-  onArmedChanged: if (root.armed) deadline.restart(); else deadline.stop()
+  onArmedChanged: {
+    if (!root.armed) {
+      deadline.stop()
+      return
+    }
+    deadline.restart()
+    wallpaperLookup.running = true
+  }
 
   Timer {
     id: deadline
@@ -144,27 +181,30 @@ Item {
     Hyprland.refreshToplevels()
   }
 
-  // Not while a gesture is live: a swipe down carried past the desktop sits at
-  // 0 with the fingers still on the pad, and taking the panel away there
-  // leaves nothing to show if they come back up.
-  onProgressChanged: if (root.progress === 0 && root.dragging === "") root.rest()
-
   function drag(distance) {
     if (root.dragging === "") return
     var from = root.opened ? 1 : 0
     var direction = root.dragging === "up" ? 1 : -1
     root.progress = Model.clamp(from + direction * distance / root.travelToOpen, 0, 1)
+    // Ahead of the swipe rather than in step with it: eased this way the strip
+    // is already readable around the halfway mark, where a linear slide still
+    // has it mostly off screen at exactly the moment you are looking.
+    root.shown = 1 - Math.pow(1 - root.progress, 3)
   }
 
   function handle(message) {
     if (message === "start:up") {
       if (root.opened) return
+      // A close still running is the fingers' now.
+      settling.stop()
       root.dragging = "up"
       // Fingers down, nothing carried yet: the cheapest moment there is to pay
       // for the panel, and the travel that follows covers what is left of it.
       root.armed = true
     } else if (message === "start:down") {
-      if (root.opened) root.dragging = "down"
+      if (!root.opened) return
+      settling.stop()
+      root.dragging = "down"
     } else if (message.indexOf("move:") === 0) {
       root.drag(Number(message.substring(5)))
     } else if (message.indexOf("end:") === 0) {
@@ -305,6 +345,14 @@ Item {
       // whole strip, never a relayout, for the same reason.
       property real pan: 0
       property real panLimit: 0
+
+      // The wheel glides the strip rather than stepping it. Not while the
+      // overview is being laid out: centring on the way in is a placement,
+      // not a move.
+      Behavior on pan {
+        enabled: root.opened
+        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+      }
 
       // Thumbnails that have a frame to draw, against how many there are.
       // What the overview waits on before it slides in: see `armed`.
@@ -556,7 +604,7 @@ Item {
       color: "transparent"
       // An armed overview stands invisibly in front of the windows, so until
       // it has something to show it takes no pointer from them either.
-      mask: root.progress > 0 ? null : untouchable
+      mask: root.shown > 0 ? null : untouchable
       WlrLayershell.namespace: "pneuma-overview"
       WlrLayershell.layer: WlrLayer.Overlay
       // Taken only once the overview has settled open: a swipe the user
@@ -575,15 +623,48 @@ Item {
         : WlrKeyboardFocus.None
       exclusionMode: ExclusionMode.Ignore
 
-      // Deep behind an expose, which covers the screen and wants the desktop,
-      // the bar and the dock to fall away entirely. Only a wash behind the
-      // strip: unlike Hyprspace this cannot hide the bar and the dock outright,
-      // and at the 0.92 the spread wants, a 250px band of miniatures was the
-      // only thing left to look at on an otherwise unreadable screen.
+      // The frosted wallpaper. Drawn at a quarter of the screen and scaled
+      // back up: a blur this wide hides the difference, and it keeps the
+      // texture and the blur pass to a sixteenth of the cost. The frame
+      // reaches `bleed` past every edge so the blur has pixels to sample at
+      // the screen's border instead of fading to nothing there.
+      Item {
+        id: frost
+
+        readonly property int shrink: 4
+        readonly property int bleed: 16
+
+        x: -frost.bleed * frost.shrink
+        y: -frost.bleed * frost.shrink
+        width: Math.ceil(panel.width / frost.shrink) + frost.bleed * 2
+        height: Math.ceil(panel.height / frost.shrink) + frost.bleed * 2
+        scale: frost.shrink
+        transformOrigin: Item.TopLeft
+        opacity: root.shown
+
+        Image {
+          anchors.fill: parent
+          source: root.wallpaper ? Util.fileUrl(root.wallpaper) : ""
+          sourceSize.width: frost.width
+          fillMode: Image.PreserveAspectCrop
+          asynchronous: true
+          layer.enabled: true
+          layer.smooth: true
+          layer.effect: MultiEffect {
+            autoPaddingEnabled: false
+            blurEnabled: true
+            blur: 1
+            blurMax: 16
+          }
+        }
+      }
+
+      // The menu's scrim over the frost, so the overview is dimmed the way
+      // every other modal surface in the shell is.
       Rectangle {
         anchors.fill: parent
-        color: Color.background
-        opacity: root.progress * 0.92
+        color: Color.menu.scrim
+        opacity: root.shown
       }
 
       // A click on the space around the strip closes it, same as the desktop
@@ -618,16 +699,7 @@ Item {
         // The whole strip slides down from off the top of the screen. Moving
         // one item is the entire open animation: nothing is laid out again, so
         // no capture is restarted on the way in.
-        y: Model.lerp(-root.panelHeight, 0, root.slide)
-
-        // The strip's own ground, so it reads as a panel laid over the desktop
-        // rather than a few boxes adrift in a dimmed screen. Hyprspace reserves
-        // this band from the layout outright; a layer surface cannot, so the
-        // band is painted instead.
-        Rectangle {
-          anchors.fill: parent
-          color: Util.alpha(Color.background, 0.85)
-        }
+        y: Model.lerp(-root.panelHeight, 0, root.shown)
 
         // Under the workspaces so it never eats a click; it takes no buttons,
         // only the wheel, which the boxes above it do not handle.
@@ -665,61 +737,80 @@ Item {
               readonly property bool current: !!space.modelData.workspace && !!panel.hyprMonitor
                 && panel.hyprMonitor.activeWorkspace === space.modelData.workspace
               readonly property bool wanted: panel.dropTarget === space.index
+              // The empty slot at the end: a place a window could go, not a
+              // workspace that exists. By position, not by having no
+              // workspace behind it: a gap in the numbering has none either,
+              // and it is a workspace all the same.
+              readonly property bool fresh: space.index === panel.slots.length - 1
+              // Passive, so hovering a miniature inside still counts as
+              // hovering the workspace it is on.
+              readonly property bool hovered: over.hovered && panel.holding === null
 
-              // Hyprspace's palette in this theme's colours: the workspace you
-              // are on sits lighter than the rest, and the one a drag is about
-              // to land on is the one picked out.
+              HoverHandler { id: over }
+
+              // Swells a little under a carried window, the way GNOME's
+              // thumbnails do, so the one about to take it is unmistakable.
+              scale: space.wanted ? 1.04 : 1
+
+              Behavior on scale {
+                NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+              }
+
+              // The switcher's shadow, so the two read as the same material.
+              // Not under the empty slot: that is an outline of a place, and
+              // weight under it would make it a card like the others.
+              RectangularShadow {
+                anchors.fill: parent
+                visible: !space.fresh
+                radius: face.radius
+                blur: Style.space(28)
+                offset.y: Style.space(6)
+                color: Qt.rgba(0, 0, 0, 0.3)
+              }
+
+              // Hyprspace's palette in the shell's own tokens: the workspace
+              // you are on wears the bar's focused-workspace pill, the one a
+              // drag is about to land on is picked out in the accent, and the
+              // rest sit as dark glass on the frost.
               //
               // Every box is outlined, which Hyprspace's defaults do not do --
               // its inactive border is transparent. It can afford that because
               // its boxes sit on the live desktop and their 50% black reads as
-              // a shape. These sit on the strip's own dark band, where an
-              // unoutlined empty workspace was invisible, and an invisible box
-              // is nothing to aim a drag at.
-              Rectangle {
+              // a shape. On the frost an unoutlined empty workspace was
+              // invisible, and an invisible box is nothing to aim a drag at.
+              ClippingRectangle {
+                id: face
+
                 anchors.fill: parent
                 radius: Style.cornerRadius
-                color: space.current ? Util.alpha(Color.foreground, 0.08)
-                  : Util.alpha(Color.background, 0.5)
+                contentUnderBorder: true
+                color: space.wanted ? Style.selectedAccentFill
+                  : space.current ? Style.selectedFill
+                  : space.hovered ? Style.hoverFill
+                  : Util.alpha(Color.background, space.fresh ? 0.25 : 0.45)
                 border.width: Math.max(1, Style.space(space.wanted ? 2 : 1))
                 border.color: space.wanted ? Color.accent
-                  : space.current ? Style.selectedBorderColor
-                  : Style.normalBorderColor
-              }
+                  : space.hovered ? Style.hoverBorderColor
+                  : Util.alpha(Color.foreground, space.current ? 0.35 : 0.12)
 
-              // Which workspace this is. Hyprspace draws no label: it renders
-              // the wallpaper and the bar into every box, so even an empty one
-              // has something to tell it apart by. Nothing here can capture
-              // another layer surface, so without the number a row of empty
-              // workspaces is a row of identical blanks.
-              Text {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.margins: Style.space(6)
-                text: space.modelData.id
-                color: space.current ? Color.foreground : Color.muted
-                font.pixelSize: Style.fontPx(1.2)
-                font.family: Style.fontFamily
-              }
-
-              Item {
-                anchors.fill: parent
-                // A window hanging off the edge of its miniature must not spill
-                // into the workspace next to it.
-                clip: true
+                Behavior on color {
+                  ColorAnimation { duration: 140; easing.type: Easing.OutCubic }
+                }
+                Behavior on border.color {
+                  ColorAnimation { duration: 140; easing.type: Easing.OutCubic }
+                }
 
                 // Beneath the windows, so a click on one of them is the
                 // window's and a click on the space around them is the
-                // workspace's. Inside this clip rather than beside it: as a
+                // workspace's. Inside the clip rather than beside it: as a
                 // sibling declared under the clipping item it received no
-                // pointer events whatsoever -- not a press, not even a hover --
-                // including over an empty workspace where the clip holds
+                // pointer events whatsoever -- not a press, not even a hover
+                // -- including over an empty workspace where the clip holds
                 // nothing at all. A HoverHandler on the very same box did fire
                 // throughout, which is what separated "the box is not being
                 // hit" from "the MouseArea is not being reached".
                 MouseArea {
                   anchors.fill: parent
-                  hoverEnabled: true
 
                   // No timing rule here, deliberately. Hyprspace's 200ms
                   // press-to-release window is for click-to-exit only -- its
@@ -806,6 +897,40 @@ Item {
                   }
                 }
               }
+
+              // Which workspace this is. Hyprspace draws no label: it renders
+              // the wallpaper and the bar into every box, so even an empty one
+              // has something to tell it apart by. Nothing here can capture
+              // another layer surface, so without the number a row of empty
+              // workspaces is a row of identical blanks.
+              Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.margins: Style.space(8)
+                width: label.implicitWidth + Style.space(12)
+                height: label.implicitHeight + Style.space(4)
+                radius: height / 2
+                color: Util.alpha(Color.background, 0.7)
+
+                Text {
+                  id: label
+
+                  anchors.centerIn: parent
+                  text: space.modelData.id
+                  color: space.current ? Color.foreground : Color.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+                }
+              }
+
+              Text {
+                anchors.centerIn: parent
+                visible: space.fresh
+                text: "+"
+                color: Color.muted
+                font.family: Style.font.family
+                font.pixelSize: Style.font.displayLarge
+              }
             }
           }
 
@@ -819,7 +944,7 @@ Item {
       // already showed. Hyprspace has no answer for it either.
       //
       // Each window flies from where it actually sits to its slot, so at
-      // progress 0 the spread lines up pixel for pixel with the desktop behind.
+      // shown 0 the spread lines up pixel for pixel with the desktop behind.
       Item {
         id: expose
 
@@ -838,66 +963,139 @@ Item {
 
             required property var modelData
 
+            readonly property var wayland: flown.modelData.toplevel.wayland
+            readonly property string iconSource: {
+              var entry = DesktopEntries.heuristicLookup(String(flown.wayland.appId))
+              var name = entry && entry.icon ? entry.icon : ""
+              return name ? Quickshell.iconPath(name, true) : ""
+            }
+
             width: flown.modelData.target.width
             height: flown.modelData.target.height
             transformOrigin: Item.TopLeft
             z: flown.modelData.toplevel === root.raised ? 1 : 0
             opacity: panel.holding === flown.modelData.toplevel ? root.dragAlpha : 1
-            x: Model.lerp(flown.modelData.actual.x, flown.modelData.target.x, root.slide)
-            y: Model.lerp(flown.modelData.actual.y, flown.modelData.target.y, root.slide)
+            x: Model.lerp(flown.modelData.actual.x, flown.modelData.target.x, root.shown)
+            y: Model.lerp(flown.modelData.actual.y, flown.modelData.target.y, root.shown)
             scale: Model.lerp(flown.modelData.actual.width / flown.modelData.target.width,
-              1, root.slide)
+              1, root.shown)
 
-            ScreencopyView {
+            // The desktop's window shadow, at the depth a lifted window gets.
+            // Faded in with the spread: at rest the tile sits on the real
+            // window, which casts its own.
+            RectangularShadow {
               anchors.fill: parent
-              captureSource: panel.visible ? flown.modelData.toplevel.wayland : null
-              live: true
-              paintCursor: false
+              radius: frame.radius
+              blur: Style.space(32)
+              offset.y: Style.space(10)
+              color: Qt.rgba(0, 0, 0, 0.45)
+              opacity: root.shown
+            }
 
-              onHasContentChanged: {
-                if (!hasContent || !flown.modelData.counted) return
-                panel.warm++
-                if (panel.warm < panel.captures) return
-                panel.ready = true
-                root.warmed()
+            ClippingRectangle {
+              id: frame
+
+              anchors.fill: parent
+              radius: Style.cornerRadius
+              contentUnderBorder: true
+              // Shows through until the capture has a frame.
+              color: Util.alpha(Color.background, 0.6)
+              border.width: Math.max(1, Style.space(1))
+              border.color: chooser.containsMouse ? Style.hoverBorderColor
+                : Util.alpha(Color.foreground, 0.12)
+
+              Behavior on border.color {
+                ColorAnimation { duration: 140; easing.type: Easing.OutCubic }
+              }
+
+              ScreencopyView {
+                anchors.fill: parent
+                captureSource: panel.visible ? flown.wayland : null
+                live: true
+                paintCursor: false
+
+                onHasContentChanged: {
+                  if (!hasContent || !flown.modelData.counted) return
+                  panel.warm++
+                  if (panel.warm < panel.captures) return
+                  panel.ready = true
+                  root.warmed()
+                }
+              }
+
+              MouseArea {
+                id: chooser
+
+                // A window in the spread lives on the workspace being shown.
+                readonly property var dragged: flown.modelData.toplevel
+                readonly property var home: panel.hyprMonitor
+                  ? panel.hyprMonitor.activeWorkspace : null
+                property point origin
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: panel.holding === chooser.dragged
+                  ? Qt.ClosedHandCursor
+                  : Qt.PointingHandCursor
+
+                onPressed: function (mouse) { chooser.origin = Qt.point(mouse.x, mouse.y) }
+                onPositionChanged: function (mouse) {
+                  if (chooser.pressed) panel.carry(chooser, mouse)
+                }
+                onReleased: {
+                  // A press that never travelled is a click, and a click on a
+                  // window means that window.
+                  if (panel.holding === null) root.choose(chooser.dragged)
+                  else panel.drop(chooser.home)
+                }
+                onCanceled: panel.release()
               }
             }
 
-            // Says which window a click is about to land on.
+            // Names the window under the pointer, the way GNOME's overview
+            // does: a thumbnail of a terminal looks like every other terminal.
             Rectangle {
-              anchors.fill: parent
-              color: "transparent"
-              radius: Math.max(0, Style.cornerRadius - Style.space(4))
-              border.width: Math.max(1, Style.space(2))
-              border.color: chooser.containsMouse ? Style.hoverBorderColor : "transparent"
-            }
+              id: caption
 
-            MouseArea {
-              id: chooser
+              anchors.horizontalCenter: parent.horizontalCenter
+              anchors.bottom: parent.bottom
+              anchors.bottomMargin: Style.space(12)
+              width: named.implicitWidth + Style.space(20)
+              height: named.implicitHeight + Style.space(12)
+              radius: height / 2
+              color: Util.alpha(Color.background, 0.75)
+              border.width: Math.max(1, Style.space(1))
+              border.color: Util.alpha(Color.foreground, 0.12)
+              opacity: chooser.containsMouse && panel.holding === null ? 1 : 0
 
-              // A window in the spread lives on the workspace being shown.
-              readonly property var dragged: flown.modelData.toplevel
-              readonly property var home: panel.hyprMonitor
-                ? panel.hyprMonitor.activeWorkspace : null
-              property point origin
-
-              anchors.fill: parent
-              hoverEnabled: true
-              cursorShape: panel.holding === chooser.dragged
-                ? Qt.ClosedHandCursor
-                : Qt.PointingHandCursor
-
-              onPressed: function (mouse) { chooser.origin = Qt.point(mouse.x, mouse.y) }
-              onPositionChanged: function (mouse) {
-                if (chooser.pressed) panel.carry(chooser, mouse)
+              Behavior on opacity {
+                NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
               }
-              onReleased: {
-                // A press that never travelled is a click, and a click on a
-                // window means that window.
-                if (panel.holding === null) root.choose(chooser.dragged)
-                else panel.drop(chooser.home)
+
+              Row {
+                id: named
+
+                anchors.centerIn: parent
+                spacing: Style.space(6)
+
+                IconImage {
+                  visible: flown.iconSource !== ""
+                  source: flown.iconSource
+                  implicitSize: Style.space(16)
+                  anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: Math.min(implicitWidth, flown.width - Style.space(72))
+                  text: String(flown.wayland.title)
+                  color: Color.foreground
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.bodySmall
+                  elide: Text.ElideRight
+                  maximumLineCount: 1
+                }
               }
-              onCanceled: panel.release()
             }
           }
         }
@@ -910,18 +1108,49 @@ Item {
       Item {
         id: carried
 
-        visible: panel.holding !== null
+        readonly property bool lifted: panel.holding !== null
+
+        visible: carried.lifted
         x: panel.ghost.x
         y: panel.ghost.y
         width: panel.ghost.width
         height: panel.ghost.height
-        opacity: 0.9
+        // Picked up rather than switched on: it grows into the hand. Only on
+        // the way up -- once dropped, its capture is already gone, and a
+        // fade-out would be of an empty frame.
+        opacity: carried.lifted ? 0.9 : 0
+        scale: carried.lifted ? 1 : 0.85
 
-        ScreencopyView {
+        Behavior on opacity {
+          enabled: carried.lifted
+          NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+        }
+        Behavior on scale {
+          enabled: carried.lifted
+          NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+        }
+
+        RectangularShadow {
           anchors.fill: parent
-          captureSource: panel.holding ? panel.holding.wayland : null
-          live: true
-          paintCursor: false
+          radius: held.radius
+          blur: Style.space(32)
+          offset.y: Style.space(10)
+          color: Qt.rgba(0, 0, 0, 0.45)
+        }
+
+        ClippingRectangle {
+          id: held
+
+          anchors.fill: parent
+          radius: Style.cornerRadius
+          color: Util.alpha(Color.background, 0.6)
+
+          ScreencopyView {
+            anchors.fill: parent
+            captureSource: panel.holding ? panel.holding.wayland : null
+            live: true
+            paintCursor: false
+          }
         }
       }
     }
