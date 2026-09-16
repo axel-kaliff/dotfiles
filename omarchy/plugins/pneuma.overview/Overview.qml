@@ -43,8 +43,11 @@ Item {
   readonly property real dragAlpha: 0.2
   // How far the spread below the strip insets from the screen edge.
   readonly property int exposeMargin: Style.space(56)
-  // Hyprspace's click-to-exit timeout: a press and release further apart than
-  // this was a drag that ended over nothing, not a click meaning "close".
+  // Hyprspace's click-to-exit timeout, and only that: a press and release
+  // further apart than this was a drag that ended over nothing, not a click
+  // meaning "close". It does not gate switching workspace -- Hyprspace's own
+  // switch has no timing condition, and borrowing this one for it swallowed
+  // every click held longer than 200ms.
   readonly property int clickMillis: 200
 
   // The single source of truth for every visual: 0 is the bare desktop, 1 the
@@ -718,12 +721,18 @@ Item {
                   anchors.fill: parent
                   hoverEnabled: true
 
-                  property double pressedAt: 0
-
-                  onPressed: pressedAt = Date.now()
+                  // No timing rule here, deliberately. Hyprspace's 200ms
+                  // press-to-release window is for click-to-exit only -- its
+                  // own comment says so, and `couldExit` gates just that branch
+                  // -- while its workspace switch has no timing condition at
+                  // all. Applied here it swallowed every click held longer than
+                  // 200ms, which is most deliberate ones: measured, a 600ms
+                  // click on workspace 6 left the desktop on workspace 2. The
+                  // drag it needs to be told apart from is already excluded by
+                  // `holding`, and a drag's release goes to the window that
+                  // started it, never here.
                   onReleased: {
                     if (panel.holding !== null) return
-                    if (Date.now() - pressedAt >= root.clickMillis) return
                     root.switchTo(space.modelData.id)
                   }
                 }
