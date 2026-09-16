@@ -7,23 +7,34 @@
 // workspace, rather than the windows of one workspace spread into a grid.
 
 // Which workspaces the strip shows. Hyprspace's rule, and the reason the
-// strip is worth swiping to: every workspace in use, every empty one below
-// the highest so the numbering never jumps a gap, and one fresh workspace
-// past the end -- that last slot is what turns "put this window somewhere
-// new" into a drag instead of a keybind.
+// strip is worth swiping to: every workspace in use on this monitor, every
+// empty one below the highest so the numbering never jumps a gap, and one
+// fresh workspace past the end -- that last slot is what turns "put this
+// window somewhere new" into a drag instead of a keybind.
 //
-// Special workspaces (negative ids) are left out: they are summoned, not
-// switched to, so a slot in a left-to-right strip misrepresents them.
-function stripWorkspaces(occupied) {
+// `elsewhere` is what the other monitors already hold. A workspace living on
+// another screen is not an empty slot this one can be sent to, and drawing it
+// as one gave a second monitor a row of boxes that could never fill.
+//
+// Special workspaces (negative ids) belong in neither list: they are summoned,
+// not switched to, so a slot in a left-to-right strip misrepresents them.
+function stripWorkspaces(mine, elsewhere) {
+  var taken = {}
+  for (var e = 0; e < elsewhere.length; e++) taken[elsewhere[e]] = true
+
   var highest = 1
-  for (var i = 0; i < occupied.length; i++) {
-    if (occupied[i] > highest) highest = occupied[i]
+  for (var i = 0; i < mine.length; i++) {
+    if (mine[i] > highest) highest = mine[i]
   }
 
   var ids = []
-  // Through the first free id past the last one in use, so the strip always
-  // ends on an empty workspace whatever the gaps below it.
-  for (var id = 1; id <= highest + 1; id++) ids.push(id)
+  for (var id = 1; id <= highest; id++) {
+    if (!taken[id]) ids.push(id)
+  }
+
+  var fresh = highest + 1
+  while (taken[fresh]) fresh++
+  ids.push(fresh)
   return ids
 }
 
@@ -32,27 +43,26 @@ function stripWorkspaces(occupied) {
 // is what lets a window be drawn at its true relative position inside one and
 // still read as the desktop it stands for.
 //
-// `scroll` is returned clamped rather than trusted, so a strip that already
-// fits on screen cannot be panned out from under the pointer.
-function stripLayout(count, panel, panelHeight, margin, scroll) {
+// A strip wider than the screen is panned by moving the whole thing, not by
+// laying it out again: re-deriving these boxes hands the view a new model,
+// and a rebuilt thumbnail loses the screen capture behind it. So `limit` is
+// how far the pan may go in either direction, and the boxes never move.
+function stripLayout(count, panel, panelHeight, margin) {
   var scale = panel.height > 0 ? (panelHeight - 2 * margin) / panel.height : 0
   var boxWidth = panel.width * scale
   var boxHeight = panel.height * scale
   var groupWidth = boxWidth * count + margin * Math.max(0, count - 1)
 
-  var limit = Math.max((groupWidth - panel.width) / 2 + margin, 0)
-  var panned = clamp(scroll, -limit, limit)
-
   var boxes = []
   for (var i = 0; i < count; i++) {
     boxes.push({
-      x: panned + (panel.width - groupWidth) / 2 + i * (boxWidth + margin),
+      x: (panel.width - groupWidth) / 2 + i * (boxWidth + margin),
       y: margin,
       width: boxWidth,
       height: boxHeight
     })
   }
-  return { boxes: boxes, scroll: panned }
+  return { boxes: boxes, limit: Math.max((groupWidth - panel.width) / 2 + margin, 0) }
 }
 
 // Which workspace box a point is over, or -1. Hyprspace runs its click target

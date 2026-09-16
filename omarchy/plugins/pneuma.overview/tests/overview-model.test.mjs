@@ -19,23 +19,35 @@ const PANEL_HEIGHT = 250
 const MARGIN = 12
 const EPSILON = 0.01
 
-const strip = (count, scroll = 0) => Model.stripLayout(count, PANEL, PANEL_HEIGHT, MARGIN, scroll)
+const strip = (count) => Model.stripLayout(count, PANEL, PANEL_HEIGHT, MARGIN)
 
 test("the strip shows every workspace in use with no gap in the numbering", () => {
-  assert.deepEqual(Model.stripWorkspaces([1, 3, 5]), [1, 2, 3, 4, 5, 6])
-  assert.deepEqual(Model.stripWorkspaces([2]), [1, 2, 3])
+  assert.deepEqual(Model.stripWorkspaces([1, 3, 5], []), [1, 2, 3, 4, 5, 6])
+  assert.deepEqual(Model.stripWorkspaces([2], []), [1, 2, 3])
 })
 
 test("the strip always ends on a free workspace, so a drag has somewhere new to go", () => {
-  for (const occupied of [[], [1], [1, 2, 3], [4]]) {
-    const ids = Model.stripWorkspaces(occupied)
-    assert.ok(!occupied.includes(ids[ids.length - 1]),
+  for (const mine of [[], [1], [1, 2, 3], [4]]) {
+    const ids = Model.stripWorkspaces(mine, [])
+    assert.ok(!mine.includes(ids[ids.length - 1]),
       `the last slot ${ids[ids.length - 1]} is already in use`)
   }
 })
 
+test("a workspace that lives on another monitor is not an empty slot on this one", () => {
+  // The real two-monitor case: this screen holds only workspace 4, while
+  // 1, 2, 3 and 9 are on the other one. Filling the gap below 4 with those
+  // gave this monitor three boxes that could never fill.
+  assert.deepEqual(Model.stripWorkspaces([4], [1, 2, 3, 9]), [4, 5])
+  assert.deepEqual(Model.stripWorkspaces([1, 2, 3, 9], [4]), [1, 2, 3, 5, 6, 7, 8, 9, 10])
+})
+
+test("the fresh slot at the end skips past a workspace another monitor holds", () => {
+  assert.deepEqual(Model.stripWorkspaces([1], [2, 3]), [1, 4])
+})
+
 test("special workspaces get no slot in a left-to-right strip", () => {
-  assert.deepEqual(Model.stripWorkspaces([-99, 1]), [1, 2])
+  assert.deepEqual(Model.stripWorkspaces([-99, 1], []), [1, 2])
 })
 
 test("a workspace box is as tall as the panel leaves room for and shaped like the monitor", () => {
@@ -56,27 +68,24 @@ test("boxes sit in a row one margin apart", () => {
   }
 })
 
-test("a strip that fits is centred and cannot be panned", () => {
+test("a strip that fits is centred and offers no pan", () => {
   const boxes = strip(3).boxes
   const left = boxes[0].x
   const right = boxes[boxes.length - 1].x + boxes[boxes.length - 1].width
   assert.ok(Math.abs((left + right) / 2 - PANEL.width / 2) < EPSILON, "not centred")
-  // Nothing is off screen to reach, so a pan would only drag it out of sight.
-  // `===` rather than strictEqual: a clamp to a zero limit yields -0 from the
-  // negative side, which positions identically and differs only to Object.is.
-  assert.ok(strip(3, 900).scroll === 0)
-  assert.ok(strip(3, -900).scroll === 0)
+  // Nothing is off screen to reach, so a pan could only drag it out of sight.
+  assert.equal(strip(3).limit, 0)
 })
 
-test("a strip that overflows pans, but only as far as there is something to reach", () => {
-  const overflowing = strip(20, 0)
-  const group = overflowing.boxes[19].x + overflowing.boxes[19].width - overflowing.boxes[0].x
+test("a strip that overflows may be panned as far as it hangs off the screen", () => {
+  const laid = strip(20)
+  const group = laid.boxes[19].x + laid.boxes[19].width - laid.boxes[0].x
   assert.ok(group > PANEL.width, "20 workspaces should not fit on one screen")
+  assert.ok(Math.abs(laid.limit - ((group - PANEL.width) / 2 + MARGIN)) < EPSILON)
 
-  const limit = (group - PANEL.width) / 2 + MARGIN
-  assert.ok(Math.abs(strip(20, 1e6).scroll - limit) < EPSILON)
-  assert.ok(Math.abs(strip(20, -1e6).scroll + limit) < EPSILON)
-  assert.equal(strip(20, 40).scroll, 40)
+  // Panned all the way, the far box has come past the screen edge.
+  assert.ok(laid.boxes[19].x + laid.boxes[19].width - laid.limit < PANEL.width)
+  assert.ok(laid.boxes[0].x + laid.limit > 0)
 })
 
 test("the hit test finds the box under a point, and nothing between them", () => {
