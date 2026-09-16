@@ -470,6 +470,46 @@ Item {
         if (panel.ready) root.warmed()
       }
 
+      // Carrying a window. Both places one can be picked up run through here:
+      // the spread below, and the miniatures inside the workspace thumbnails.
+      // `area` supplies the press origin and the window, so the only thing that
+      // differs between the two is where the press came from.
+      function carry(area, mouse) {
+        var travelled = Math.abs(mouse.x - area.origin.x) + Math.abs(mouse.y - area.origin.y)
+        // A press only becomes a drag once it has travelled: without this every
+        // click would pick the window up and put it straight back down.
+        if (panel.holding === null && travelled < Style.space(8)) return
+
+        panel.holding = area.dragged
+        // Two coordinate spaces, because the two ends of a drag live in
+        // different ones: the ghost follows the cursor across the whole panel,
+        // while the workspace it would land on is found inside the strip, which
+        // is panned and slid independently of everything else.
+        var tall = panel.ghostHeight
+        var wide = tall * (area.width / area.height)
+        var onPanel = area.mapToItem(carried.parent, mouse.x, mouse.y)
+        panel.ghost = Qt.rect(onPanel.x - wide / 2, onPanel.y - tall / 2, wide, tall)
+
+        var inStrip = area.mapToItem(panned, mouse.x, mouse.y)
+        panel.dropTarget = Model.boxAt(panel.boxes, inStrip.x, inStrip.y)
+      }
+
+      function release() {
+        panel.holding = null
+        panel.dropTarget = -1
+      }
+
+      // `home` is the workspace the window is on now: a drop back onto it is a
+      // no-op, not a move that would re-tile the workspace for nothing.
+      function drop(home) {
+        var onto = panel.dropTarget
+        var carriedWindow = panel.holding
+        panel.release()
+        if (onto < 0 || carriedWindow === null) return
+        if (panel.slots[onto].workspace === home) return
+        panel.moveWindow(carriedWindow, panel.slots[onto].id)
+      }
+
       // The overview stays up after a drop: Hyprspace leaves you in the strip
       // (its switchOnDrop is off by default), so several windows can be moved
       // in one visit. Dispatched straight away rather than through the
@@ -516,11 +556,18 @@ Item {
       mask: root.progress > 0 ? null : untouchable
       WlrLayershell.namespace: "pneuma-overview"
       WlrLayershell.layer: WlrLayer.Overlay
-      // Taken only once the overview has settled open, and given up again for
-      // the length of a drag: a swipe the user abandons must not have stolen
-      // the keyboard from what they were typing, and a dispatch aimed at a
-      // window is swallowed while this layer holds the focus exclusively.
-      WlrLayershell.keyboardFocus: root.opened && root.dragging === "" && panel.holding === null
+      // Taken only once the overview has settled open: a swipe the user
+      // abandons must not have stolen the keyboard from what they were typing.
+      //
+      // Emphatically not given up again for the length of a drag, which is what
+      // it used to do so that a move dispatch would not be swallowed. Two
+      // measurements killed that: reconfiguring the layer surface mid-gesture
+      // drops the pointer grab, so a drag delivered exactly one motion event
+      // and then never a release; and a move dispatch is not swallowed anyway,
+      // having been watched moving a window between workspaces with this layer
+      // holding the keyboard exclusively. Only `hl.dsp.focus` needs the
+      // handover, and that one closes the overview first regardless.
+      WlrLayershell.keyboardFocus: root.opened && root.dragging === ""
         ? WlrKeyboardFocus.Exclusive
         : WlrKeyboardFocus.None
       exclusionMode: ExclusionMode.Ignore
@@ -694,6 +741,7 @@ Item {
                     width: tile.modelData.rect.width
                     height: tile.modelData.rect.height
                     z: tile.modelData.depth
+                    opacity: panel.holding === tile.modelData.toplevel ? root.dragAlpha : 1
 
                     ScreencopyView {
                       anchors.fill: parent
@@ -710,6 +758,42 @@ Item {
                       }
                     }
 
+                    // Says which window a drag is about to lift.
+                    Rectangle {
+                      anchors.fill: parent
+                      color: "transparent"
+                      border.width: grip.containsMouse ? Math.max(1, Style.space(1)) : 0
+                      border.color: Style.hoverBorderColor
+                    }
+
+                    // A window can be picked up from its miniature too, not
+                    // only from the spread below, so a window already on
+                    // another workspace can be moved without going there first.
+                    // A press that never travels falls through to what the
+                    // workspace box beneath would have done: take me there.
+                    MouseArea {
+                      id: grip
+
+                      readonly property var dragged: tile.modelData.toplevel
+                      readonly property var home: space.modelData.workspace
+                      property point origin
+
+                      anchors.fill: parent
+                      hoverEnabled: true
+                      cursorShape: panel.holding === grip.dragged
+                        ? Qt.ClosedHandCursor
+                        : Qt.PointingHandCursor
+
+                      onPressed: function (mouse) { grip.origin = Qt.point(mouse.x, mouse.y) }
+                      onPositionChanged: function (mouse) {
+                        if (grip.pressed) panel.carry(grip, mouse)
+                      }
+                      onReleased: {
+                        if (panel.holding === null) root.switchTo(space.modelData.id)
+                        else panel.drop(grip.home)
+                      }
+                      onCanceled: panel.release()
+                    }
                   }
                 }
               }
@@ -782,60 +866,29 @@ Item {
             MouseArea {
               id: chooser
 
+              // A window in the spread lives on the workspace being shown.
+              readonly property var dragged: flown.modelData.toplevel
+              readonly property var home: panel.hyprMonitor
+                ? panel.hyprMonitor.activeWorkspace : null
+              property point origin
+
               anchors.fill: parent
               hoverEnabled: true
-              cursorShape: panel.holding === flown.modelData.toplevel
+              cursorShape: panel.holding === chooser.dragged
                 ? Qt.ClosedHandCursor
                 : Qt.PointingHandCursor
 
-              property point origin
-
               onPressed: function (mouse) { chooser.origin = Qt.point(mouse.x, mouse.y) }
-
               onPositionChanged: function (mouse) {
-                if (!chooser.pressed) return
-                // A press only becomes a drag once it has travelled: without
-                // this every click would pick the window up and put it straight
-                // back down where it came from.
-                var travelled = Math.abs(mouse.x - chooser.origin.x)
-                  + Math.abs(mouse.y - chooser.origin.y)
-                if (panel.holding === null && travelled < Style.space(8)) return
-
-                panel.holding = flown.modelData.toplevel
-                // Two coordinate spaces, because the two ends of the drag live
-                // in different ones: the ghost follows the cursor across the
-                // whole panel, while the workspace it would land on is found
-                // inside the strip, which is panned and slid independently.
-                var onPanel = chooser.mapToItem(carried.parent, mouse.x, mouse.y)
-                // Sized from this tile, not from `carried`, whose own width is
-                // still whatever the last drag left it -- 0 on the first one.
-                var tall = panel.ghostHeight
-                var wide = tall * (flown.width / flown.height)
-                panel.ghost = Qt.rect(onPanel.x - wide / 2, onPanel.y - tall / 2, wide, tall)
-                var inStrip = chooser.mapToItem(panned, mouse.x, mouse.y)
-                panel.dropTarget = Model.boxAt(panel.boxes, inStrip.x, inStrip.y)
+                if (chooser.pressed) panel.carry(chooser, mouse)
               }
-
               onReleased: {
-                if (panel.holding === null) {
-                  root.choose(flown.modelData.toplevel)
-                  return
-                }
-                var onto = panel.dropTarget
-                var carriedWindow = panel.holding
-                panel.holding = null
-                panel.dropTarget = -1
-                if (onto < 0) return
-                // Dropping a window back where it already lives is a no-op, not
-                // a move: the compositor would re-tile the workspace for nothing.
-                if (panel.slots[onto].workspace === panel.hyprMonitor.activeWorkspace) return
-                panel.moveWindow(carriedWindow, panel.slots[onto].id)
+                // A press that never travelled is a click, and a click on a
+                // window means that window.
+                if (panel.holding === null) root.choose(chooser.dragged)
+                else panel.drop(chooser.home)
               }
-
-              onCanceled: {
-                panel.holding = null
-                panel.dropTarget = -1
-              }
+              onCanceled: panel.release()
             }
           }
         }
