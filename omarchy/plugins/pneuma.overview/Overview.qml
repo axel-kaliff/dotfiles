@@ -350,7 +350,8 @@ Item {
 
           var entry = {
             toplevel: all[i],
-            counted: counted,
+            // Waited on only if it can be seen and can be captured at all.
+            counted: counted && Model.onMonitor(ipc.at, ipc.size, panel.hyprMonitor),
             depth: ipc.floating ? 1 : 0,
             rect: Model.windowRect(ipc.at, ipc.size, panel.hyprMonitor, area)
           }
@@ -377,7 +378,8 @@ Item {
         for (var i = 0; i < all.length; i++) {
           var ipc = all[i].lastIpcObject
           if (!ipc || !ipc.at || !ipc.size) continue
-          described.push({ toplevel: all[i], at: ipc.at, size: ipc.size })
+          described.push({ toplevel: all[i], at: ipc.at, size: ipc.size,
+            counted: Model.onMonitor(ipc.at, ipc.size, panel.hyprMonitor) })
         }
 
         var screen = { x: 0, y: 0, width: panel.width, height: panel.height }
@@ -403,9 +405,12 @@ Item {
 
         if (root.mode === "expose") {
           var flying = panel.layOutExpose()
+          var waited = 0
+          for (var f = 0; f < flying.length; f++) if (flying[f].counted) waited++
+
           panel.warm = 0
-          panel.captures = flying.length
-          panel.ready = flying.length === 0
+          panel.captures = waited
+          panel.ready = waited === 0
           // Emptied so the strip builds no delegates, and starts no captures,
           // for an overview that is not on screen.
           panel.slots = []
@@ -468,7 +473,10 @@ Item {
           var box = laid.boxes[slot]
           var onScreen = box.x + panel.pan < panel.width && box.x + box.width + panel.pan > 0
           var windows = panel.windowsIn(workspace, box, onScreen)
-          if (onScreen) total += windows.length
+          // Each window decides for itself, so a box that is on screen but
+          // holds one window scrolled off the monitor contributes only the
+          // thumbnails that will actually arrive.
+          for (var c = 0; c < windows.length; c++) if (windows[c].counted) total++
           built.push({ id: ids[slot], workspace: workspace, box: box, windows: windows })
         }
 
@@ -851,7 +859,7 @@ Item {
               paintCursor: false
 
               onHasContentChanged: {
-                if (!hasContent) return
+                if (!hasContent || !flown.modelData.counted) return
                 panel.warm++
                 if (panel.warm < panel.captures) return
                 panel.ready = true
