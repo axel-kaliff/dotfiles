@@ -21,6 +21,7 @@ Quick reference for the full terminal workflow. Render in terminal with `md CHEA
 | `ai` | Chat with local LLM |
 | `pair` | Start aider AI pair programmer |
 | `md file.md` | Render markdown in terminal |
+| `cc` | List Claude Code accounts; `cc <name>` runs Claude under that one |
 
 ### Navigation
 

@@ -33,6 +33,13 @@ if git_out=$(git -C "$cwd" --no-optional-locks branch --show-current 2>/dev/null
   fi
 fi
 
+# Account profile: `cc <name>` runs Claude Code with CLAUDE_CONFIG_DIR pointed
+# at that profile. Unset means the default ~/.claude root.
+account=""
+if [ -n "$CLAUDE_CONFIG_DIR" ]; then
+  account=$(basename "$CLAUDE_CONFIG_DIR")
+fi
+
 # Build context usage indicator
 context_segment=""
 if [ -n "$used_pct" ]; then
@@ -59,6 +66,10 @@ fi
 
 if [ -n "$context_segment" ]; then
   printf '%b' "  ${DIM}${context_segment}"
+fi
+
+if [ -n "$account" ]; then
+  printf '%b' "  ${DIM}${FG_YELLOW}@${account}${RESET}"
 fi
 
 printf '%b' "  ${DIM}${FG_CYAN}${model}${RESET}"
