@@ -72,28 +72,24 @@ fi
 if echo "$command" | grep -qE 'git\s+commit' && ! echo "$command" | grep -qE '\-\-amend'; then
   staged_py=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep '\.py$')
   if [ -n "$staged_py" ]; then
-    changed=0
+    restage=()
     for f in $staged_py; do
       [ -f "$f" ] || continue
+      # A partially staged file is left alone: the formatter would run over its unstaged hunks
+      # too, and re-staging it would commit them.
+      git diff --quiet "$f" 2>/dev/null || continue
+      before=$(md5sum "$f")
       if command -v black &> /dev/null; then
         black --quiet "$f" 2>/dev/null
       fi
       if command -v ruff &> /dev/null; then
         ruff check --fix --unfixable F401 "$f" 2>/dev/null
       fi
+      [ "$(md5sum "$f")" != "$before" ] && restage+=("$f")
     done
-    for f in $staged_py; do
-      [ -f "$f" ] || continue
-      if ! git diff --quiet "$f" 2>/dev/null; then
-        changed=1
-        break
-      fi
-    done
-    if [ "$changed" -eq 1 ]; then
+    if [ "${#restage[@]}" -gt 0 ]; then
       echo "Pre-format: formatted staged files, re-staging..." >&2
-      for f in $staged_py; do
-        [ -f "$f" ] && git add "$f" 2>/dev/null
-      done
+      git add "${restage[@]}" 2>/dev/null
     fi
   fi
 fi
