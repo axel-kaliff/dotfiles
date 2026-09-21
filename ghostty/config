@@ -19,7 +19,7 @@ font-family = JetBrains Mono
 # fontconfig name) — without this fallback ghostty lands on Noto Serif there.
 font-family = JetBrainsMono Nerd Font
 font-family = Symbols Nerd Font
-font-size = 9
+font-size = 11
 adjust-cell-height = 3
 
 # --- Window ---
