@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Apply the COSMIC side of the dotfiles. Config is COPIED into ~/.config/cosmic (cosmic-config
+# rewrites keys atomically and a stowed symlink would route every runtime write into the repo,
+# where the 15-minute sync timer would commit it); everything else in the repo is stowed as usual.
+set -euo pipefail
+
+REPO=${DOTFILES:-$HOME/dotfiles}
+D=$REPO/cosmic
+
+mkdir -p "$HOME/.config/cosmic" "$HOME/.local/bin" "$HOME/.local/share/pop-launcher/scripts" \
+  "$HOME/.config/environment.d" "$HOME/.local/state/pneuma"
+
+rsync -a "$D/config/" "$HOME/.config/cosmic/"
+
+# The panel layout follows the easy-mode flag, so a re-apply never flips the mode.
+if [ -f "$HOME/.local/state/pneuma/easy-mode" ]; then
+  for k in plugins_wings plugins_center opacity; do cp -f "$D/panel-layouts/easy/$k" "$HOME/.config/cosmic/com.system76.CosmicPanel.Panel/v1/$k"; done
+  printf '["Panel","Dock"]\n' > "$HOME/.config/cosmic/com.system76.CosmicPanel/v1/entries"
+fi
+
+for f in "$D"/bin/*; do ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"; done
+for f in "$D"/pop-launcher/scripts/*; do [ -e "$f" ] && ln -sfn "$f" "$HOME/.local/share/pop-launcher/scripts/$(basename "$f")"; done
+for f in "$D"/environment.d/*; do [ -e "$f" ] && cp -f "$f" "$HOME/.config/environment.d/"; done
+
+if command -v stow >/dev/null; then
+  "$REPO/scripts/stow-resolve-conflicts.sh" -d "$HOME" -t "$HOME/.config" dotfiles
+  stow -d "$HOME" -t "$HOME/.config" --restow dotfiles
+  "$REPO/scripts/stow-resolve-conflicts.sh" -d "$REPO" -t "$HOME" bash
+  stow -d "$REPO" -t "$HOME" --restow bash
+fi
+
+echo "cosmic config applied from $D"

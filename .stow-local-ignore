@@ -26,6 +26,9 @@ codex
 
 # Not XDG config: helper scripts, container/server definitions, editor state
 scripts
+# COSMIC config is applied by copy (cosmic/bin/pneuma-cosmic-apply); the VM harness is not config
+cosmic
+vm
 devcontainer
 server
 Code

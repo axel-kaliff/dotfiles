@@ -71,3 +71,6 @@ __pycache__/
 # when `broot --install` runs. It lands inside the stowed fish package, and a
 # committed absolute symlink aborts stow on every other machine.
 fish/functions/br.fish
+
+# COSMIC applet build output (staged for the VM by vm/cosmic/vm sync)
+cosmic/applets/dist/

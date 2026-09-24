@@ -1,0 +1,15 @@
+# bootc-image-builder config template. `vm build` renders it to .build/disk.toml:
+# the user/password come from VM_USER/VM_PASSWORD, the public key from ~/.ssh/cosmic-vm.pub.
+# The user name must match the greetd [initial_session] user baked into the Containerfile.
+[[customizations.user]]
+name = "@VM_USER@"
+password = "@VM_PASSWORD@"
+key = "@SSH_PUBKEY@"
+groups = ["wheel"]
+
+[[customizations.filesystem]]
+mountpoint = "/"
+minsize = "40 GiB"
+
+[customizations.kernel]
+append = "console=tty0 console=ttyS0,115200n8"

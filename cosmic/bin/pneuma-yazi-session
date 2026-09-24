@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# yazi in its own floating window (tiling exception org.pneuma.yazi), restoring the last tabs
+# through the projects.yazi plugin (see yazi/init.lua).
+set -euo pipefail
+HERE=$(dirname "$(readlink -f "$0")")
+if [[ ${1:-} != --inner ]]; then exec "$HERE/pneuma-term" org.pneuma.yazi "$0" --inner; fi
+id=$RANDOM
+for _ in $(seq 1 25); do
+  sleep 0.2
+  YAZI_ID=$id ya emit plugin tab-session 2>/dev/null && break
+done &
+exec yazi --client-id "$id"

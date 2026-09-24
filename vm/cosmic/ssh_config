@@ -1,0 +1,9 @@
+Host vm
+  HostName 127.0.0.1
+  Port 2222
+  IdentityFile ~/.ssh/cosmic-vm
+  IdentitiesOnly yes
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  LogLevel ERROR
+  ConnectTimeout 3

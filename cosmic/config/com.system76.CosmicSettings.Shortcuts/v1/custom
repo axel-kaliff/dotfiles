@@ -1,0 +1,43 @@
+// Extends /usr/share/cosmic/com.system76.CosmicSettings.Shortcuts/v1/defaults. Same chord
+// replaces the default; Disable frees a key. Physical Alt is Super (altwin:swap_lalt_lwin).
+{
+    // Omarchy muscle memory
+    (modifiers: [Super], key: "Return"): System(Terminal),
+    (modifiers: [Super, Shift], key: "Return"): System(WebBrowser),
+    (modifiers: [Super, Shift], key: "b"): System(WebBrowser),
+    (modifiers: [Super], key: "f"): Fullscreen,
+    (modifiers: [Super, Alt], key: "f"): Maximize,
+    (modifiers: [Super], key: "t"): ToggleWindowFloating,
+    (modifiers: [Super], key: "m"): Minimize,
+    (modifiers: [Super], key: "space"): System(Launcher),
+    (modifiers: [Super, Shift], key: "space"): System(InputSourceSwitch),
+    // Bare Super tap = Mission Control (was the launcher)
+    (modifiers: [Super]): System(WorkspaceOverview),
+    // Workspaces: Super+Tab family cycles workspaces, Alt+Tab stays the window switcher
+    (modifiers: [Super], key: "Tab"): NextWorkspace,
+    (modifiers: [Super, Shift], key: "Tab"): PreviousWorkspace,
+    (modifiers: [Super, Ctrl], key: "Tab"): LastWorkspace,
+    (modifiers: [Super, Shift, Alt], key: "1"): SendToWorkspace(1),
+    (modifiers: [Super, Shift, Alt], key: "2"): SendToWorkspace(2),
+    (modifiers: [Super, Shift, Alt], key: "3"): SendToWorkspace(3),
+    (modifiers: [Super, Shift, Alt], key: "4"): SendToWorkspace(4),
+    (modifiers: [Super, Shift, Alt], key: "5"): SendToWorkspace(5),
+    (modifiers: [Super, Shift, Alt], key: "6"): SendToWorkspace(6),
+    (modifiers: [Super, Shift, Alt], key: "7"): SendToWorkspace(7),
+    (modifiers: [Super, Shift, Alt], key: "8"): SendToWorkspace(8),
+    (modifiers: [Super, Shift, Alt], key: "9"): SendToWorkspace(9),
+    // Apps and scripts (cosmic/bin, linked into ~/.local/bin)
+    (modifiers: [Super, Shift], key: "f"): Spawn("~/.local/bin/pneuma-yazi-session"),
+    (modifiers: [Super, Shift], key: "e"): Spawn("~/.local/bin/pneuma-thunderbird -mail"),
+    (modifiers: [Super, Shift, Alt], key: "e"): Spawn("~/.local/bin/pneuma-thunderbird -compose"),
+    (modifiers: [Super, Shift], key: "c"): Spawn("~/.local/bin/pneuma-thunderbird -calendar"),
+    (modifiers: [Super, Shift], key: "m"): Spawn("~/.local/bin/pneuma-music"),
+    (modifiers: [Super, Alt], key: "e"): Spawn("~/.local/bin/pneuma-easy-mode toggle"),
+    (modifiers: [Super, Shift], key: "t"): Spawn("~/.local/bin/pneuma-panel toggle"),
+    (modifiers: [Super, Ctrl], key: "i"): Spawn("~/.local/bin/pneuma-stay-awake toggle"),
+    (modifiers: [Super, Ctrl], key: "l"): System(LockScreen),
+    (modifiers: [Super, Ctrl], key: "t"): Spawn("cosmic-term -e btm"),
+    (modifiers: [Super, Alt], key: "k"): Spawn("~/.local/bin/pneuma-cheatsheet zellij"),
+    (modifiers: [Super, Shift, Alt], key: "k"): Spawn("~/.local/bin/pneuma-cheatsheet cosmic"),
+    (modifiers: [Alt, Shift], key: "s"): System(Screenshot),
+}

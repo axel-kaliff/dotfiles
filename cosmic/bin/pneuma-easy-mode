@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Easy mode: floating windows, a dock, click-to-focus, transparent bar -- for someone who
+# expects macOS. Saves the keys it touches and restores them byte-for-byte on `off`.
+set -euo pipefail
+HERE=$(dirname "$(readlink -f "$0")")
+state="${XDG_STATE_HOME:-$HOME/.local/state}/pneuma"
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}/cosmic"
+flag="$state/easy-mode"
+saved="$state/easy-mode.saved"
+layouts="${DOTFILES:-$HOME/dotfiles}/cosmic/panel-layouts"
+keys=(com.system76.CosmicComp/v1/autotile com.system76.CosmicComp/v1/focus_follows_cursor
+      com.system76.CosmicPanel/v1/entries com.system76.CosmicPanel.Panel/v1/plugins_wings
+      com.system76.CosmicPanel.Panel/v1/plugins_center com.system76.CosmicPanel.Panel/v1/opacity)
+button_key=(org.gnome.desktop.wm.preferences button-layout)
+
+is_on() { [[ -f $flag ]]; }
+
+on() {
+  mkdir -p "$state"
+  if ! is_on; then
+    rm -rf "$saved"; mkdir -p "$saved"
+    for k in "${keys[@]}"; do [[ -f $cfg/$k ]] && { mkdir -p "$saved/$(dirname "$k")"; cp "$cfg/$k" "$saved/$k"; }; done
+    gsettings get "${button_key[@]}" >"$saved/button-layout" 2>/dev/null || true
+  fi
+  "$HERE/pneuma-cosmic-set" com.system76.CosmicComp/v1/autotile false
+  "$HERE/pneuma-cosmic-set" com.system76.CosmicComp/v1/focus_follows_cursor false
+  "$HERE/pneuma-cosmic-set" com.system76.CosmicPanel/v1/entries '["Panel","Dock"]'
+  for k in plugins_wings plugins_center opacity; do "$HERE/pneuma-cosmic-set" "com.system76.CosmicPanel.Panel/v1/$k" "@$layouts/easy/$k"; done
+  gsettings set "${button_key[@]}" 'close,minimize,maximize:' 2>/dev/null || true
+  touch "$flag"
+  notify-send -a pneuma 'Easy mode on' 'Floating windows, dock and click-to-focus. Super+Alt+E turns it off.' 2>/dev/null || true
+}
+
+off() {
+  rm -f "$flag"
+  for k in "${keys[@]}"; do
+    if [[ -f $saved/$k ]]; then "$HERE/pneuma-cosmic-set" "$k" "@$saved/$k"; else rm -f "$cfg/$k"; fi
+  done
+  if [[ -s $saved/button-layout ]]; then gsettings set "${button_key[@]}" "$(<"$saved/button-layout")" 2>/dev/null || true; fi
+  rm -rf "$saved"
+  notify-send -a pneuma 'Easy mode off' 'Tiling is back.' 2>/dev/null || true
+}
+
+case "${1:-toggle}" in
+  on) is_on || on ;;
+  off) is_on && off || true ;;
+  toggle) if is_on; then off; else on; fi ;;
+  status) is_on && echo on || echo off ;;
+  *) echo "usage: pneuma-easy-mode on|off|toggle|status" >&2; exit 2 ;;
+esac

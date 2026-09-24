@@ -1,0 +1,10 @@
+.build/
+.shots/
+.stage/
+_build-bib.*/
+_scp.*/
+*.qcow2
+*.fd
+*.pid
+*.sock
+*.log

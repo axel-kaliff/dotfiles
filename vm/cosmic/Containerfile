@@ -1,0 +1,37 @@
+# Bluefin (Fedora 44) + COSMIC 1.8 test image for the VM harness (vm/cosmic/vm).
+# Userland tools come from Homebrew after first boot (`brew bundle --file ~/dotfiles/Brewfile`);
+# dnf only installs the desktop and what the harness needs to sync and apply dotfiles.
+FROM ghcr.io/ublue-os/bluefin:stable
+ARG VM_USER=akaliff
+
+RUN dnf5 -y group install cosmic-desktop \
+ && dnf5 -y install just stow git rsync wl-clipboard mesa-vulkan-drivers \
+ && dnf5 clean all
+
+# greetd/cosmic-greeter replaces GDM. The preset file keeps first-boot `preset-all` from
+# re-enabling gdm (same pattern as pneuma's sddm switch).
+RUN systemctl disable gdm.service \
+ && systemctl enable cosmic-greeter.service sshd.service \
+ && printf 'enable cosmic-greeter.service\nenable sshd.service\ndisable gdm.service\n' \
+      > /usr/lib/systemd/system-preset/45-cosmic-vm.preset \
+ && { [ -e /etc/systemd/system/display-manager.service ] \
+      || ln -s /usr/lib/systemd/system/cosmic-greeter.service /etc/systemd/system/display-manager.service; }
+
+# Autologin straight into COSMIC. VM_USER must be the [[customizations.user]] in disk.toml:
+# a user that does not exist leaves the boot stuck at the vendor logo.
+RUN printf '\n[initial_session]\ncommand = "start-cosmic"\nuser = "%s"\n' "${VM_USER}" \
+      >> /etc/greetd/cosmic-greeter.toml
+
+# Clipboard managers need cosmic-comp's data-control protocol. /etc/environment reaches the
+# greetd PAM session (start-cosmic -> cosmic-comp); environment.d reaches systemd --user units.
+RUN echo 'COSMIC_DATA_CONTROL_ENABLED=1' >> /etc/environment \
+ && mkdir -p /usr/lib/environment.d \
+ && echo 'COSMIC_DATA_CONTROL_ENABLED=1' > /usr/lib/environment.d/60-cosmic-vm.conf
+
+# Throwaway VM: passwordless wheel so `vm ssh` can restart services.
+RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/90-vm-wheel \
+ && chmod 0440 /etc/sudoers.d/90-vm-wheel
+
+RUN if [ -f /usr/lib/systemd/system/flatpak-preinstall.service ]; then systemctl mask flatpak-preinstall.service; fi
+
+RUN rm -rf /var/cache/* /var/log/* && bootc container lint

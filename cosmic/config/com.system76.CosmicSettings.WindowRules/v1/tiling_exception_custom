@@ -1,0 +1,7 @@
+[
+    (appid: "org.pneuma.yazi", titles: [".*"]),
+    (appid: "org.pneuma.btm", titles: [".*"]),
+    (appid: "org.gnome.Loupe", titles: [".*"]),
+    (appid: "com.spotify.Client", titles: [".*"]),
+    (appid: "1Password", titles: [".*"]),
+]

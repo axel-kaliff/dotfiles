@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Stay awake = no screen-off/lock timer. cosmic-idle locks when the screen turns off, so the
+# one key covers both. The previous value is kept so `off` restores exactly what was there.
+set -euo pipefail
+HERE=$(dirname "$(readlink -f "$0")")
+state="${XDG_STATE_HOME:-$HOME/.local/state}/pneuma"
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}/cosmic"
+key=com.system76.CosmicIdle/v1/screen_off_time
+saved="$state/stay-awake.screen_off_time"
+is_on() { [[ -f $saved ]]; }
+on() { mkdir -p "$state"; cp "$cfg/$key" "$saved" 2>/dev/null || echo 'Some(300000)' >"$saved"; "$HERE/pneuma-cosmic-set" "$key" None; }
+off() { "$HERE/pneuma-cosmic-set" "$key" "@$saved"; rm -f "$saved"; }
+case "${1:-toggle}" in
+  on) is_on || on ;;
+  off) is_on && off || true ;;
+  toggle) if is_on; then off; else on; fi ;;
+  status) is_on && echo on || echo off ;;
+  *) echo "usage: pneuma-stay-awake on|off|toggle|status" >&2; exit 2 ;;
+esac

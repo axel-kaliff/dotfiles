@@ -1,0 +1,9 @@
+(
+    rules: "",
+    model: "",
+    layout: "us,se",
+    variant: ",",
+    options: Some("compose:caps,shift:both_capslock_cancel,altwin:swap_lalt_lwin"),
+    repeat_delay: 250,
+    repeat_rate: 40,
+)

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Thunderbird (flatpak) mail / compose / calendar. A running instance takes the argument itself.
+set -u
+exec flatpak run org.mozilla.thunderbird_esr "$@"

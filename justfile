@@ -153,6 +153,10 @@ stow-codex:
   @bash "$HOME/dotfiles/codex/install.sh"
   @if command -v codex >/dev/null; then bash "$HOME/dotfiles/codex/apply-config.sh"; else echo "Codex is not installed; linked files only. Re-run just stow-codex after installing it."; fi
 
+# COSMIC VM harness: just vm build|run|stop|reset|shot|key|click|ssh|sync (see vm/cosmic/vm help)
+vm *ARGS:
+  @"$HOME/dotfiles/vm/cosmic/vm" {{ARGS}}
+
 # Explicit, interactive counterpart to stow-dotfiles: pulls conflicting on-disk
 # files INTO the repo. Never run from the sync timer — always review the diff.
 adopt:

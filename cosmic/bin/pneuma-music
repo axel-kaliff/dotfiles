@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Music "scratchpad": Spotify floats (tiling exception). Until pneuma-wm exists this only launches.
+exec flatpak run com.spotify.Client

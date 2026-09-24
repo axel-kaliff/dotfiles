@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec flatpak run --file-forwarding be.alexandervanhee.gradia @@ "$1" @@

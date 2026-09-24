@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# pneuma-term <app-id> <command...>   open a terminal window with that app id running the command.
+# Ghostty when present (brew/source build), cosmic-term otherwise.
+set -euo pipefail
+id=${1:?app-id}; shift
+if command -v ghostty >/dev/null; then exec ghostty --class="$id" -e "$@"; fi
+exec cosmic-term -- "$@"

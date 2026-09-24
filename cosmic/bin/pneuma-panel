@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Show, hide (autohide) or toggle the top panel.
+set -euo pipefail
+HERE=$(dirname "$(readlink -f "$0")")
+key=com.system76.CosmicPanel.Panel/v1/autohide
+cur=$(cat "${XDG_CONFIG_HOME:-$HOME/.config}/cosmic/$key" 2>/dev/null || echo Never)
+case "${1:-toggle}" in
+  show) "$HERE/pneuma-cosmic-set" "$key" Never ;;
+  hide) "$HERE/pneuma-cosmic-set" "$key" Always ;;
+  toggle) if [[ $cur == Never* ]]; then "$HERE/pneuma-cosmic-set" "$key" Always; else "$HERE/pneuma-cosmic-set" "$key" Never; fi ;;
+  status) [[ $cur == Never* ]] && echo shown || echo hidden ;;
+  *) echo "usage: pneuma-panel show|hide|toggle|status" >&2; exit 2 ;;
+esac

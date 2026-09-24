@@ -1,0 +1,291 @@
+#!/usr/bin/env bash
+# COSMIC VM harness: build a Bluefin+COSMIC disk from the Containerfile, run it under
+# the Homebrew qemu with KVM, and drive it (screenshots, keys, clicks, ssh, sync).
+set -euo pipefail
+
+HERE=$(dirname "$(readlink -f "$0")")
+B=$HERE/.build
+SHOTS=$HERE/.shots
+BREW=/home/linuxbrew/.linuxbrew
+QMP=$B/qmp.sock
+IMG=localhost/cosmic-vm:latest
+KEY=$HOME/.ssh/cosmic-vm
+VM_USER=${VM_USER:-akaliff}
+VM_PASSWORD=${VM_PASSWORD:-cosmic}
+VM_XRES=${VM_XRES:-1920}
+VM_YRES=${VM_YRES:-1080}
+# Same pin as ~/pneuma/Justfile; override with BIB_IMAGE=ghcr.io/osbuild/bootc-image-builder:v83.0.0 if it fails on F44.
+BIB_IMAGE=${BIB_IMAGE:-quay.io/centos-bootc/bootc-image-builder:latest@sha256:2b52843ea2bfda73b0a08d97e76b734393b1d3a804681b9fabb26723bd3a2f0b}
+
+die() { echo "vm: $*" >&2; exit 1; }
+
+qemu_pid() {
+  local pid
+  [ -f "$B/qemu.pid" ] || return 1
+  pid=$(cat "$B/qemu.pid")
+  kill -0 "$pid" 2>/dev/null || return 1
+  echo "$pid"
+}
+
+# One QMP command; prints its reply line. The capabilities handshake reply is filtered out.
+qmp() {
+  [ -S "$QMP" ] || die "no QMP socket at $QMP (is the VM running?)"
+  local reply
+  reply=$(printf '%s\n%s\n' '{"execute":"qmp_capabilities"}' "$1" \
+    | socat -t 3 - "UNIX-CONNECT:$QMP" \
+    | jq -c 'select(has("return") or has("error"))' | tail -n1)
+  if jq -e '.error' <<<"$reply" >/dev/null 2>&1; then die "QMP error: $reply"; fi
+  echo "$reply"
+}
+
+# QEMU QKeyCode names for the key names people type. Unknown names pass through unchanged.
+declare -A K=(
+  [super]=meta_l [win]=meta_l [meta]=meta_l [ctrl]=ctrl [control]=ctrl [alt]=alt [shift]=shift
+  [enter]=ret [return]=ret [space]=spc [escape]=esc [bs]=backspace [del]=delete
+  [pageup]=pgup [pagedown]=pgdn [-]=minus [=]=equal [,]=comma [.]=dot [/]=slash
+  [\;]=semicolon [\']=apostrophe [\`]=grave_accent [\[]=bracket_left [\]]=bracket_right
+  [\\]=backslash [print]=print
+)
+# Shifted characters for `type`: character -> unshifted qcode.
+declare -A SHIFTED=(
+  [!]=1 [@]=2 [#]=3 [\$]=4 [%]=5 [^]=6 [\&]=7 [\*]=8 [\(]=9 [\)]=0
+  [_]=minus [+]=equal [\{]=bracket_left [\}]=bracket_right [\|]=backslash
+  [:]=semicolon [\"]=apostrophe [\<]=comma [\>]=dot [\?]=slash [\~]=grave_accent
+)
+
+combo_json() {  # "super+shift+t" -> [{"type":"qcode","data":"meta_l"},...]
+  local out="" part
+  IFS='+' read -r -a parts <<<"$1"
+  for part in "${parts[@]}"; do
+    part=${part,,}
+    out+="{\"type\":\"qcode\",\"data\":\"${K[$part]:-$part}\"},"
+  done
+  echo "[${out%,}]"
+}
+
+send_combo() { qmp "{\"execute\":\"send-key\",\"arguments\":{\"keys\":$(combo_json "$1")}}" >/dev/null; }
+
+cmd_build() {
+  local image=1 disk=1
+  case "${1:-}" in --image-only) disk=0 ;; --disk-only) image=0 ;; "") ;; *) die "build: unknown flag $1" ;; esac
+  mkdir -p "$B"
+  [ -f "$KEY" ] || ssh-keygen -t ed25519 -N '' -f "$KEY" -C cosmic-vm
+  # The image builds rootless (no password needed); only bootc-image-builder needs root,
+  # so the disk step copies the image into root's storage first (pneuma's _rootful_load_image).
+  if [ $image = 1 ]; then
+    /usr/bin/podman build --pull=newer --build-arg "VM_USER=$VM_USER" -t "$IMG" -f "$HERE/Containerfile" "$HERE"
+  fi
+  if [ $disk = 1 ]; then
+    local pubkey buildtmp copytmp user_id root_id
+    sudo -v
+    user_id=$(/usr/bin/podman images --filter "reference=$IMG" --format '{{.ID}}')
+    [ -n "$user_id" ] || die "no $IMG in your podman storage: run 'vm build --image-only'"
+    root_id=$(sudo /usr/bin/podman images --filter "reference=$IMG" --format '{{.ID}}')
+    if [ "$root_id" != "$user_id" ]; then
+      copytmp=$(mktemp -d -p "$B" _scp.XXXXXXXX)
+      sudo TMPDIR="$copytmp" /usr/bin/podman image scp "$UID@localhost::$IMG" "root@localhost::$IMG"
+      rm -r "$copytmp"
+    fi
+    pubkey=$(cat "$KEY.pub")
+    sed -e "s|@VM_USER@|$VM_USER|" -e "s|@VM_PASSWORD@|$VM_PASSWORD|" -e "s|@SSH_PUBKEY@|$pubkey|" \
+      "$HERE/disk.toml.in" >"$B/disk.toml"
+    buildtmp=$(mktemp -d -p "$B" _build-bib.XXXXXXXX)
+    sudo /usr/bin/podman run --rm -it --privileged --pull=newer --net=host \
+      --security-opt label=type:unconfined_t \
+      -v "$B/disk.toml":/config.toml:ro -v "$buildtmp":/output \
+      -v /var/lib/containers/storage:/var/lib/containers/storage \
+      "$BIB_IMAGE" --type qcow2 --use-librepo=True ${BIB_ROOTFS:+--rootfs "$BIB_ROOTFS"} "$IMG"
+    sudo chown -R "$USER:$USER" "$buildtmp"
+    mv "$buildtmp/qcow2/disk.qcow2" "$B/base.qcow2"
+    rm -r "$buildtmp"
+    rm -f "$B/overlay.qcow2" "$B/vars.fd"
+    du -h "$B/base.qcow2"
+  fi
+}
+
+cmd_run() {
+  local display=gtk
+  if [ "${1:-}" = --headless ] || { [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ]; }; then display=none; fi
+  qemu_pid >/dev/null && die "already running (pid $(cat "$B/qemu.pid")); use 'vm stop' first"
+  [ -f "$B/base.qcow2" ] || die "no $B/base.qcow2: run 'vm build' first"
+  local backing="$B/base.qcow2"
+  [ -f "$B/snap.qcow2" ] && backing="$B/snap.qcow2"
+  [ -f "$B/overlay.qcow2" ] || qemu-img create -q -f qcow2 -b "$backing" -F qcow2 "$B/overlay.qcow2"
+  [ -f "$B/vars.fd" ] || cp "$BREW/share/qemu/edk2-i386-vars.fd" "$B/vars.fd"
+  rm -f "$QMP" "$B/serial.sock"
+  setsid -f qemu-system-x86_64 -name cosmic-vm -machine q35,accel=kvm -cpu host -smp 6 -m 8G -nodefaults \
+    -drive if=pflash,format=raw,unit=0,readonly=on,file="$BREW/share/qemu/edk2-x86_64-code.fd" \
+    -drive if=pflash,format=raw,unit=1,file="$B/vars.fd" \
+    -drive file="$B/overlay.qcow2",format=qcow2,if=virtio,discard=unmap \
+    -device virtio-vga,xres="$VM_XRES",yres="$VM_YRES" \
+    -device qemu-xhci,id=xhci -device usb-tablet,bus=xhci.0 \
+    -netdev user,id=n0,hostfwd=tcp:127.0.0.1:2222-:22 -device virtio-net-pci,netdev=n0 \
+    -object rng-random,id=rng0,filename=/dev/urandom -device virtio-rng-pci,rng=rng0 \
+    -audiodev none,id=snd0 \
+    -chardev "socket,id=ser0,path=$B/serial.sock,server=on,wait=off,logfile=$B/serial.log" -serial chardev:ser0 \
+    -qmp unix:"$QMP",server=on,wait=off -pidfile "$B/qemu.pid" -display "$display" >"$B/qemu.log" 2>&1
+  local i
+  for i in $(seq 1 20); do [ -S "$QMP" ] && break; sleep 0.5; done
+  [ -S "$QMP" ] || die "qemu did not open $QMP; see $B/qemu.log"
+  echo "QMP ok (display=$display). Next: vm wait && vm ssh; watch: vm shot"
+}
+
+cmd_shot() {
+  mkdir -p "$SHOTS"
+  local f
+  f="$SHOTS/$(date +%Y%m%d-%H%M%S)${1:+-$1}.png"
+  qmp "{\"execute\":\"screendump\",\"arguments\":{\"filename\":\"$f\",\"format\":\"png\"}}" >/dev/null
+  cp -f "$f" "$SHOTS/latest.png"
+  find "$SHOTS" -maxdepth 1 -name '2*.png' -printf '%T@ %p\n' | sort -rn | tail -n +51 | cut -d' ' -f2- | xargs -r rm -f
+  echo "$f"
+}
+
+cmd_key() {
+  [ $# -gt 0 ] || die "key: give at least one combo, e.g. super+t"
+  local combo
+  for combo in "$@"; do send_combo "$combo"; sleep 0.15; done
+}
+
+cmd_type() {
+  local text=${1-} i ch
+  for ((i = 0; i < ${#text}; i++)); do
+    ch=${text:i:1}
+    case "$ch" in
+      ' ') send_combo spc ;;
+      $'\n') send_combo ret ;;
+      [a-z0-9]) send_combo "$ch" ;;
+      [A-Z]) send_combo "shift+${ch,,}" ;;
+      *)
+        if [ -n "${SHIFTED[$ch]:-}" ]; then send_combo "shift+${SHIFTED[$ch]}"
+        elif [ -n "${K[$ch]:-}" ]; then send_combo "${K[$ch]}"
+        else die "type: no key mapping for '$ch'"; fi ;;
+    esac
+    sleep 0.06
+  done
+}
+
+cmd_click() {
+  local x=${1:?x} y=${2:?y} btn=${3:-left} double=0 w h ax ay ev
+  [ "${4:-}" = --double ] && double=1
+  [ "$btn" = --double ] && { btn=left; double=1; }
+  [ -f "$SHOTS/latest.png" ] || cmd_shot >/dev/null
+  read -r w h < <(identify -format '%w %h' "$SHOTS/latest.png")
+  ax=$((x * 32767 / w)); ay=$((y * 32767 / h))
+  ev="{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$ax}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$ay}}"
+  local press="{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"$btn\"}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"$btn\"}}"
+  [ $double = 1 ] && press="$press,$press"
+  qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[$ev,$press]}}" >/dev/null
+}
+
+# Session env so wl-paste, cosmic-screenshot, busctl --user work from a non-login ssh shell.
+# shellcheck disable=SC2016  # expands in the guest, on purpose
+SESSION_ENV='export XDG_RUNTIME_DIR=/run/user/$(id -u); export WAYLAND_DISPLAY=$(ls "$XDG_RUNTIME_DIR" | grep -m1 "^wayland-[0-9]*$"); export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus; '
+
+cmd_ssh() {
+  if [ $# -eq 0 ]; then exec ssh -F "$HERE/ssh_config" -o "User=$VM_USER" vm; fi
+  ssh -F "$HERE/ssh_config" -o "User=$VM_USER" vm "$SESSION_ENV$*"
+}
+
+cmd_wait() {
+  local secs=${1:-180} i
+  for ((i = 0; i < secs; i += 3)); do
+    if ssh -F "$HERE/ssh_config" -o "User=$VM_USER" vm true 2>/dev/null; then echo "ssh up after ${i}s"; return; fi
+    sleep 3
+  done
+  die "ssh not reachable after ${secs}s (serial log: $B/serial.log)"
+}
+
+cmd_status() {
+  local pid
+  if pid=$(qemu_pid); then echo "qemu: running (pid $pid)"; else echo "qemu: not running"; return; fi
+  echo "qmp:  $(qmp '{"execute":"query-status"}' | jq -c .return)"
+  if ssh -F "$HERE/ssh_config" -o "User=$VM_USER" vm true 2>/dev/null; then echo "ssh:  reachable"; else echo "ssh:  not reachable"; fi
+  [ -f "$B/overlay.qcow2" ] && echo "overlay: $(stat -c %y "$B/overlay.qcow2" | cut -d. -f1)"
+}
+
+cmd_stop() {
+  local pid i
+  pid=$(qemu_pid) || { echo "not running"; rm -f "$B/qemu.pid"; return; }
+  qmp '{"execute":"system_powerdown"}' >/dev/null || true
+  for i in $(seq 1 60); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+  if kill -0 "$pid" 2>/dev/null; then qmp '{"execute":"quit"}' >/dev/null || true; sleep 2; fi
+  kill -0 "$pid" 2>/dev/null && kill "$pid"
+  rm -f "$B/qemu.pid"
+  echo "stopped"
+}
+
+cmd_reset() {
+  qemu_pid >/dev/null && cmd_stop
+  rm -f "$B/overlay.qcow2" "$B/vars.fd"
+  if [ "${1:-}" = --base ]; then rm -f "$B/snap.qcow2"; echo "overlay and snapshot removed; next 'vm run' boots the built base"
+  else echo "overlay removed; next 'vm run' boots the ${B##*/}/snap.qcow2 snapshot if one exists, else the base"; fi
+}
+
+# Flatten the current overlay into snap.qcow2 so a provisioned state (brew bundle, first login)
+# survives `vm reset`. The VM is stopped first; the flattened file becomes the new backing file.
+cmd_snapshot() {
+  qemu_pid >/dev/null && cmd_stop
+  [ -f "$B/overlay.qcow2" ] || die "nothing to snapshot (no overlay)"
+  qemu-img convert -O qcow2 "$B/overlay.qcow2" "$B/snap.tmp.qcow2"
+  mv -f "$B/snap.tmp.qcow2" "$B/snap.qcow2"
+  rm -f "$B/overlay.qcow2"
+  echo "snapshot saved: $(du -h "$B/snap.qcow2" | cut -f1); next 'vm run' boots it (vm reset --base discards it)"
+}
+
+cmd_sync() {
+  local restart=0 dist="$HOME/dotfiles/cosmic/applets/dist"
+  [ "${1:-}" = --restart ] && restart=1
+  local rsh="ssh -F $HERE/ssh_config -o User=$VM_USER"
+  rsync -az --delete --exclude .git --exclude vm --exclude 'cosmic/applets/target' --exclude 'cosmic/applets/dist' \
+    -e "$rsh" "$HOME/dotfiles/" vm:dotfiles/
+  if [ -d "$dist" ]; then
+    ssh -F "$HERE/ssh_config" -o "User=$VM_USER" vm 'mkdir -p ~/.local/bin ~/.local/share/applications ~/.local/share/icons ~/.config/systemd/user'
+    [ -d "$dist/bin" ] && rsync -az -e "$rsh" "$dist/bin/" vm:.local/bin/
+    [ -d "$dist/applications" ] && rsync -az -e "$rsh" "$dist/applications/" vm:.local/share/applications/
+    [ -d "$dist/icons" ] && rsync -az -e "$rsh" "$dist/icons/" vm:.local/share/icons/
+    [ -d "$dist/systemd" ] && rsync -az -e "$rsh" "$dist/systemd/" vm:.config/systemd/user/
+  fi
+  cmd_ssh 'if [ -x ~/dotfiles/cosmic/bin/pneuma-cosmic-apply ]; then ~/dotfiles/cosmic/bin/pneuma-cosmic-apply; else echo "synced (no cosmic/bin/pneuma-cosmic-apply yet)"; fi'
+  [ $restart = 1 ] && cmd_ssh 'pkill -x cosmic-panel || true'
+  return 0
+}
+
+cmd_help() {
+  cat <<'H'
+vm build [--image-only|--disk-only]  rootless podman build, then (sudo) bootc-image-builder -> .build/base.qcow2
+vm run [--headless]                  boot an overlay of base.qcow2 (gtk window unless headless)
+vm wait [secs]                       block until ssh answers
+vm status | stop | reset [--base]    state / graceful shutdown / drop overlay (and the snapshot with --base)
+vm snapshot                          flatten the overlay into .build/snap.qcow2 (survives reset)
+vm shot [label]                      QMP screendump -> .shots/<ts>-<label>.png (prints the path)
+vm key <combo>...                    send chords, e.g. vm key super+t  ctrl+alt+f2
+vm type "text"                       type literal text
+vm click <x> <y> [left|right|middle] [--double]   pixel coords of the last screenshot
+vm ssh [cmd]                         shell or one command inside the session env
+vm sync [--restart]                  rsync ~/dotfiles + applet dist into the VM, run pneuma-cosmic-apply
+vm serial                            attach to the serial console (Ctrl-C to leave)
+vm qmp '<json>'                      raw QMP command
+H
+}
+
+cmd=${1:-help}; shift || true
+case "$cmd" in
+  build) cmd_build "$@" ;;
+  run) cmd_run "$@" ;;
+  shot) cmd_shot "$@" ;;
+  key) cmd_key "$@" ;;
+  _keys) combo_json "$1" ;;
+  type) cmd_type "$@" ;;
+  click) cmd_click "$@" ;;
+  ssh) cmd_ssh "$@" ;;
+  wait) cmd_wait "$@" ;;
+  status) cmd_status ;;
+  stop) cmd_stop ;;
+  reset) cmd_reset "$@" ;;
+  snapshot) cmd_snapshot ;;
+  sync) cmd_sync "$@" ;;
+  serial) exec socat -,raw,echo=0 "UNIX-CONNECT:$B/serial.sock" ;;
+  qmp) qmp "$1" ;;
+  help|-h|--help) cmd_help ;;
+  *) die "unknown command '$cmd' (vm help)" ;;
+esac
