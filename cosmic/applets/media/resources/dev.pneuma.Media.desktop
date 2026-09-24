@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Now Playing
+Comment=MPRIS now-playing with playback controls
+Type=Application
+Icon=multimedia-player-symbolic
+Exec=pneuma-applet-media
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Media;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10

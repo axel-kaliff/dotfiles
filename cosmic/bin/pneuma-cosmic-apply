@@ -17,6 +17,10 @@ if [ -f "$HOME/.local/state/pneuma/easy-mode" ]; then
   for k in plugins_wings plugins_center opacity; do cp -f "$D/panel-layouts/easy/$k" "$HOME/.config/cosmic/com.system76.CosmicPanel.Panel/v1/$k"; done
   printf '["Panel","Dock"]\n' > "$HOME/.config/cosmic/com.system76.CosmicPanel/v1/entries"
 fi
+# Same for stay-awake: the shipped idle timeout must not undo it.
+if [ -f "$HOME/.local/state/pneuma/stay-awake.screen_off_time" ]; then
+  "$D/bin/pneuma-cosmic-set" com.system76.CosmicIdle/v1/screen_off_time None
+fi
 
 for f in "$D"/bin/*; do ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"; done
 for f in "$D"/pop-launcher/scripts/*; do [ -e "$f" ] && ln -sfn "$f" "$HOME/.local/share/pop-launcher/scripts/$(basename "$f")"; done

@@ -2,7 +2,7 @@
 # cosmic-applets 1.8.0 was built from (its Cargo.lock), so the panel and the applets agree.
 [workspace]
 resolver = "3"
-members = ["easy-mode", "kbd-flags", "wm", "pomodoro", "safeeyes", "toggles", "agents", "workspaces"]
+members = ["easy-mode", "kbd-flags", "wm", "pomodoro", "safeeyes", "toggles", "agents", "workspaces", "media"]
 
 [workspace.package]
 version = "0.1.0"
@@ -11,7 +11,7 @@ license = "MIT"
 
 [workspace.dependencies]
 libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "d4d71fd53e5ed6bd3a430089114dffa2da3cd498", features = ["applet", "applet-token", "dbus-config", "desktop", "multi-window", "tokio", "wayland", "winit"] }
-tokio = { version = "1", features = ["rt-multi-thread", "process", "time"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time"] }
 # Compositor protocols, at the revision Fedora's cosmic-applets 1.8.0 lock resolves to.
 cctk = { git = "https://github.com/pop-os/cosmic-protocols", package = "cosmic-client-toolkit", rev = "32283d7" }
 futures = "0.3"

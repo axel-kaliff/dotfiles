@@ -6,6 +6,7 @@ Some((
     [
         "com.system76.CosmicAppletStatusArea",
         "com.system76.CosmicAppletNotifications",
+        "dev.pneuma.Media",
         "dev.pneuma.Pomodoro",
         "dev.pneuma.Agents",
         "com.system76.CosmicAppletBluetooth",

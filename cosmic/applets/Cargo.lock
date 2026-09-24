@@ -3304,6 +3304,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpris2-zbus"
+version = "0.1.0"
+source = "git+https://github.com/pop-os/dbus-settings-bindings?rev=eed01dd#eed01dd3609e90e3c8cd043656734c500956c793"
+dependencies = [
+ "futures-util",
+ "jiff",
+ "serde",
+ "thiserror 2.0.21",
+ "zbus",
+ "zvariant",
+]
+
+[[package]]
 name = "mutate_once"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3915,6 +3928,19 @@ dependencies = [
  "futures",
  "libcosmic",
  "serde",
+]
+
+[[package]]
+name = "pneuma-applet-media"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "jiff",
+ "libcosmic",
+ "mpris2-zbus",
+ "tokio",
+ "url",
+ "zbus",
 ]
 
 [[package]]

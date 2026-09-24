@@ -127,6 +127,7 @@ impl cosmic::Application for Applet {
         let pills = self.workspaces.iter().map(|workspace| {
             let mut content = widget::row::with_capacity(1 + workspace.app_ids.len())
                 .spacing(4)
+                .height(Length::Fill)
                 .align_y(Alignment::Center)
                 .push(self.core.applet.text(workspace.name.as_str()).font(cosmic::font::bold()));
             for handle in workspace.app_ids.iter().filter_map(|id| self.icons.get(id)) {

@@ -1,0 +1,16 @@
+[package]
+name = "pneuma-applet-media"
+description = "Now playing from MPRIS with transport controls and source switching"
+version.workspace = true
+edition.workspace = true
+# mpris.rs is modelled on cosmic-applet-audio (System76, GPL-3.0-only).
+license = "GPL-3.0-only"
+
+[dependencies]
+libcosmic.workspace = true
+futures.workspace = true
+tokio.workspace = true
+jiff = "0.2"
+url = "2"
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+mpris2-zbus = { git = "https://github.com/pop-os/dbus-settings-bindings", rev = "eed01dd" }
