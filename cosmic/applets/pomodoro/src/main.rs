@@ -432,7 +432,6 @@ impl cosmic::Application for Applet {
     }
 
     fn update(&mut self, message: Message) -> Task<cosmic::Action<Message>> {
-        eprintln!("DEBUG pomodoro message {message:?}");
         match message {
             Message::TogglePopup => {
                 return match self.popup.take() {

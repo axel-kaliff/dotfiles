@@ -1,0 +1,13 @@
+[Unit]
+Description=Eye-break overlays every 15 minutes (pneuma-safeeyes)
+PartOf=cosmic-session.target
+After=cosmic-session.target
+ConditionEnvironment=XDG_CURRENT_DESKTOP=COSMIC
+
+[Service]
+ExecStart=%h/.local/bin/pneuma-safeeyes
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=cosmic-session.target

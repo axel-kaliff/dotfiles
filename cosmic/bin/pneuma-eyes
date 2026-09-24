@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Control the eye-break daemon: pneuma-eyes pause [minutes] | resume | toggle | status | break [long]
+# Pause is a flag file the daemon polls (optionally holding a resume time); a break-now is a signal.
+set -euo pipefail
+flag="${XDG_STATE_HOME:-$HOME/.local/state}/pneuma/safeeyes-paused"
+case "${1:-status}" in
+  pause)
+    mkdir -p "$(dirname "$flag")"
+    if [[ ${2:-0} -gt 0 ]]; then echo $(( $(date +%s) * 1000 + ${2} * 60000 )) >"$flag"; else : >"$flag"; fi ;;
+  resume) rm -f "$flag" ;;
+  toggle) if [[ -e $flag ]]; then rm -f "$flag"; else mkdir -p "$(dirname "$flag")"; : >"$flag"; fi ;;
+  status) [[ -e $flag ]] && echo paused || echo active ;;
+  break) if [[ ${2:-short} == long ]]; then pkill -USR2 -x pneuma-safeeyes; else pkill -USR1 -x pneuma-safeeyes; fi ;;
+  *) echo "usage: pneuma-eyes pause [minutes] | resume | toggle | status | break [long]" >&2; exit 2 ;;
+esac

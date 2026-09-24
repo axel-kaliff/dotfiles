@@ -3700,6 +3700,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pneuma-safeeyes"
+version = "0.1.0"
+dependencies = [
+ "cosmic-client-toolkit",
+ "libcosmic",
+ "tokio",
+]
+
+[[package]]
 name = "pneuma-wm"
 version = "0.1.0"
 dependencies = [
