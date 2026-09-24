@@ -1,0 +1,9 @@
+[package]
+name = "pneuma-applet-toggles"
+description = "Session toggles in the panel: stay awake, eye breaks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+libcosmic.workspace = true

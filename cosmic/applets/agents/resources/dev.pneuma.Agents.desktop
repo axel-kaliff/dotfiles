@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Agents
+Comment=AI coding subscriptions: limits, balance and usage
+Type=Application
+Icon=dev.pneuma.Agents
+Exec=pneuma-applet-agents
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Claude;Codex;Fireworks;Usage;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10

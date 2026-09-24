@@ -1,4 +1,5 @@
 Some([
+    "dev.pneuma.Toggles",
     "com.system76.CosmicAppletTime",
     "dev.pneuma.KeyboardFlags",
 ])

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Toggles
+Comment=Stay awake and eye-break switches
+Type=Application
+Icon=view-more-symbolic
+Exec=pneuma-applet-toggles
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Toggles;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10
