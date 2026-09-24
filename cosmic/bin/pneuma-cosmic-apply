@@ -23,6 +23,11 @@ if [ -f "$HOME/.local/state/pneuma/stay-awake.screen_off_time" ]; then
 fi
 
 for f in "$D"/bin/*; do ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"; done
+# The panel spawns applets with a PATH that lacks ~/.local/bin, so their Exec lines get the
+# absolute path (the files come from cosmic/applets/dist via `vm sync`).
+for f in "$HOME"/.local/share/applications/dev.pneuma.*.desktop; do
+  [ -e "$f" ] && sed -i "s|^Exec=pneuma-|Exec=$HOME/.local/bin/pneuma-|" "$f"
+done
 for f in "$D"/pop-launcher/scripts/*; do [ -e "$f" ] && ln -sfn "$f" "$HOME/.local/share/pop-launcher/scripts/$(basename "$f")"; done
 for f in "$D"/environment.d/*; do [ -e "$f" ] && cp -f "$f" "$HOME/.config/environment.d/"; done
 

@@ -10,7 +10,6 @@ use std::sync::LazyLock;
 use std::time::Duration;
 
 use cosmic::iced::platform_specific::shell::wayland::commands::popup::{destroy_popup, get_popup};
-use cosmic::iced::widget::text::Wrapping;
 use cosmic::iced::{Alignment, Length, Limits, Subscription, time, window::Id};
 use cosmic::prelude::*;
 use cosmic::widget::{self, autosize, button, icon, mouse_area};
@@ -140,6 +139,9 @@ enum Message {
     TogglePopup,
     PopupClosed(Id),
     Notify,
+    /// A follow-up pass: the runtime asks the surface size from the layout it had when the
+    /// message arrived, so a size change needs one more update to be requested.
+    Relayout,
 }
 
 impl Applet {
@@ -206,7 +208,7 @@ impl cosmic::Application for Applet {
             .height(Length::Fill)
             .align_y(Alignment::Center)
             .push(icon::from_name(name).size(16))
-            .push(self.core.applet.text(degrees(current.temperature_2m)).wrapping(Wrapping::None));
+            .push(self.core.applet.text(degrees(current.temperature_2m)));
         let height = self.core.applet.suggested_window_size().1.get() as f32;
         let button = button::custom(content)
             .padding([0, self.core.applet.suggested_padding(true).1])
@@ -285,8 +287,10 @@ impl cosmic::Application for Applet {
             Message::Fetched(forecast) => {
                 if forecast.is_some() {
                     self.forecast = forecast;
+                    return cosmic::task::message(Message::Relayout);
                 }
             }
+            Message::Relayout => {}
             Message::TogglePopup => {
                 return match self.popup.take() {
                     Some(id) => destroy_popup(id),

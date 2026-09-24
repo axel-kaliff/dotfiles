@@ -40,6 +40,9 @@ struct Applet {
 #[derive(Debug, Clone)]
 enum Message {
     Focused(Option<String>),
+    /// A follow-up pass: the runtime asks the surface size from the layout it had when the
+    /// message arrived, so a size change needs one more update to be requested.
+    Relayout,
 }
 
 impl cosmic::Application for Applet {
@@ -80,7 +83,7 @@ impl cosmic::Application for Applet {
     }
 
     fn update(&mut self, message: Message) -> Task<cosmic::Action<Message>> {
-        let Message::Focused(app_id) = message;
+        let Message::Focused(app_id) = message else { return Task::none() };
         self.name = app_id
             .filter(|id| !id.is_empty())
             .map(|id| {
@@ -92,7 +95,7 @@ impl cosmic::Application for Applet {
                 entry.name(self.entries.locales()).map_or(id, |name| name.into_owned())
             })
             .unwrap_or_default();
-        Task::none()
+        cosmic::task::message(Message::Relayout)
     }
 
     fn style(&self) -> Option<cosmic::iced::theme::Style> {

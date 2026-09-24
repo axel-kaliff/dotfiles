@@ -49,6 +49,9 @@ struct Applet {
 enum Message {
     Wayland(wayland::Event),
     Activate(ExtWorkspaceHandleV1),
+    /// A follow-up pass: the runtime asks the surface size from the layout it had when the
+    /// message arrived, so a size change needs one more update to be requested.
+    Relayout,
 }
 
 impl Applet {
@@ -156,7 +159,9 @@ impl cosmic::Application for Applet {
                     self.cache_icon(app_id);
                 }
                 self.workspaces = list;
+                return cosmic::task::message(Message::Relayout);
             }
+            Message::Relayout => {}
             Message::Activate(handle) => {
                 if let Some(manager) = &self.manager {
                     handle.activate();

@@ -65,6 +65,9 @@ enum Message {
     PollPosition,
     Position(Option<SignedDuration>),
     Tick,
+    /// A follow-up pass: the runtime asks the surface size from the layout it had when the
+    /// message arrived, so a size change needs one more update to be requested.
+    Relayout,
 }
 
 fn truncate(text: &str, chars: usize) -> String {
@@ -301,10 +304,10 @@ impl cosmic::Application for Applet {
                 if self.selected.as_ref().is_some_and(|name| !self.players.iter().any(|p| p.name == *name)) {
                     self.selected = None;
                 }
-                if self.popup.is_some() {
-                    return self.poll_position();
-                }
+                let poll = if self.popup.is_some() { self.poll_position() } else { Task::none() };
+                return Task::batch([poll, cosmic::task::message(Message::Relayout)]);
             }
+            Message::Relayout => {}
             Message::TogglePopup => {
                 return match self.popup.take() {
                     Some(id) => destroy_popup(id),
