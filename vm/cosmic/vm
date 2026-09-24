@@ -15,6 +15,7 @@ VM_PASSWORD=${VM_PASSWORD:-cosmic}
 VM_XRES=${VM_XRES:-1920}
 VM_YRES=${VM_YRES:-1080}
 # Same pin as ~/pneuma/Justfile; override with BIB_IMAGE=ghcr.io/osbuild/bootc-image-builder:v83.0.0 if it fails on F44.
+# The image ships no DefaultRootFs hint, so the filesystem is always passed (BIB_ROOTFS overrides btrfs).
 BIB_IMAGE=${BIB_IMAGE:-quay.io/centos-bootc/bootc-image-builder:latest@sha256:2b52843ea2bfda73b0a08d97e76b734393b1d3a804681b9fabb26723bd3a2f0b}
 
 die() { echo "vm: $*" >&2; exit 1; }
@@ -94,7 +95,7 @@ cmd_build() {
       --security-opt label=type:unconfined_t \
       -v "$B/disk.toml":/config.toml:ro -v "$buildtmp":/output \
       -v /var/lib/containers/storage:/var/lib/containers/storage \
-      "$BIB_IMAGE" --type qcow2 --use-librepo=True ${BIB_ROOTFS:+--rootfs "$BIB_ROOTFS"} "$IMG"
+      "$BIB_IMAGE" --type qcow2 --use-librepo=True --rootfs "${BIB_ROOTFS:-btrfs}" "$IMG"
     sudo chown -R "$USER:$USER" "$buildtmp"
     mv "$buildtmp/qcow2/disk.qcow2" "$B/base.qcow2"
     rm -r "$buildtmp"

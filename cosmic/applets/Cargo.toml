@@ -1,0 +1,17 @@
+# Own COSMIC panel applets, one crate each. libcosmic is pinned to the revision Fedora 44's
+# cosmic-applets 1.8.0 was built from (its Cargo.lock), so the panel and the applets agree.
+[workspace]
+resolver = "3"
+members = ["easy-mode"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "d4d71fd53e5ed6bd3a430089114dffa2da3cd498", features = ["applet", "applet-token", "dbus-config", "multi-window", "tokio", "wayland", "winit"] }
+tokio = { version = "1", features = ["rt-multi-thread", "process", "time"] }
+
+[profile.release]
+lto = "thin"

@@ -157,6 +157,13 @@ stow-codex:
 vm *ARGS:
   @"$HOME/dotfiles/vm/cosmic/vm" {{ARGS}}
 
+# Own COSMIC applets (cosmic/applets): build in the f44-cosmic distrobox, stage for vm sync
+build-applets *ARGS:
+  @just -f "$HOME/dotfiles/cosmic/applets/justfile" -d "$HOME/dotfiles/cosmic/applets" build {{ARGS}}
+
+stage-applets:
+  @just -f "$HOME/dotfiles/cosmic/applets/justfile" -d "$HOME/dotfiles/cosmic/applets" stage
+
 # Explicit, interactive counterpart to stow-dotfiles: pulls conflicting on-disk
 # files INTO the repo. Never run from the sync timer — always review the diff.
 adopt:

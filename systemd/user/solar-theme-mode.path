@@ -1,0 +1,12 @@
+[Unit]
+Description=Re-run the solar wallpaper when COSMIC's light/dark mode changes
+# cosmic-settings and the theme picker rewrite is_dark; the wallpaper choice follows the sun,
+# not the mode, so this puts it back the way Omarchy's theme-set hook did.
+ConditionEnvironment=XDG_CURRENT_DESKTOP=COSMIC
+
+[Path]
+PathModified=%h/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark
+Unit=solar-wallpaper.service
+
+[Install]
+WantedBy=default.target

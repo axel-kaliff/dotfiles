@@ -1,13 +1,17 @@
 """Drive the wallpaper, night light and theme from the sun's position.
 
-A macOS-style dynamic desktop on Omarchy. The Bluefin image ships a day and a
-night wallpaper for every month of the year; this picks the pair for the
-current month, shows the day or night half according to sunrise and sunset,
-and converts the JPEG XL source once into a JPEG the shell can render. The
-night light follows the same clock, and a day and a night theme can be named
-too (SOLAR_DAY_THEME / SOLAR_NIGHT_THEME). Runs from a systemd user timer and
-from the theme-set hook, and only acts while the `solar-wallpaper` Omarchy
-toggle is on: `omarchy toggle solar-wallpaper on`.
+A macOS-style dynamic desktop. The Bluefin image ships a day and a night
+wallpaper for every month of the year; this picks the pair for the current
+month, shows the day or night half according to sunrise and sunset, and
+converts the JPEG XL source once into a JPEG the shell can render. The night
+light follows the same clock where the desktop has one, and a day and a night
+theme can be named too (SOLAR_DAY_THEME / SOLAR_NIGHT_THEME). Runs from a
+systemd user timer and from the theme-change hook, and only acts while the
+`solar-wallpaper` toggle is on.
+
+Two desktops: Omarchy on Hyprland (omarchy-* commands, night light, theme
+slugs) and COSMIC (cosmic-config keys, no night light, themes "dark" and
+"light"). The session's XDG_CURRENT_DESKTOP picks one; SOLAR_DESKTOP overrides.
 """
 
 from __future__ import annotations
@@ -16,6 +20,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -33,6 +38,16 @@ TARGET_WIDTH: Final = 3840
 JPEG_QUALITY: Final = 90
 CONVERT_TIMEOUT_SECONDS: Final = 180
 COMMAND_TIMEOUT_SECONDS: Final = 60
+COSMIC_BACKGROUND: Final = """(
+    output: "all",
+    source: Path("{path}"),
+    filter_by_theme: false,
+    rotation_frequency: 3600,
+    filter_method: Lanczos,
+    scaling_mode: Zoom,
+    sampling_method: Alphanumeric,
+)
+"""
 
 
 class SolarWallpaperError(Exception):
@@ -48,41 +63,6 @@ class ConversionError(SolarWallpaperError):
 
 
 @dataclass(frozen=True, slots=True)
-class Settings:
-    """Everything configurable, read from SOLAR_* environment variables."""
-
-    location: Location
-    source_dir: Path
-    cache_dir: Path
-    state_dir: Path
-    nightlight: bool
-    day_theme: str
-    night_theme: str
-
-    @classmethod
-    def from_env(cls, env: Mapping[str, str], home: Path) -> Settings:
-        """Defaults: Stockholm, the Bluefin set, night light on, no theme switching."""
-        return cls(
-            location=Location(
-                latitude=float(env.get("SOLAR_LATITUDE", "59.3293")),
-                longitude=float(env.get("SOLAR_LONGITUDE", "18.0686")),
-            ),
-            source_dir=Path(env.get("SOLAR_SOURCE_DIR", "/usr/share/backgrounds/bluefin")),
-            cache_dir=Path(
-                env.get("SOLAR_CACHE_DIR", str(home / ".local/share/pneuma/solar"))
-            ).resolve(),
-            state_dir=home / ".local/state/omarchy",
-            nightlight=env.get("SOLAR_NIGHTLIGHT", "1") == "1",
-            day_theme=env.get("SOLAR_DAY_THEME", ""),
-            night_theme=env.get("SOLAR_NIGHT_THEME", ""),
-        )
-
-    def theme_for(self, phase: SolarPhase) -> str:
-        """The theme named for `phase`, or "" when themes are left alone."""
-        return self.day_theme if phase is SolarPhase.DAY else self.night_theme
-
-
-@dataclass(frozen=True, slots=True)
 class DesktopState:
     """What the desktop shows right now."""
 
@@ -93,7 +73,7 @@ class DesktopState:
 
 @dataclass(frozen=True, slots=True)
 class SetTheme:
-    """Apply an Omarchy theme by slug."""
+    """Apply a theme: an Omarchy slug, or "dark" / "light" on COSMIC."""
 
     name: str
 
@@ -128,6 +108,140 @@ class Runner(Protocol):
     def __call__(self, command: Sequence[str], *, timeout: int) -> CommandResult: ...
 
 
+class Desktop(Protocol):
+    """The shell this runs on: where its toggle lives, how it is read and changed."""
+
+    @property
+    def state_dir(self) -> Path: ...
+
+    @property
+    def has_nightlight(self) -> bool: ...
+
+    def read_state(self, run: Runner) -> DesktopState: ...
+
+    def apply(self, step: Step, run: Runner) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class OmarchyDesktop:
+    """Omarchy on Hyprland: state under ~/.local/state/omarchy, the omarchy-* commands."""
+
+    state_dir: Path
+    has_nightlight: bool = True
+
+    def read_state(self, run: Runner) -> DesktopState:
+        """Current background, theme slug and night light state."""
+        background_link = self.state_dir / "current" / "background"
+        background = background_link.resolve() if background_link.is_symlink() else None
+        theme_file = self.state_dir / "current" / "theme.name"
+        theme = theme_file.read_text().strip() if theme_file.exists() else ""
+        status = run(["omarchy-toggle-nightlight", "--status"], timeout=COMMAND_TIMEOUT_SECONDS)
+        return DesktopState(
+            background=background,
+            theme=theme,
+            nightlight_on=parse_nightlight_status(status.stdout),
+        )
+
+    def apply(self, step: Step, run: Runner) -> None:
+        """Carry out one step with the omarchy-* commands."""
+        match step:
+            case SetTheme(name=name):
+                run(["omarchy-theme-set", name], timeout=COMMAND_TIMEOUT_SECONDS)
+            case SetWallpaper(image=image):
+                run(["omarchy-theme-bg-set", str(image)], timeout=COMMAND_TIMEOUT_SECONDS)
+            case ToggleNightlight():
+                run(["omarchy-toggle-nightlight"], timeout=COMMAND_TIMEOUT_SECONDS)
+
+
+@dataclass(frozen=True, slots=True)
+class CosmicDesktop:
+    """COSMIC: cosmic-bg and the colour mode are RON keys under ~/.config/cosmic.
+
+    Themes are "dark" and "light". There is no night light before COSMIC Epoch 3.
+    """
+
+    state_dir: Path
+    config_dir: Path
+    has_nightlight: bool = False
+
+    def read_state(self, run: Runner) -> DesktopState:
+        """Current background and colour mode, straight from the config keys."""
+        background = None
+        key = self.config_dir / "com.system76.CosmicBackground/v1/all"
+        if key.exists() and (found := re.search(r'Path\("([^"]+)"\)', key.read_text())):
+            background = Path(found.group(1))
+        mode = self.config_dir / "com.system76.CosmicTheme.Mode/v1/is_dark"
+        theme = ""
+        if mode.exists():
+            theme = "dark" if mode.read_text().strip() == "true" else "light"
+        return DesktopState(background=background, theme=theme, nightlight_on=False)
+
+    def apply(self, step: Step, run: Runner) -> None:
+        """Carry out one step by rewriting the config keys cosmic-bg and the theme watch."""
+        match step:
+            case SetTheme(name=name):
+                mode = self.config_dir / "com.system76.CosmicTheme.Mode/v1/is_dark"
+                write_key(mode, "true\n" if name == "dark" else "false\n")
+            case SetWallpaper(image=image):
+                background = self.config_dir / "com.system76.CosmicBackground/v1"
+                write_key(background / "all", COSMIC_BACKGROUND.format(path=image))
+                write_key(background / "same-on-all", "true\n")
+            case ToggleNightlight():
+                raise SolarWallpaperError("COSMIC has no night light; set SOLAR_NIGHTLIGHT=0")
+
+
+def write_key(key: Path, value: str) -> None:
+    """Replace one cosmic-config key atomically, so its watcher sees a single event."""
+    key.parent.mkdir(parents=True, exist_ok=True)
+    partial = key.with_name(f".{key.name}.partial")
+    partial.write_text(value)
+    partial.replace(key)
+
+
+def detect_desktop(env: Mapping[str, str], home: Path) -> Desktop:
+    """COSMIC when the session (or SOLAR_DESKTOP) says so, Omarchy otherwise."""
+    kind = env.get("SOLAR_DESKTOP") or env.get("XDG_CURRENT_DESKTOP", "")
+    if "cosmic" in kind.lower():
+        return CosmicDesktop(
+            state_dir=home / ".local/state/pneuma", config_dir=home / ".config/cosmic"
+        )
+    return OmarchyDesktop(state_dir=home / ".local/state/omarchy")
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+    """Everything configurable, read from SOLAR_* environment variables."""
+
+    location: Location
+    source_dir: Path
+    cache_dir: Path
+    nightlight: bool
+    day_theme: str
+    night_theme: str
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str], home: Path, desktop: Desktop) -> Settings:
+        """Defaults: Stockholm, the Bluefin set, the night light if there is one, no themes."""
+        nightlight_default = "1" if desktop.has_nightlight else "0"
+        return cls(
+            location=Location(
+                latitude=float(env.get("SOLAR_LATITUDE", "59.3293")),
+                longitude=float(env.get("SOLAR_LONGITUDE", "18.0686")),
+            ),
+            source_dir=Path(env.get("SOLAR_SOURCE_DIR", "/usr/share/backgrounds/bluefin")),
+            cache_dir=Path(
+                env.get("SOLAR_CACHE_DIR", str(home / ".local/share/pneuma/solar"))
+            ).resolve(),
+            nightlight=env.get("SOLAR_NIGHTLIGHT", nightlight_default) == "1",
+            day_theme=env.get("SOLAR_DAY_THEME", ""),
+            night_theme=env.get("SOLAR_NIGHT_THEME", ""),
+        )
+
+    def theme_for(self, phase: SolarPhase) -> str:
+        """The theme named for `phase`, or "" when themes are left alone."""
+        return self.day_theme if phase is SolarPhase.DAY else self.night_theme
+
+
 def run_command(command: Sequence[str], *, timeout: int) -> CommandResult:
     """Run `command` with its executable resolved on PATH, capturing stdout."""
     executable = shutil.which(command[0])
@@ -154,7 +268,7 @@ def source_path(source_dir: Path, phase: SolarPhase, month: int) -> Path:
 
 
 def toggle_enabled(state_dir: Path) -> bool:
-    """Whether `omarchy toggle solar-wallpaper on` has been run."""
+    """Whether the solar-wallpaper toggle file has been created."""
     return (state_dir / "toggles" / TOGGLE_NAME).exists()
 
 
@@ -165,20 +279,6 @@ def parse_nightlight_status(raw: str) -> bool:
     except json.JSONDecodeError:
         return False
     return status.get("enabled") is True
-
-
-def read_desktop_state(state_dir: Path, run: Runner) -> DesktopState:
-    """Current background, theme slug and night light state."""
-    background_link = state_dir / "current" / "background"
-    background = background_link.resolve() if background_link.is_symlink() else None
-    theme_file = state_dir / "current" / "theme.name"
-    theme = theme_file.read_text().strip() if theme_file.exists() else ""
-    status = run(["omarchy-toggle-nightlight", "--status"], timeout=COMMAND_TIMEOUT_SECONDS)
-    return DesktopState(
-        background=background,
-        theme=theme,
-        nightlight_on=parse_nightlight_status(status.stdout),
-    )
 
 
 def plan(
@@ -229,17 +329,13 @@ def ensure_converted(source: Path, target: Path, run: Runner) -> None:
     partial.replace(target)
 
 
-def execute(steps: Sequence[Step], run: Runner) -> None:
-    """Carry out `steps` in order."""
+def execute(steps: Sequence[Step], run: Runner, desktop: Desktop) -> None:
+    """Carry out `steps` in order, converting a wallpaper before it is shown."""
     for step in steps:
         match step:
-            case SetTheme(name=name):
-                run(["omarchy-theme-set", name], timeout=COMMAND_TIMEOUT_SECONDS)
             case SetWallpaper(image=image, source=source):
                 ensure_converted(source, image, run)
-                run(["omarchy-theme-bg-set", str(image)], timeout=COMMAND_TIMEOUT_SECONDS)
-            case ToggleNightlight():
-                run(["omarchy-toggle-nightlight"], timeout=COMMAND_TIMEOUT_SECONDS)
+        desktop.apply(step, run)
 
 
 def describe(step: Step) -> str:
@@ -281,17 +377,19 @@ def parse_args(argv: Sequence[str] | None) -> Options:
 def main(argv: Sequence[str] | None = None, run: Runner = run_command) -> int:
     """Entry point: 0 when the desktop matches the sun, 1 when a step failed."""
     options = parse_args(argv)
-    settings = Settings.from_env(os.environ, Path.home())
-    if not (options.force or toggle_enabled(settings.state_dir)):
+    home = Path.home()
+    desktop = detect_desktop(os.environ, home)
+    settings = Settings.from_env(os.environ, home, desktop)
+    if not (options.force or toggle_enabled(desktop.state_dir)):
         return 0
     now = (options.now or dt.datetime.now(tz=dt.UTC)).astimezone()
     phase = phase_at(now, settings.location)
     try:
-        steps = plan(settings, phase, now.month, read_desktop_state(settings.state_dir, run))
+        steps = plan(settings, phase, now.month, desktop.read_state(run))
         if options.dry_run:
             print(f"{phase}: {', '.join(describe(step) for step in steps) or 'nothing to do'}")
         else:
-            execute(steps, run)
+            execute(steps, run, desktop)
     except SolarWallpaperError as error:
         print(f"solar-wallpaper: {error}", file=sys.stderr)
         return 1

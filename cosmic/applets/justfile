@@ -1,0 +1,23 @@
+# Applets build in the Fedora 44 distrobox (same glibc as the Bluefin guest) with rustup's
+# toolchain from the shared home; the target dir stays out of the repo.
+box := "f44-cosmic"
+export CARGO_TARGET_DIR := env("CARGO_TARGET_DIR", env("HOME") + "/.cache/pneuma-applets-target")
+
+build *ARGS:
+  distrobox enter {{box}} -- "$HOME/.cargo/bin/cargo" build --release --workspace {{ARGS}}
+
+check:
+  distrobox enter {{box}} -- "$HOME/.cargo/bin/cargo" clippy --release --workspace -- -W clippy::pedantic
+
+# Collect binaries and desktop files into dist/, which `vm sync` ships into the guest.
+stage:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  rm -rf dist; mkdir -p dist/bin dist/applications
+  for crate in */; do
+    crate=${crate%/}; [ -f "$crate/Cargo.toml" ] || continue
+    name=$(sed -n 's/^name = "\(.*\)"/\1/p' "$crate/Cargo.toml" | head -1)
+    install -Dm755 "$CARGO_TARGET_DIR/release/$name" "dist/bin/$name"
+    install -Dm644 "$crate"/resources/*.desktop -t dist/applications/
+  done
+  ls -R dist

@@ -1,9 +1,10 @@
 [Unit]
 Description=Solar wallpaper: day/night wallpaper, night light and theme by sun position
-# Needs the Hyprland session: omarchy-shell IPC for the wallpaper, hyprctl for
-# the night light. Omarchy's autostart imports the session variables into the
-# user manager, so this skips cleanly outside a session.
-ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+# Needs a session the script knows: Hyprland (omarchy-shell IPC, hyprctl) or
+# COSMIC (cosmic-config keys). Both import their variables into the user
+# manager at login, so this skips cleanly outside a session.
+ConditionEnvironment=|HYPRLAND_INSTANCE_SIGNATURE
+ConditionEnvironment=|XDG_CURRENT_DESKTOP=COSMIC
 
 [Service]
 Type=oneshot

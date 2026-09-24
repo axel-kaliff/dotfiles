@@ -11,18 +11,21 @@ import pytest
 from solar_wallpaper import (
     CommandResult,
     ConversionError,
+    CosmicDesktop,
     DesktopState,
+    OmarchyDesktop,
     SetTheme,
     Settings,
     SetWallpaper,
+    SolarWallpaperError,
     ToggleNightlight,
     ToolMissingError,
+    detect_desktop,
     ensure_converted,
     execute,
     main,
     parse_nightlight_status,
     plan,
-    read_desktop_state,
     run_command,
     source_path,
     wallpaper_path,
@@ -53,9 +56,21 @@ class FakeRunner:
         return self.result
 
 
+def omarchy(tmp_path: Path) -> OmarchyDesktop:
+    return OmarchyDesktop(state_dir=tmp_path / ".local/state/omarchy")
+
+
+def cosmic(tmp_path: Path) -> CosmicDesktop:
+    return CosmicDesktop(
+        state_dir=tmp_path / ".local/state/pneuma", config_dir=tmp_path / ".config/cosmic"
+    )
+
+
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
-    return Settings.from_env({"SOLAR_CACHE_DIR": str(tmp_path / "cache")}, home=tmp_path)
+    return Settings.from_env(
+        {"SOLAR_CACHE_DIR": str(tmp_path / "cache")}, home=tmp_path, desktop=omarchy(tmp_path)
+    )
 
 
 def state(
@@ -69,11 +84,10 @@ def state(
 
 
 def test_defaults_point_at_stockholm_and_the_bluefin_set(tmp_path: Path) -> None:
-    settings = Settings.from_env({}, home=tmp_path)
+    settings = Settings.from_env({}, home=tmp_path, desktop=omarchy(tmp_path))
     assert settings.location == Location(latitude=59.3293, longitude=18.0686)
     assert settings.source_dir == Path("/usr/share/backgrounds/bluefin")
     assert settings.cache_dir == (tmp_path / ".local/share/pneuma/solar").resolve()
-    assert settings.state_dir == tmp_path / ".local/state/omarchy"
     assert settings.nightlight is True
     assert settings.theme_for(SolarPhase.DAY) == ""
 
@@ -86,7 +100,7 @@ def test_environment_overrides(tmp_path: Path) -> None:
         "SOLAR_DAY_THEME": "catppuccin-latte",
         "SOLAR_NIGHT_THEME": "tokyo-night",
     }
-    settings = Settings.from_env(env, home=tmp_path)
+    settings = Settings.from_env(env, home=tmp_path, desktop=omarchy(tmp_path))
     assert settings.location == Location(latitude=-33.9, longitude=151.2)
     assert settings.nightlight is False
     assert settings.theme_for(SolarPhase.DAY) == "catppuccin-latte"
@@ -123,14 +137,16 @@ def test_sunset_swaps_wallpaper_and_lights_the_night_light(settings: Settings) -
 
 
 def test_night_light_is_left_alone_when_disabled(tmp_path: Path) -> None:
-    settings = Settings.from_env({"SOLAR_NIGHTLIGHT": "0"}, home=tmp_path)
+    settings = Settings.from_env(
+        {"SOLAR_NIGHTLIGHT": "0"}, home=tmp_path, desktop=omarchy(tmp_path)
+    )
     steps = plan(settings, SolarPhase.DAY, 9, state(settings, SolarPhase.DAY, nightlight_on=True))
     assert steps == ()
 
 
 def test_theme_switch_comes_first_and_only_when_it_differs(tmp_path: Path) -> None:
     env = {"SOLAR_DAY_THEME": "catppuccin-latte", "SOLAR_NIGHT_THEME": "tokyo-night"}
-    settings = Settings.from_env(env, home=tmp_path)
+    settings = Settings.from_env(env, home=tmp_path, desktop=omarchy(tmp_path))
     steps = plan(
         settings, SolarPhase.DAY, 9, state(settings, SolarPhase.NIGHT, nightlight_on=False)
     )
@@ -167,7 +183,7 @@ def test_desktop_state_reads_omarchy_state(tmp_path: Path) -> None:
     (current / "theme.name").write_text("tokyo-night\n")
     runner = FakeRunner(CommandResult(returncode=0, stdout='{"enabled":true}'))
 
-    desktop = read_desktop_state(tmp_path, runner)
+    desktop = OmarchyDesktop(state_dir=tmp_path).read_state(runner)
 
     assert desktop == DesktopState(
         background=image.resolve(), theme="tokyo-night", nightlight_on=True
@@ -176,8 +192,63 @@ def test_desktop_state_reads_omarchy_state(tmp_path: Path) -> None:
 
 
 def test_desktop_state_without_omarchy_state(tmp_path: Path) -> None:
-    desktop = read_desktop_state(tmp_path, FakeRunner())
+    desktop = OmarchyDesktop(state_dir=tmp_path).read_state(FakeRunner())
     assert desktop == DesktopState(background=None, theme="", nightlight_on=False)
+
+
+def test_desktop_is_picked_from_the_session(tmp_path: Path) -> None:
+    assert detect_desktop({}, tmp_path) == omarchy(tmp_path)
+    assert detect_desktop({"XDG_CURRENT_DESKTOP": "COSMIC"}, tmp_path) == cosmic(tmp_path)
+    assert detect_desktop(
+        {"XDG_CURRENT_DESKTOP": "Hyprland", "SOLAR_DESKTOP": "cosmic"}, tmp_path
+    ) == cosmic(tmp_path)
+
+
+def test_cosmic_state_comes_from_the_config_keys(tmp_path: Path) -> None:
+    desktop = cosmic(tmp_path)
+    assert desktop.read_state(FakeRunner()) == DesktopState(
+        background=None, theme="", nightlight_on=False
+    )
+    background = desktop.config_dir / "com.system76.CosmicBackground/v1"
+    background.mkdir(parents=True)
+    (background / "all").write_text(
+        '(\n    output: "all",\n    source: Path("/walls/09-night.jpg"),\n)\n'
+    )
+    mode = desktop.config_dir / "com.system76.CosmicTheme.Mode/v1"
+    mode.mkdir(parents=True)
+    (mode / "is_dark").write_text("true\n")
+
+    assert desktop.read_state(FakeRunner()) == DesktopState(
+        background=Path("/walls/09-night.jpg"), theme="dark", nightlight_on=False
+    )
+
+
+def test_cosmic_rewrites_the_wallpaper_and_mode_keys(tmp_path: Path) -> None:
+    desktop = cosmic(tmp_path)
+    image = tmp_path / "09-day.jpg"
+    image.write_bytes(b"")
+    runner = FakeRunner()
+
+    execute(
+        (SetTheme("light"), SetWallpaper(image=image, source=tmp_path / "x.jxl")), runner, desktop
+    )
+
+    background = desktop.config_dir / "com.system76.CosmicBackground/v1"
+    assert f'source: Path("{image}")' in (background / "all").read_text()
+    assert (background / "same-on-all").read_text() == "true\n"
+    assert (
+        desktop.config_dir / "com.system76.CosmicTheme.Mode/v1/is_dark"
+    ).read_text() == "false\n"
+    assert runner.calls == []
+    assert desktop.read_state(runner).background == image
+
+
+def test_cosmic_has_no_night_light(tmp_path: Path) -> None:
+    desktop = cosmic(tmp_path)
+    settings = Settings.from_env({}, home=tmp_path, desktop=desktop)
+    assert settings.nightlight is False
+    with pytest.raises(SolarWallpaperError, match="no night light"):
+        desktop.apply(ToggleNightlight(), FakeRunner())
 
 
 def test_conversion_is_skipped_when_the_target_exists(tmp_path: Path) -> None:
@@ -236,6 +307,7 @@ def test_execute_runs_the_omarchy_commands(tmp_path: Path) -> None:
             ToggleNightlight(),
         ),
         runner,
+        OmarchyDesktop(state_dir=tmp_path),
     )
 
     assert runner.calls == [
@@ -254,6 +326,7 @@ def test_main_is_a_no_op_while_the_toggle_is_off(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("SOLAR_DESKTOP", "omarchy")
     runner = FakeRunner()
     assert main(["--dry-run"], run=runner) == 0
     assert runner.calls == []
@@ -264,6 +337,7 @@ def test_main_dry_run_describes_the_plan(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("SOLAR_DESKTOP", "omarchy")
     monkeypatch.setenv("SOLAR_CACHE_DIR", str(tmp_path / "cache"))
     runner = FakeRunner(CommandResult(returncode=0, stdout='{"enabled":false}'))
     noon = dt.datetime(2026, 9, 4, 12, 0, tzinfo=dt.UTC).isoformat()
@@ -274,10 +348,27 @@ def test_main_dry_run_describes_the_plan(
     assert runner.calls == [("omarchy-toggle-nightlight", "--status")]
 
 
+def test_main_on_cosmic_reads_no_night_light(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CURRENT_DESKTOP", "COSMIC")
+    monkeypatch.delenv("SOLAR_DESKTOP", raising=False)
+    monkeypatch.setenv("SOLAR_CACHE_DIR", str(tmp_path / "cache"))
+    runner = FakeRunner()
+    midnight = dt.datetime(2026, 9, 4, 0, 0, tzinfo=dt.UTC).isoformat()
+
+    assert main(["--force", "--dry-run", "--now", midnight], run=runner) == 0
+
+    assert capsys.readouterr().out == "night: wallpaper 09-night.jpg\n"
+    assert runner.calls == []
+
+
 def test_main_reports_a_failed_step(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("SOLAR_DESKTOP", "omarchy")
     monkeypatch.setenv("SOLAR_CACHE_DIR", str(tmp_path / "cache"))
     monkeypatch.setenv("SOLAR_SOURCE_DIR", str(tmp_path / "no-sources"))
     midnight = dt.datetime(2026, 9, 4, 0, 0, tzinfo=dt.UTC).isoformat()

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Easy Mode
+Comment=Floating windows, a dock and click-to-focus
+Type=Application
+Icon=input-mouse-symbolic
+Exec=pneuma-applet-easy-mode
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10
