@@ -1,7 +1,9 @@
+// Vec<PreciseApplicationException>: one (appid, title) regex pair per entry, unlike the
+// defaults file, whose entries carry a `titles` list.
 [
-    (appid: "org.pneuma.yazi", titles: [".*"]),
-    (appid: "org.pneuma.btm", titles: [".*"]),
-    (appid: "org.gnome.Loupe", titles: [".*"]),
-    (appid: "com.spotify.Client", titles: [".*"]),
-    (appid: "1Password", titles: [".*"]),
+    (appid: "org.pneuma.yazi", title: ".*", enabled: true),
+    (appid: "org.pneuma.btm", title: ".*", enabled: true),
+    (appid: "org.gnome.Loupe", title: ".*", enabled: true),
+    (appid: "com.spotify.Client", title: ".*", enabled: true),
+    (appid: "com.bitwarden.desktop", title: ".*", enabled: true),
 ]

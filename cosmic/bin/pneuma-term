@@ -3,5 +3,6 @@
 # Ghostty when present (brew/source build), cosmic-term otherwise.
 set -euo pipefail
 id=${1:?app-id}; shift
-if command -v ghostty >/dev/null; then exec ghostty --class="$id" -e "$@"; fi
+# A separate instance: through the single instance the window would keep the first one's class.
+if command -v ghostty >/dev/null; then exec ghostty --gtk-single-instance=false --class="$id" -e "$@"; fi
 exec cosmic-term -- "$@"
