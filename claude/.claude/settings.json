@@ -131,13 +131,20 @@
     "hyperstar@sicsai-plugins": false,
     "sicsai@sicsai-plugins": true,
     "clangd-lsp@claude-plugins-official": false,
-    "mattpocock-skills@claude-plugins-official": false
+    "mattpocock-skills@claude-plugins-official": false,
+    "codex@openai-codex": true
   },
   "extraKnownMarketplaces": {
     "zombiesnack-plugins": {
       "source": {
         "source": "directory",
         "path": "/space/personal/akaliff/zombiesnack/.claude/plugins"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
       }
     }
   },

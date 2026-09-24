@@ -20,6 +20,8 @@ A hook runs ruff and ty after every edit to a .py file and returns the findings;
 ## Delegating to subagents
 A brief is a complete spec: objective, the files or symbols in scope, what is out of scope, the output format, the check the agent must run, and the stop condition. Subagents report; the main thread decides, and no subagent declares the task done. Do not run parallel subagents that write to the same files. Why: most delegation failures happen at the handoff (spec ignored, findings withheld, verification skipped).
 
+Hand all implementation and documentation writing to the `codex:codex-rescue` subagent with such a brief; the main thread plans, reads the resulting diff, and runs the checks. Why: Claude does the planning and big-picture work, Codex writes the code and docs.
+
 ## Memory
 Save a memory only after the outcome is verified, as a dated lesson with the failure it prevents. Anything phrased "always" or "never" belongs in this file or a hook, not in memory. Why: ungated memory measures net negative, and a stale entry primes every session and every subagent.
 
