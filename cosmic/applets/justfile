@@ -16,8 +16,10 @@ stage:
   rm -rf dist; mkdir -p dist/bin dist/applications
   for crate in */; do
     crate=${crate%/}; [ -f "$crate/Cargo.toml" ] || continue
-    name=$(sed -n 's/^name = "\(.*\)"/\1/p' "$crate/Cargo.toml" | head -1)
-    install -Dm755 "$CARGO_TARGET_DIR/release/$name" "dist/bin/$name"
+    # Every [package] or [[bin]] name that built to a binary (a lib-only package name has none).
+    for name in $(sed -n 's/^name = "\(.*\)"/\1/p' "$crate/Cargo.toml"); do
+      [ -f "$CARGO_TARGET_DIR/release/$name" ] && install -Dm755 "$CARGO_TARGET_DIR/release/$name" "dist/bin/$name"
+    done
     for d in "$crate"/resources/*.desktop; do [ -e "$d" ] && install -Dm644 "$d" -t dist/applications/; done
   done
   ls -R dist

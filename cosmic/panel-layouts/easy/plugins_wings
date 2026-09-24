@@ -6,6 +6,7 @@ Some((
     ],
     [
         "dev.pneuma.Toggles",
+        "dev.pneuma.Clipboard",
         "com.system76.CosmicAppletStatusArea",
         "com.system76.CosmicAppletNotifications",
         "dev.pneuma.Media",

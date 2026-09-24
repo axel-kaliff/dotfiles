@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Toggles the clipboard history popup (Super+Ctrl+V).
+exec busctl --user call dev.pneuma.Clipboard /dev/pneuma/Clipboard dev.pneuma.Clipboard Toggle

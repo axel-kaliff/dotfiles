@@ -1,0 +1,13 @@
+[Unit]
+Description=Clipboard history picker (pneuma-clipboard-picker)
+PartOf=cosmic-session.target
+After=cosmic-session.target
+ConditionEnvironment=XDG_CURRENT_DESKTOP=COSMIC
+
+[Service]
+ExecStart=%h/.local/bin/pneuma-clipboard-picker
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=cosmic-session.target

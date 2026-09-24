@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Feeds the clipboard into the history: text and images are watched separately because a copied
+# image usually comes with a text/html alternative that would win otherwise. Both die with this.
+set -euo pipefail
+bin="$HOME/.local/bin/pneuma-clipboard-picker"
+setpriv --pdeathsig TERM wl-paste --type text --watch "$bin" --capture text &
+setpriv --pdeathsig TERM wl-paste --type image/png --watch "$bin" --capture image/png &
+wait

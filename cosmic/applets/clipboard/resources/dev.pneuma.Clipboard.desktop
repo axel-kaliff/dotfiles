@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Clipboard
+Comment=Clipboard history picker
+Type=Application
+Icon=edit-paste-symbolic
+Exec=pneuma-applet-clipboard
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Clipboard;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10

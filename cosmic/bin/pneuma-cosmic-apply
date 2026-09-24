@@ -41,8 +41,10 @@ fi
 # Daemons that belong to the COSMIC session (units are stowed from systemd/user).
 if [ "${XDG_CURRENT_DESKTOP:-}" = COSMIC ] && [ -x "$HOME/.local/bin/pneuma-safeeyes" ]; then
   systemctl --user daemon-reload
-  systemctl --user enable --now pneuma-safeeyes.service >/dev/null 2>&1 || true
-  systemctl --user restart pneuma-safeeyes.service >/dev/null 2>&1 || true
+  for unit in pneuma-safeeyes pneuma-clipboard-picker pneuma-clipboard-watch; do
+    systemctl --user enable --now "$unit.service" >/dev/null 2>&1 || true
+    systemctl --user restart "$unit.service" >/dev/null 2>&1 || true
+  done
 fi
 
 echo "cosmic config applied from $D"
