@@ -3681,6 +3681,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pneuma-applet-kbd-flags"
+version = "0.1.0"
+dependencies = [
+ "cosmic-client-toolkit",
+ "futures",
+ "libcosmic",
+ "serde",
+]
+
+[[package]]
+name = "pneuma-wm"
+version = "0.1.0"
+dependencies = [
+ "cosmic-client-toolkit",
+]
+
+[[package]]
 name = "png"
 version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"

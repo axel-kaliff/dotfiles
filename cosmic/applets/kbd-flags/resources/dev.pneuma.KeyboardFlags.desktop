@@ -1,0 +1,16 @@
+[Desktop Entry]
+Name=Keyboard Flags
+Comment=Active keyboard layout as a flag; click to switch
+Type=Application
+Icon=input-keyboard-symbolic
+Exec=pneuma-applet-kbd-flags
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Keyboard;Layout;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicShrinkable=true
+X-CosmicHoverPopup=Auto
+X-HostWaylandDisplay=true
+X-OverflowPriority=10

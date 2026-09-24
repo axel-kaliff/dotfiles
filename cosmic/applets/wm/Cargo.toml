@@ -1,0 +1,9 @@
+[package]
+name = "pneuma-wm"
+description = "Window control for shortcuts: list, activate, or toggle a window by app id, spawning it when absent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cctk.workspace = true

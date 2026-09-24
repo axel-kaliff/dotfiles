@@ -27,7 +27,7 @@
     (modifiers: [Super, Shift, Alt], key: "8"): SendToWorkspace(8),
     (modifiers: [Super, Shift, Alt], key: "9"): SendToWorkspace(9),
     // Apps and scripts (cosmic/bin, linked into ~/.local/bin)
-    (modifiers: [Super, Shift], key: "f"): Spawn("~/.local/bin/pneuma-yazi-session"),
+    (modifiers: [Super, Shift], key: "f"): Spawn("~/.local/bin/pneuma-wm toggle org.pneuma.yazi -- ~/.local/bin/pneuma-yazi-session"),
     (modifiers: [Super, Shift], key: "e"): Spawn("~/.local/bin/pneuma-thunderbird -mail"),
     (modifiers: [Super, Shift, Alt], key: "e"): Spawn("~/.local/bin/pneuma-thunderbird -compose"),
     (modifiers: [Super, Shift], key: "c"): Spawn("~/.local/bin/pneuma-thunderbird -calendar"),

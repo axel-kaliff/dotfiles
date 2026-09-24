@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
-# Thunderbird (flatpak) mail / compose / calendar. A running instance takes the argument itself.
+# Thunderbird (flatpak) mail / compose / calendar: focus the running window for -mail and
+# -calendar, otherwise start it with the argument.
 set -u
-exec flatpak run org.mozilla.thunderbird_esr "$@"
+app=org.mozilla.thunderbird_esr
+if [[ ${1:-} != -compose ]] && "$HOME/.local/bin/pneuma-wm" activate "$app"; then exit 0; fi
+exec flatpak run "$app" "$@"

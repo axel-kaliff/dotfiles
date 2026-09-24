@@ -40,8 +40,10 @@ qmp() {
 }
 
 # QEMU QKeyCode names for the key names people type. Unknown names pass through unchanged.
+# The guest's xkb config swaps Left Alt and Left Win (altwin:swap_lalt_lwin), so "super" is the
+# physical Alt key and "alt" the physical Win key; VM_ALTWIN_SWAP=0 sends them unswapped.
 declare -A K=(
-  [super]=meta_l [win]=meta_l [meta]=meta_l [ctrl]=ctrl [control]=ctrl [alt]=alt [shift]=shift
+  [super]=alt [win]=alt [meta]=alt [ctrl]=ctrl [control]=ctrl [alt]=meta_l [shift]=shift
   [enter]=ret [return]=ret [space]=spc [escape]=esc [bs]=backspace [del]=delete
   [pageup]=pgup [pagedown]=pgdn [-]=minus [=]=equal [,]=comma [.]=dot [/]=slash
   [\;]=semicolon [\']=apostrophe [\`]=grave_accent [\[]=bracket_left [\]]=bracket_right
@@ -54,7 +56,8 @@ declare -A SHIFTED=(
   [:]=semicolon [\"]=apostrophe [\<]=comma [\>]=dot [\?]=slash [\~]=grave_accent
 )
 
-combo_json() {  # "super+shift+t" -> [{"type":"qcode","data":"meta_l"},...]
+combo_json() {  # "super+shift+t" -> [{"type":"qcode","data":"alt"},...]
+  if [ "${VM_ALTWIN_SWAP:-1}" = 0 ]; then K[super]=meta_l; K[win]=meta_l; K[meta]=meta_l; K[alt]=alt; fi
   local out="" part
   IFS='+' read -r -a parts <<<"$1"
   for part in "${parts[@]}"; do
@@ -180,7 +183,7 @@ cmd_click() {
 
 # Session env so wl-paste, cosmic-screenshot, busctl --user work from a non-login ssh shell.
 # shellcheck disable=SC2016  # expands in the guest, on purpose
-SESSION_ENV='export XDG_RUNTIME_DIR=/run/user/$(id -u); export WAYLAND_DISPLAY=$(ls "$XDG_RUNTIME_DIR" | grep -m1 "^wayland-[0-9]*$"); export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus; '
+SESSION_ENV='export XDG_RUNTIME_DIR=/run/user/$(id -u); export WAYLAND_DISPLAY=$(ls "$XDG_RUNTIME_DIR" | grep -m1 "^wayland-[0-9]*$"); export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus; export XDG_CURRENT_DESKTOP=COSMIC; '
 
 cmd_ssh() {
   if [ $# -eq 0 ]; then exec ssh -F "$HERE/ssh_config" -o "User=$VM_USER" vm; fi

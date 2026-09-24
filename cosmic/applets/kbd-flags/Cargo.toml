@@ -1,0 +1,13 @@
+[package]
+name = "pneuma-applet-kbd-flags"
+description = "Panel flag for the active keyboard layout; click cycles"
+version.workspace = true
+edition.workspace = true
+# wayland.rs is adapted from cosmic-applet-input-sources (System76, GPL-3.0-only).
+license = "GPL-3.0-only"
+
+[dependencies]
+libcosmic.workspace = true
+cctk.workspace = true
+serde.workspace = true
+futures.workspace = true

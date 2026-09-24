@@ -18,6 +18,6 @@ stage:
     crate=${crate%/}; [ -f "$crate/Cargo.toml" ] || continue
     name=$(sed -n 's/^name = "\(.*\)"/\1/p' "$crate/Cargo.toml" | head -1)
     install -Dm755 "$CARGO_TARGET_DIR/release/$name" "dist/bin/$name"
-    install -Dm644 "$crate"/resources/*.desktop -t dist/applications/
+    for d in "$crate"/resources/*.desktop; do [ -e "$d" ] && install -Dm644 "$d" -t dist/applications/; done
   done
   ls -R dist
