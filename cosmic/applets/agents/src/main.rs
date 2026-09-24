@@ -5,6 +5,7 @@
 //! recorded usage; the mark turns red when any allowance is at 90 % or more.
 
 use std::collections::BTreeMap;
+use std::fs::File;
 use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
@@ -165,6 +166,8 @@ struct Applet {
     updater: PathBuf,
     records: Vec<Record>,
     selected: usize,
+    /// One instance per panel output; only the lock holder runs the timed refresh.
+    lead: Option<File>,
 }
 
 #[derive(Debug, Clone)]
@@ -172,7 +175,9 @@ enum Message {
     TogglePopup,
     PopupClosed(Id),
     Reload,
+    /// Right-click: always refreshes, from whichever instance was clicked.
     Refresh,
+    TimedRefresh,
     Select(usize),
 }
 
@@ -183,6 +188,18 @@ impl Applet {
             args.extend(["--except", id]);
         }
         detached(self.updater.clone(), &args);
+    }
+
+    fn timed_refresh(&mut self) {
+        if self.lead.is_none() {
+            // Next to the usage dir, which only exists once the updater has run.
+            let lock = self.usage_dir.with_extension("lock");
+            let _ = lock.parent().map(std::fs::create_dir_all);
+            self.lead = File::create(lock).ok().filter(|lock| lock.try_lock().is_ok());
+        }
+        if self.lead.is_some() {
+            self.refresh();
+        }
     }
 
     fn alarming(&self) -> bool {
@@ -311,8 +328,8 @@ impl cosmic::Application for Applet {
         let usage_dir = state_dir().join("pneuma/agents/usage");
         let updater = PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".local/bin/agent-usage-update");
         let records = load_records(&usage_dir);
-        let applet = Self { core, popup: None, usage_dir, updater, records, selected: 0 };
-        applet.refresh();
+        let mut applet = Self { core, popup: None, usage_dir, updater, records, selected: 0, lead: None };
+        applet.timed_refresh();
         (applet, Task::none())
     }
 
@@ -353,7 +370,7 @@ impl cosmic::Application for Applet {
     fn subscription(&self) -> Subscription<Message> {
         Subscription::batch([
             time::every(POLL).map(|_| Message::Reload),
-            time::every(REFRESH).map(|_| Message::Refresh),
+            time::every(REFRESH).map(|_| Message::TimedRefresh),
         ])
     }
 
@@ -385,6 +402,7 @@ impl cosmic::Application for Applet {
             }
             Message::Reload => self.records = load_records(&self.usage_dir),
             Message::Refresh => self.refresh(),
+            Message::TimedRefresh => self.timed_refresh(),
             Message::Select(i) => self.selected = i,
         }
         Task::none()

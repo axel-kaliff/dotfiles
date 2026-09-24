@@ -5,6 +5,7 @@
 //! waits for a deliberate start. A ticking focus phase holds Do Not Disturb unless it was on already.
 //! State and the session lengths live in ~/.local/state/pneuma/pomodoro.json.
 
+use std::fs::File;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -56,7 +57,7 @@ impl Phase {
 }
 
 /// Everything that survives a panel restart, in the shape the Omarchy widget wrote.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct State {
     phase: Phase,
@@ -215,6 +216,16 @@ fn load_state(path: &PathBuf) -> State {
     std::fs::read(path).ok().and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default()
 }
 
+fn modified(path: &PathBuf) -> Option<SystemTime> {
+    std::fs::metadata(path).and_then(|m| m.modified()).ok()
+}
+
+/// The lock that makes this instance the one with side effects; `None` while another has it.
+fn try_lead(state_file: &PathBuf) -> Option<File> {
+    let lock = File::create(state_file.with_extension("lock")).ok()?;
+    lock.try_lock().ok().map(|()| lock)
+}
+
 fn save_state(path: &PathBuf, state: &State) {
     let Ok(json) = serde_json::to_vec_pretty(state) else { return };
     if let Some(dir) = path.parent() {
@@ -238,6 +249,11 @@ struct Applet {
     state: State,
     path: PathBuf,
     now: u64,
+    /// The panel runs one instance per output. The state file is shared and re-read when
+    /// another instance wrote it; only the instance holding this lock fires the phase-end
+    /// notification and chime and holds Do Not Disturb, so they happen once.
+    lead: Option<File>,
+    seen: Option<SystemTime>,
 }
 
 #[derive(Debug, Clone)]
@@ -253,8 +269,18 @@ enum Message {
 }
 
 impl Applet {
-    fn save(&self) {
+    fn save(&mut self) {
         save_state(&self.path, &self.state);
+        self.seen = modified(&self.path);
+    }
+
+    /// Picks up a change another instance saved.
+    fn reload(&mut self) {
+        let modified = modified(&self.path);
+        if modified != self.seen {
+            self.state = load_state(&self.path);
+            self.seen = modified;
+        }
     }
 
     fn sync_dnd(&mut self) {
@@ -345,16 +371,20 @@ impl cosmic::Application for Applet {
         let path = state_path();
         let now = now_ms();
         let mut state = load_state(&path);
+        let lead = try_lead(&path);
         // A phase that elapsed while the panel was down settles quietly on what should be showing.
-        if state.running && state.ends_at <= now {
+        if lead.is_some() && state.running && state.ends_at <= now {
             state.advance(now);
             if state.running && state.ends_at <= now {
                 state.begin_phase(state.phase, false, now);
             }
         }
-        let mut applet = Self { core, popup: None, tune: false, state, path, now };
-        applet.sync_dnd();
-        applet.save();
+        let seen = modified(&path);
+        let mut applet = Self { core, popup: None, tune: false, state, path, now, lead, seen };
+        if applet.lead.is_some() {
+            applet.sync_dnd();
+            applet.save();
+        }
         (applet, Task::none())
     }
 
@@ -424,14 +454,14 @@ impl cosmic::Application for Applet {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        if self.state.running {
-            time::every(Duration::from_secs(1)).map(|_| Message::Tick)
-        } else {
-            Subscription::none()
-        }
+        // Idle instances still tick slowly, to see a timer another instance started.
+        let period = if self.state.running { Duration::from_secs(1) } else { Duration::from_secs(2) };
+        time::every(period).map(|_| Message::Tick)
     }
 
     fn update(&mut self, message: Message) -> Task<cosmic::Action<Message>> {
+        self.reload();
+        let before = self.state.clone();
         match message {
             Message::TogglePopup => {
                 return match self.popup.take() {
@@ -446,7 +476,10 @@ impl cosmic::Application for Applet {
             }
             Message::Tick => {
                 self.now = now_ms();
-                if self.state.running && self.state.ends_at <= self.now {
+                if self.lead.is_none() {
+                    self.lead = try_lead(&self.path);
+                }
+                if self.lead.is_some() && self.state.running && self.state.ends_at <= self.now {
                     self.advance(true);
                 }
             }
@@ -472,8 +505,12 @@ impl cosmic::Application for Applet {
                 self.state.retarget(phase, self.now);
             }
         }
-        self.sync_dnd();
-        self.save();
+        if self.lead.is_some() {
+            self.sync_dnd();
+        }
+        if self.state != before {
+            self.save();
+        }
         Task::none()
     }
 

@@ -2,6 +2,7 @@ Some((
     [
         "com.system76.CosmicPanelLauncherButton",
         "dev.pneuma.Workspaces",
+        "com.system76.CosmicAppletMinimize",
     ],
     [
         "dev.pneuma.Weather",
