@@ -30,7 +30,9 @@ fi
 for f in "$D"/bin/*; do ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"; done
 # The bar's launcher button wears the pneuma mark (the wind glyph of the pneuma.menu button);
 # the panel button takes its icon from the launcher's own desktop entry.
-sed 's/^Icon=.*/Icon=weather-windy-symbolic/' /usr/share/applications/com.system76.CosmicLauncher.desktop \
+mkdir -p "$HOME/.local/share/icons/hicolor/scalable/apps"
+cp -f "$D"/icons/*.svg "$HOME/.local/share/icons/hicolor/scalable/apps/"
+sed 's/^Icon=.*/Icon=pneuma-symbolic/' /usr/share/applications/com.system76.CosmicLauncher.desktop \
   > "$HOME/.local/share/applications/com.system76.CosmicLauncher.desktop"
 
 # The panel spawns applets with a PATH that lacks ~/.local/bin, so their Exec lines get the

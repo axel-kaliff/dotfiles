@@ -189,7 +189,8 @@ fn main() {
     let target = app
         .windows
         .iter()
-        .filter(|(_, w)| w.app_id == app_id)
+        // Case-blind: one app can report `spotify` natively and `Spotify` under XWayland.
+        .filter(|(_, w)| w.app_id.eq_ignore_ascii_case(app_id))
         .max_by_key(|(_, w)| w.state.contains(&zcosmic_toplevel_handle_v1::State::Activated))
         .and_then(|(_, w)| w.cosmic.clone().map(|handle| (handle, w.state.clone())));
     match (verb, target) {

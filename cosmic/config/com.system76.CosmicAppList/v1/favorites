@@ -4,5 +4,5 @@
     "org.mozilla.thunderbird_esr",
     "com.spotify.Client",
     "com.slack.Slack",
-    "com.system76.CosmicTerm",
+    "com.mitchellh.ghostty",
 ]

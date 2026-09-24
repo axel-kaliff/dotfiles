@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # Music "scratchpad": Spotify floats (tiling exception); this minimizes it when focused, brings it
 # back when hidden, and starts it when absent -- what the special:music workspace toggle did.
-exec "$HOME/.local/bin/pneuma-wm" toggle com.spotify.Client -- flatpak run com.spotify.Client
+exec "$HOME/.local/bin/pneuma-wm" toggle spotify -- flatpak run com.spotify.Client
