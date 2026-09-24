@@ -27,7 +27,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "fable",
+  "model": "opus",
   "skillOverrides": {
     "rethink": "user-invocable-only"
   },
