@@ -2,7 +2,7 @@
 # cosmic-applets 1.8.0 was built from (its Cargo.lock), so the panel and the applets agree.
 [workspace]
 resolver = "3"
-members = ["easy-mode", "kbd-flags", "wm", "pomodoro", "safeeyes", "toggles", "agents", "workspaces", "media"]
+members = ["easy-mode", "kbd-flags", "wm", "pomodoro", "safeeyes", "toggles", "agents", "workspaces", "media", "app-name"]
 
 [workspace.package]
 version = "0.1.0"

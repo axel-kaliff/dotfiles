@@ -1,0 +1,10 @@
+[package]
+name = "pneuma-applet-app-name"
+description = "The focused application's name in the easy-mode bar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+libcosmic.workspace = true
+futures.workspace = true

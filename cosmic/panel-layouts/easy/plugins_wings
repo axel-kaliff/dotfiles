@@ -1,6 +1,7 @@
 Some((
     [
         "com.system76.CosmicPanelLauncherButton",
+        "dev.pneuma.AppName",
         "dev.pneuma.Workspaces",
     ],
     [

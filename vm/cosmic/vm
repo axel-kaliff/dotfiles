@@ -256,7 +256,11 @@ cmd_sync() {
     [ -d "$dist/systemd" ] && rsync -az -e "$rsh" "$dist/systemd/" vm:.config/systemd/user/
   fi
   cmd_ssh 'if [ -x ~/dotfiles/cosmic/bin/pneuma-cosmic-apply ]; then ~/dotfiles/cosmic/bin/pneuma-cosmic-apply; else echo "synced (no cosmic/bin/pneuma-cosmic-apply yet)"; fi'
-  [ $restart = 1 ] && cmd_ssh 'pkill -x cosmic-panel || true'
+  # Applets are respawned by rewriting the plugin list, not by killing the panel: cosmic-session
+  # restarts the panel with an exponential backoff (over a minute after a dozen restarts), and
+  # the panel does not respawn an applet that exits.
+  # shellcheck disable=SC2016
+  [ $restart = 1 ] && cmd_ssh 'K=com.system76.CosmicPanel.Panel/v1/plugins_wings; F=$HOME/.config/cosmic/$K; cp "$F" /tmp/wings.keep; grep -v dev.pneuma "$F" > /tmp/wings.bare; ~/.local/bin/pneuma-cosmic-set $K @/tmp/wings.bare; sleep 2; ~/.local/bin/pneuma-cosmic-set $K @/tmp/wings.keep'
   return 0
 }
 

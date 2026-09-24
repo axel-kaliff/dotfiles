@@ -128,11 +128,7 @@ impl Applet {
                 .height(64)
                 .content_fit(ContentFit::Cover)
                 .into(),
-            None => widget::container(icon::from_name("audio-x-generic-symbolic").size(32))
-                .width(64)
-                .height(64)
-                .center(Length::Fill)
-                .into(),
+            None => widget::container(icon::from_name("audio-x-generic-symbolic").size(32)).center_x(64).center_y(64).into(),
         };
         let mut text = widget::column::with_capacity(3)
             .spacing(2)
