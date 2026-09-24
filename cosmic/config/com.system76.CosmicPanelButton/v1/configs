@@ -1,0 +1,5 @@
+{
+    // The launcher button as an icon on the bar too, like the pneuma.menu glyph.
+    "Panel": (force_presentation: Some(Icon)),
+    "Dock": (force_presentation: Some(Icon)),
+}

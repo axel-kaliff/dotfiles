@@ -5,5 +5,7 @@
     (appid: "org.pneuma.btm", title: ".*", enabled: true),
     (appid: "org.gnome.Loupe", title: ".*", enabled: true),
     (appid: "com.spotify.Client", title: ".*", enabled: true),
-    (appid: "com.bitwarden.desktop", title: ".*", enabled: true),
+    // Bitwarden desktop, and the popup window of its browser extension (Omarchy's matches).
+    (appid: "^(Bitwarden|com.bitwarden.desktop)$", title: ".*", enabled: true),
+    (appid: "chrome-nngceckbapebfimnlniiiahkandclblb-Default", title: ".*", enabled: true),
 ]

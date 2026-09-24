@@ -1,0 +1,9 @@
+[package]
+name = "pneuma-theme-apply"
+description = "Applies an Omarchy colors.toml palette to the COSMIC theme"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+libcosmic.workspace = true

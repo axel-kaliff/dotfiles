@@ -12,6 +12,11 @@ mkdir -p "$HOME/.config/cosmic" "$HOME/.local/bin" "$HOME/.local/share/pop-launc
 
 rsync -a "$D/config/" "$HOME/.config/cosmic/"
 
+# The derived dark theme is built from the builder keys just copied plus the palette.
+if [ -x "$HOME/.local/bin/pneuma-theme-apply" ]; then
+  "$HOME/.local/bin/pneuma-theme-apply" "$D/theme/colors.toml"
+fi
+
 # The panel layout follows the easy-mode flag, so a re-apply never flips the mode.
 if [ -f "$HOME/.local/state/pneuma/easy-mode" ]; then
   for k in plugins_wings plugins_center opacity; do cp -f "$D/panel-layouts/easy/$k" "$HOME/.config/cosmic/com.system76.CosmicPanel.Panel/v1/$k"; done
@@ -23,6 +28,11 @@ if [ -f "$HOME/.local/state/pneuma/stay-awake.screen_off_time" ]; then
 fi
 
 for f in "$D"/bin/*; do ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"; done
+# The bar's launcher button wears the pneuma mark (the wind glyph of the pneuma.menu button);
+# the panel button takes its icon from the launcher's own desktop entry.
+sed 's/^Icon=.*/Icon=weather-windy-symbolic/' /usr/share/applications/com.system76.CosmicLauncher.desktop \
+  > "$HOME/.local/share/applications/com.system76.CosmicLauncher.desktop"
+
 # The panel spawns applets with a PATH that lacks ~/.local/bin, so their Exec lines get the
 # absolute path (the files come from cosmic/applets/dist via `vm sync`).
 for f in "$HOME"/.local/share/applications/dev.pneuma.*.desktop; do

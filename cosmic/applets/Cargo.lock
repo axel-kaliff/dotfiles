@@ -4059,6 +4059,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pneuma-theme-apply"
+version = "0.1.0"
+dependencies = [
+ "libcosmic",
+]
+
+[[package]]
 name = "pneuma-wm"
 version = "0.1.0"
 dependencies = [
