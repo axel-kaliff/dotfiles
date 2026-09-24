@@ -3914,6 +3914,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pneuma-applet-app-name"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "libcosmic",
+]
+
+[[package]]
 name = "pneuma-applet-easy-mode"
 version = "0.1.0"
 dependencies = [
