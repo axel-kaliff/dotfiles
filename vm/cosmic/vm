@@ -170,7 +170,7 @@ cmd_click() {
   [ "${4:-}" = --double ] && double=1
   [ "$btn" = --double ] && { btn=left; double=1; }
   [ -f "$SHOTS/latest.png" ] || cmd_shot >/dev/null
-  read -r w h < <(identify -format '%w %h' "$SHOTS/latest.png")
+  read -r w h < <(python3 -c 'import struct,sys; f=open(sys.argv[1],"rb"); f.seek(16); print(*struct.unpack(">II", f.read(8)))' "$SHOTS/latest.png")
   ax=$((x * 32767 / w)); ay=$((y * 32767 / h))
   ev="{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$ax}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$ay}}"
   local press="{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"$btn\"}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"$btn\"}}"

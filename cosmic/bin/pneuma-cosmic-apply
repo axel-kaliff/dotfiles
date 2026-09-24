@@ -22,6 +22,11 @@ for f in "$D"/bin/*; do ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"; done
 for f in "$D"/pop-launcher/scripts/*; do [ -e "$f" ] && ln -sfn "$f" "$HOME/.local/share/pop-launcher/scripts/$(basename "$f")"; done
 for f in "$D"/environment.d/*; do [ -e "$f" ] && cp -f "$f" "$HOME/.config/environment.d/"; done
 
+# The first-run wizard (accessibility, scaling, layout) would re-appear on every fresh VM overlay.
+mkdir -p "$HOME/.config/autostart"
+printf '[Desktop Entry]\nType=Application\nName=COSMIC Initial Setup\nHidden=true\n' \
+  > "$HOME/.config/autostart/com.system76.CosmicInitialSetup.desktop"
+
 if command -v stow >/dev/null; then
   "$REPO/scripts/stow-resolve-conflicts.sh" -d "$HOME" -t "$HOME/.config" dotfiles
   stow -d "$HOME" -t "$HOME/.config" --restow dotfiles
