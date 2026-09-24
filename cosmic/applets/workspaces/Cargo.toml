@@ -1,0 +1,11 @@
+[package]
+name = "pneuma-applet-workspaces"
+description = "Workspace pills with the apps on each; click switches"
+version.workspace = true
+edition.workspace = true
+# wayland.rs is adapted from cosmic-applet-workspaces (System76, GPL-3.0-only).
+license = "GPL-3.0-only"
+
+[dependencies]
+libcosmic.workspace = true
+futures.workspace = true
