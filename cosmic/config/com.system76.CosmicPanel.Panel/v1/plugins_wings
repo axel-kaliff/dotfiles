@@ -4,6 +4,7 @@ Some((
         "dev.pneuma.Workspaces",
     ],
     [
+        "dev.pneuma.Weather",
         "dev.pneuma.Clipboard",
         "com.system76.CosmicAppletStatusArea",
         "com.system76.CosmicAppletNotifications",

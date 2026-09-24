@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Weather
+Comment=Temperature and conditions, with a forecast popup
+Type=Application
+Icon=weather-few-clouds-symbolic
+Exec=pneuma-applet-weather
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Weather;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10

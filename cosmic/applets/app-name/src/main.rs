@@ -64,7 +64,8 @@ impl cosmic::Application for Applet {
 
     fn view(&self) -> Element<'_, Message> {
         if self.name.is_empty() {
-            return widget::Space::new().into();
+            // A zero-size frame would unmap the surface for good; a sliver keeps it resizable.
+            return widget::Space::new().width(1).height(1).into();
         }
         // No wrapping: a wrapped measurement would keep the surface as narrow as it started.
         let text = self.core.applet.text(self.name.as_str()).font(cosmic::font::bold()).wrapping(Wrapping::None);

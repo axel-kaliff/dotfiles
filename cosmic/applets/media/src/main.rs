@@ -238,7 +238,8 @@ impl cosmic::Application for Applet {
 
     fn view(&self) -> Element<'_, Message> {
         let Some(active) = self.active().filter(|p| p.has_track()) else {
-            return widget::Space::new().into();
+            // A zero-size frame would unmap the surface for good; a sliver keeps it resizable.
+            return widget::Space::new().width(1).height(1).into();
         };
         let mark = if active.playing() { "media-playback-pause-symbolic" } else { "media-playback-start-symbolic" };
         let mut label = active.title.clone();
