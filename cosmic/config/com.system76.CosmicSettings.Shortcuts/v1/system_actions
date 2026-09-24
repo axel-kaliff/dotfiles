@@ -1,4 +1,4 @@
 {
-    Terminal: "cosmic-term",
+    Terminal: "~/.local/bin/pneuma-terminal",
     Screenshot: "~/.local/bin/pneuma-screenshot",
 }

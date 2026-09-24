@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The terminal behind Super+Return: Ghostty when present, cosmic-term otherwise.
+if command -v ghostty >/dev/null; then exec ghostty; fi
+exec cosmic-term

@@ -11,6 +11,8 @@
     (modifiers: [Super], key: "m"): Minimize,
     (modifiers: [Super], key: "space"): System(Launcher),
     (modifiers: [Super, Shift], key: "space"): System(InputSourceSwitch),
+    (modifiers: [Super, Alt], key: "j"): ToggleOrientation,
+    (modifiers: [Super, Alt], key: "l"): ToggleTiling,
     // Bare Super tap = Mission Control (was the launcher)
     (modifiers: [Super]): System(WorkspaceOverview),
     // Workspaces: Super+Tab family cycles workspaces, Alt+Tab stays the window switcher
@@ -37,7 +39,7 @@
     (modifiers: [Super, Ctrl], key: "i"): Spawn("~/.local/bin/pneuma-stay-awake toggle"),
     (modifiers: [Super, Ctrl], key: "l"): System(LockScreen),
     (modifiers: [Super, Ctrl], key: "v"): Spawn("~/.local/bin/pneuma-clipboard"),
-    (modifiers: [Super, Ctrl], key: "t"): Spawn("cosmic-term -e btm"),
+    (modifiers: [Super, Ctrl], key: "t"): Spawn("~/.local/bin/pneuma-term org.pneuma.btm btm"),
     (modifiers: [Super, Alt], key: "k"): Spawn("~/.local/bin/pneuma-cheatsheet zellij"),
     (modifiers: [Super, Shift, Alt], key: "k"): Spawn("~/.local/bin/pneuma-cheatsheet cosmic"),
     (modifiers: [Alt, Shift], key: "s"): System(Screenshot),
