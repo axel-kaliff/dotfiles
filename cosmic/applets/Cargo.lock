@@ -3691,6 +3691,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pneuma-applet-pomodoro"
+version = "0.1.0"
+dependencies = [
+ "libcosmic",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "pneuma-wm"
 version = "0.1.0"
 dependencies = [

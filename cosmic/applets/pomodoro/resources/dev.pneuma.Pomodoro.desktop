@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Pomodoro
+Comment=Focus timer with work and break cycles
+Type=Application
+Icon=alarm-symbolic
+Exec=pneuma-applet-pomodoro
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Pomodoro;Timer;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=10

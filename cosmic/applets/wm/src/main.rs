@@ -3,65 +3,128 @@
 //!   pneuma-wm list
 //!   pneuma-wm activate <app-id>                 exit 1 when no such window
 //!   pneuma-wm toggle <app-id> -- <command...>   minimize if focused, show if not, spawn if absent
+//!
+//! The protocol state is kept here rather than through cosmic-client-toolkit: its
+//! `ToplevelInfoState` only publishes a window after an ext `done` that follows the cosmic
+//! state event, which a one-shot client never receives.
 
+use std::collections::HashSet;
 use std::process::{Command, Stdio};
 
-use cctk::{
-    cosmic_protocols::toplevel_info::v1::client::zcosmic_toplevel_handle_v1::State,
-    sctk::{
-        self,
-        registry::{ProvidesRegistryState, RegistryState},
-        seat::{SeatHandler, SeatState},
-    },
-    toplevel_info::{ToplevelInfo, ToplevelInfoHandler, ToplevelInfoState},
-    toplevel_management::{ToplevelManagerHandler, ToplevelManagerState},
-    wayland_client::{Connection, QueueHandle, globals::registry_queue_init, protocol::wl_seat},
+use cctk::cosmic_protocols::toplevel_info::v1::client::{
+    zcosmic_toplevel_handle_v1::{self, ZcosmicToplevelHandleV1},
+    zcosmic_toplevel_info_v1::{self, ZcosmicToplevelInfoV1},
+};
+use cctk::cosmic_protocols::toplevel_management::v1::client::zcosmic_toplevel_manager_v1::{
+    self, ZcosmicToplevelManagerV1,
+};
+use cctk::wayland_client::{
+    Connection, Dispatch, QueueHandle, delegate_noop, event_created_child,
+    globals::{GlobalListContents, registry_queue_init},
+    protocol::{wl_registry, wl_seat::WlSeat},
+};
+use cctk::wayland_protocols::ext::foreign_toplevel_list::v1::client::{
+    ext_foreign_toplevel_handle_v1::{self, ExtForeignToplevelHandleV1},
+    ext_foreign_toplevel_list_v1::{self, ExtForeignToplevelListV1},
 };
 
+#[derive(Default)]
+struct Window {
+    app_id: String,
+    title: String,
+    state: HashSet<zcosmic_toplevel_handle_v1::State>,
+    has_state: bool,
+    cosmic: Option<ZcosmicToplevelHandleV1>,
+}
+
+#[derive(Default)]
 struct App {
-    registry_state: RegistryState,
-    seat_state: SeatState,
-    toplevel_info_state: ToplevelInfoState,
-    toplevel_manager_state: ToplevelManagerState,
+    windows: Vec<(ExtForeignToplevelHandleV1, Window)>,
+    info: Option<ZcosmicToplevelInfoV1>,
 }
 
-impl ProvidesRegistryState for App {
-    fn registry(&mut self) -> &mut RegistryState {
-        &mut self.registry_state
+impl App {
+    fn window_mut(&mut self, handle: &ExtForeignToplevelHandleV1) -> &mut Window {
+        let index = self.windows.iter().position(|(h, _)| h == handle).expect("unknown toplevel");
+        &mut self.windows[index].1
     }
-    sctk::registry_handlers![SeatState,];
 }
 
-impl SeatHandler for App {
-    fn seat_state(&mut self) -> &mut SeatState {
-        &mut self.seat_state
+impl Dispatch<ExtForeignToplevelListV1, ()> for App {
+    fn event(
+        app: &mut Self,
+        _: &ExtForeignToplevelListV1,
+        event: ext_foreign_toplevel_list_v1::Event,
+        _: &(),
+        _: &Connection,
+        qh: &QueueHandle<Self>,
+    ) {
+        if let ext_foreign_toplevel_list_v1::Event::Toplevel { toplevel } = event {
+            let cosmic = app.info.as_ref().map(|info| info.get_cosmic_toplevel(&toplevel, qh, ()));
+            app.windows.push((toplevel, Window { cosmic, ..Window::default() }));
+        }
     }
-    fn new_seat(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat) {}
-    fn new_capability(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat, _: sctk::seat::Capability) {}
-    fn remove_capability(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat, _: sctk::seat::Capability) {}
-    fn remove_seat(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat) {}
+
+    event_created_child!(App, ExtForeignToplevelListV1, [
+        ext_foreign_toplevel_list_v1::EVT_TOPLEVEL_OPCODE => (ExtForeignToplevelHandleV1, ()),
+    ]);
 }
 
-impl ToplevelInfoHandler for App {
-    fn toplevel_info_state(&mut self) -> &mut ToplevelInfoState {
-        &mut self.toplevel_info_state
+impl Dispatch<ExtForeignToplevelHandleV1, ()> for App {
+    fn event(
+        app: &mut Self,
+        handle: &ExtForeignToplevelHandleV1,
+        event: ext_foreign_toplevel_handle_v1::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        match event {
+            ext_foreign_toplevel_handle_v1::Event::Title { title } => app.window_mut(handle).title = title,
+            ext_foreign_toplevel_handle_v1::Event::AppId { app_id } => app.window_mut(handle).app_id = app_id,
+            ext_foreign_toplevel_handle_v1::Event::Closed => app.windows.retain(|(h, _)| h != handle),
+            _ => {}
+        }
     }
-    fn new_toplevel(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &cctk::wayland_protocols::ext::foreign_toplevel_list::v1::client::ext_foreign_toplevel_handle_v1::ExtForeignToplevelHandleV1) {}
-    fn update_toplevel(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &cctk::wayland_protocols::ext::foreign_toplevel_list::v1::client::ext_foreign_toplevel_handle_v1::ExtForeignToplevelHandleV1) {}
-    fn toplevel_closed(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &cctk::wayland_protocols::ext::foreign_toplevel_list::v1::client::ext_foreign_toplevel_handle_v1::ExtForeignToplevelHandleV1) {}
 }
 
-impl ToplevelManagerHandler for App {
-    fn toplevel_manager_state(&mut self) -> &mut ToplevelManagerState {
-        &mut self.toplevel_manager_state
+impl Dispatch<ZcosmicToplevelHandleV1, ()> for App {
+    fn event(
+        app: &mut Self,
+        handle: &ZcosmicToplevelHandleV1,
+        event: zcosmic_toplevel_handle_v1::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        if let zcosmic_toplevel_handle_v1::Event::State { state } = event
+            && let Some((_, window)) = app.windows.iter_mut().find(|(_, w)| w.cosmic.as_ref() == Some(handle))
+        {
+            window.has_state = true;
+            window.state = state
+                .chunks_exact(4)
+                .filter_map(|bytes| u32::from_ne_bytes(bytes.try_into().ok()?).try_into().ok())
+                .collect();
+        }
     }
-    fn capabilities(&mut self, _: &Connection, _: &QueueHandle<Self>, _: Vec<cctk::wayland_client::WEnum<cctk::cosmic_protocols::toplevel_management::v1::client::zcosmic_toplevel_manager_v1::ZcosmicToplelevelManagementCapabilitiesV1>>) {}
 }
 
-sctk::delegate_registry!(App);
-sctk::delegate_seat!(App);
-cctk::delegate_toplevel_info!(App);
-cctk::delegate_toplevel_manager!(App);
+// Globals whose events carry nothing this tool needs.
+impl Dispatch<ZcosmicToplevelInfoV1, ()> for App {
+    fn event(_: &mut Self, _: &ZcosmicToplevelInfoV1, _: zcosmic_toplevel_info_v1::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+
+    // The legacy v1 `toplevel` event also creates a handle; the binding must know its type.
+    event_created_child!(App, ZcosmicToplevelInfoV1, [
+        zcosmic_toplevel_info_v1::EVT_TOPLEVEL_OPCODE => (ZcosmicToplevelHandleV1, ()),
+    ]);
+}
+impl Dispatch<ZcosmicToplevelManagerV1, ()> for App {
+    fn event(_: &mut Self, _: &ZcosmicToplevelManagerV1, _: zcosmic_toplevel_manager_v1::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+}
+impl Dispatch<wl_registry::WlRegistry, GlobalListContents> for App {
+    fn event(_: &mut Self, _: &wl_registry::WlRegistry, _: wl_registry::Event, _: &GlobalListContents, _: &Connection, _: &QueueHandle<Self>) {}
+}
+delegate_noop!(App: ignore WlSeat);
 
 fn usage() -> ! {
     eprintln!("usage: pneuma-wm list | activate <app-id> | toggle <app-id> -- <command...>");
@@ -94,24 +157,28 @@ fn main() {
     };
 
     let conn = Connection::connect_to_env().expect("no Wayland display");
-    let (globals, mut queue) = registry_queue_init(&conn).expect("registry");
+    let (globals, mut queue) = registry_queue_init::<App>(&conn).expect("registry");
     let qh = queue.handle();
-    let registry_state = RegistryState::new(&globals);
     let mut app = App {
-        seat_state: SeatState::new(&globals, &qh),
-        toplevel_info_state: ToplevelInfoState::new(&registry_state, &qh),
-        toplevel_manager_state: ToplevelManagerState::new(&registry_state, &qh),
-        registry_state,
+        info: globals.bind::<ZcosmicToplevelInfoV1, _, _>(&qh, 2..=3, ()).ok(),
+        ..App::default()
     };
-    // The toplevel list and each handle's state arrive over the first few roundtrips.
-    for i in 0..3 {
+    let _list: ExtForeignToplevelListV1 = globals.bind(&qh, 1..=1, ()).expect("ext_foreign_toplevel_list_v1");
+    let manager: ZcosmicToplevelManagerV1 = globals.bind(&qh, 1..=4, ()).expect("zcosmic_toplevel_manager_v1");
+    let seat: WlSeat = globals.bind(&qh, 1..=1, ()).expect("wl_seat");
+    // The list arrives on the first roundtrip; cosmic-comp sends each window's state a little
+    // later, on its own schedule, so keep polling briefly until every window has reported one.
+    queue.roundtrip(&mut app).expect("roundtrip");
+    for _ in 0..20 {
         queue.roundtrip(&mut app).expect("roundtrip");
-        eprintln!("DEBUG roundtrip {i}: {} toplevels, cosmic info bound: {}", app.toplevel_info_state.toplevels().count(), app.toplevel_info_state.cosmic_toplevel_info.is_some());
+        if app.info.is_none() || app.windows.iter().all(|(_, w)| w.has_state) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
     }
 
-    let windows: Vec<&ToplevelInfo> = app.toplevel_info_state.toplevels().collect();
     if verb == "list" {
-        for w in &windows {
+        for (_, w) in &app.windows {
             let mut states: Vec<String> = w.state.iter().map(|s| format!("{s:?}").to_lowercase()).collect();
             states.sort();
             println!("{}\t{}\t{}", w.app_id, states.join(","), w.title);
@@ -119,23 +186,20 @@ fn main() {
         return;
     }
 
-    let Some(seat) = app.seat_state.seats().next() else {
-        eprintln!("pneuma-wm: no seat");
-        std::process::exit(1);
-    };
-    let manager = &app.toplevel_manager_state.manager;
-    let target = windows
+    let target = app
+        .windows
         .iter()
-        .filter(|w| w.app_id == app_id)
-        .max_by_key(|w| w.state.contains(&State::Activated));
-    match (verb, target.and_then(|w| w.cosmic_toplevel.clone().map(|h| (h, w.state.clone())))) {
+        .filter(|(_, w)| w.app_id == app_id)
+        .max_by_key(|(_, w)| w.state.contains(&zcosmic_toplevel_handle_v1::State::Activated))
+        .and_then(|(_, w)| w.cosmic.clone().map(|handle| (handle, w.state.clone())));
+    match (verb, target) {
         ("activate", Some((handle, _))) => manager.activate(&handle, &seat),
         ("activate", None) => std::process::exit(1),
         ("toggle", Some((handle, state))) => {
-            if state.contains(&State::Activated) {
+            if state.contains(&zcosmic_toplevel_handle_v1::State::Activated) {
                 manager.set_minimized(&handle);
             } else {
-                if state.contains(&State::Minimized) {
+                if state.contains(&zcosmic_toplevel_handle_v1::State::Minimized) {
                     manager.unset_minimized(&handle);
                 }
                 manager.activate(&handle, &seat);

@@ -1,5 +1,7 @@
 //! Panel flag for the active keyboard layout (the pneuma.keyboard-layout bar widget):
-//! 🇬🇧 for us, 🇸🇪 for se; a click moves to the next layout in the CosmicComp xkb list.
+//! a GB flag for us, SE for se, the code for anything else; a click moves to the next
+//! layout in the CosmicComp xkb list. Flags are SVGs because the panel's text renderer
+//! draws nothing for Fedora's COLRv1 emoji font.
 
 mod wayland;
 
@@ -18,7 +20,7 @@ use cosmic::iced::{
     event::wayland::{Event as WaylandEvent, OutputEvent},
 };
 use cosmic::prelude::*;
-use cosmic::widget::{self, autosize};
+use cosmic::widget::{self, autosize, icon};
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
@@ -56,12 +58,13 @@ fn main() -> cosmic::iced::Result {
     cosmic::applet::run::<Applet>(connection)
 }
 
-fn flag(layout: &str) -> String {
-    match layout {
-        "us" | "gb" => "🇬🇧".to_owned(),
-        "se" => "🇸🇪".to_owned(),
-        other => other.to_uppercase(),
-    }
+fn flag(layout: &str) -> Option<icon::Handle> {
+    let bytes: &'static [u8] = match layout {
+        "us" | "gb" => include_bytes!("../resources/gb.svg"),
+        "se" => include_bytes!("../resources/se.svg"),
+        _ => return None,
+    };
+    Some(icon::from_svg_bytes(bytes))
 }
 
 struct Applet {
@@ -95,16 +98,20 @@ impl cosmic::Application for Applet {
     }
 
     fn init(core: cosmic::Core, connection: Option<Connection>) -> (Self, Task<cosmic::Action<Message>>) {
-        eprintln!("DEBUG init: privileged connection = {}", connection.is_some());
         let applet = Self { core, connection, keyboard_layout: None, layouts: Vec::new(), current: 0 };
         (applet, Task::none())
     }
 
     fn view(&self) -> Element<'_, Message> {
-        let label = self.layouts.get(self.current).map_or_else(String::new, |l| flag(l));
-        let text = self.core.applet.text(label);
-        let button = self.core.applet.text_button(text, Message::Next);
-        autosize::autosize(button, AUTOSIZE_ID.clone()).into()
+        let layout = self.layouts.get(self.current).map_or("", String::as_str);
+        match flag(layout) {
+            Some(handle) => self.core.applet.icon_button_from_handle(handle).on_press(Message::Next).into(),
+            None => {
+                let text = self.core.applet.text(layout.to_uppercase());
+                let button = self.core.applet.text_button(text, Message::Next);
+                autosize::autosize(button, AUTOSIZE_ID.clone()).into()
+            }
+        }
     }
 
     fn update(&mut self, message: Message) -> Task<cosmic::Action<Message>> {
@@ -121,7 +128,6 @@ impl cosmic::Application for Applet {
                 }
             }
             Message::CompConfig(config) => {
-                eprintln!("DEBUG config: layout={:?}", config.xkb_config.layout);
                 self.layouts = config
                     .xkb_config
                     .layout
@@ -135,13 +141,9 @@ impl cosmic::Application for Applet {
                 }
             }
             Message::Wayland(wayland::Event::KeyboardLayout(keyboard_layout)) => {
-                eprintln!("DEBUG keyboard layout object received");
                 self.keyboard_layout = Some(keyboard_layout);
             }
-            Message::Wayland(wayland::Event::Group(group)) => {
-                eprintln!("DEBUG group {group}");
-                self.current = group;
-            }
+            Message::Wayland(wayland::Event::Group(group)) => self.current = group,
         }
         Task::none()
     }

@@ -169,16 +169,22 @@ cmd_type() {
 }
 
 cmd_click() {
-  local x=${1:?x} y=${2:?y} btn=${3:-left} double=0 w h ax ay ev
+  local x=${1:?x} y=${2:?y} btn=${3:-left} double=0 w h ax ay
   [ "${4:-}" = --double ] && double=1
   [ "$btn" = --double ] && { btn=left; double=1; }
   [ -f "$SHOTS/latest.png" ] || cmd_shot >/dev/null
   read -r w h < <(python3 -c 'import struct,sys; f=open(sys.argv[1],"rb"); f.seek(16); print(*struct.unpack(">II", f.read(8)))' "$SHOTS/latest.png")
   ax=$((x * 32767 / w)); ay=$((y * 32767 / h))
-  ev="{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$ax}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$ay}}"
-  local press="{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"$btn\"}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"$btn\"}}"
-  [ $double = 1 ] && press="$press,$press"
-  qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[$ev,$press]}}" >/dev/null
+  # Move, press and release go as separate events with a real hold: a batch with press and
+  # release in the same frame is not seen as a click by the guest.
+  qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":$ax}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":$ay}}]}}" >/dev/null
+  local i
+  for i in $(seq 1 $((double + 1))); do
+    sleep 0.1
+    qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"$btn\"}}]}}" >/dev/null
+    sleep 0.08
+    qmp "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"$btn\"}}]}}" >/dev/null
+  done
 }
 
 # Session env so wl-paste, cosmic-screenshot, busctl --user work from a non-login ssh shell.

@@ -1,0 +1,11 @@
+[package]
+name = "pneuma-applet-pomodoro"
+description = "Focus timer in the panel: live countdown, work/break cycles, popup controls"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+libcosmic.workspace = true
+serde.workspace = true
+serde_json = "1"
