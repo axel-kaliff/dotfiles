@@ -27,7 +27,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "opus[1m]",
   "skillOverrides": {
     "rethink": "user-invocable-only"
   },
