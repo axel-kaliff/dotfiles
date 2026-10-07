@@ -23,6 +23,9 @@ class Occurrence(TypedDict):
     date: str
     time: str
     title: str
+    calendar: str
+    id: str
+    rid: str
 
 
 def stored_date(value: int, zone: str, all_day: bool) -> date | datetime:
@@ -64,10 +67,25 @@ def event_from_row(row: sqlite3.Row, connection: sqlite3.Connection) -> Componen
     return event
 
 
-def event_occurrences(event: Component, start: date, end: date) -> list[Occurrence]:
+def recurrence_id(value: date | datetime) -> str:
+    match value:
+        case datetime() as instant:
+            if instant.tzinfo is not None:
+                return instant.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
+            return instant.strftime("%Y%m%dT%H%M%S")
+        case date() as day:
+            return day.strftime("%Y%m%d")
+    raise TypeError("RECURRENCE-ID must be a date or datetime")
+
+
+def event_occurrences(
+    event: Component, cal_id: str, start: date, end: date
+) -> list[Occurrence]:
     if event.get("status") == "CANCELLED":
         return []
     title = str(event["summary"])
+    item_id = str(event["uid"])
+    rid = recurrence_id(event.decoded("recurrence-id"))
     match event.decoded("dtstart"):
         case datetime() as instant:
             local = instant.astimezone() if instant.tzinfo is not None else instant
@@ -78,6 +96,9 @@ def event_occurrences(event: Component, start: date, end: date) -> list[Occurren
                         "date": day.isoformat(),
                         "time": local.strftime("%H:%M"),
                         "title": title,
+                        "calendar": cal_id,
+                        "id": item_id,
+                        "rid": rid,
                     }
                 ]
             return []
@@ -86,7 +107,16 @@ def event_occurrences(event: Component, start: date, end: date) -> list[Occurren
             day = max(first, start)
             result: list[Occurrence] = []
             while day < min(last, end):
-                result.append({"date": day.isoformat(), "time": "", "title": title})
+                result.append(
+                    {
+                        "date": day.isoformat(),
+                        "time": "",
+                        "title": title,
+                        "calendar": cal_id,
+                        "id": item_id,
+                        "rid": rid,
+                    }
+                )
                 day += timedelta(days=1)
             return result
     raise TypeError("DTSTART must be a date or datetime")
@@ -116,9 +146,9 @@ def occurrences(profile_dir: Path, start: date, end: date) -> list[Occurrence]:
                     calendar.add_component(event_from_row(row, connection))
 
     result: list[Occurrence] = []
-    for calendar in calendars.values():
+    for cal_id, calendar in calendars.items():
         for event in recurring_ical_events.of(calendar).between(start, end):
-            result.extend(event_occurrences(event, start, end))
+            result.extend(event_occurrences(event, cal_id, start, end))
     return sorted(result, key=lambda item: (item["date"], item["time"], item["title"]))
 
 

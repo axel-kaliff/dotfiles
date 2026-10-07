@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Calendar opener",
+  "description": "Opens a calendar event from a net.thunderbird://calopen/ URL",
+  "version": "1.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "calopen@akaliff",
+      "strict_min_version": "128.0"
+    }
+  },
+  "experiment_apis": {
+    "calopen": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["calopen"]],
+        "script": "implementation.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

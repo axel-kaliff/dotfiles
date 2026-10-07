@@ -230,6 +230,16 @@ setup-fisher:
   @fish -c 'type -q fisher; or curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher'
   @fish -c 'fisher install eth-p/fish-plugin-sudo'
 
+# Install the calendar URL handler into Thunderbird's default profile
+install-thunderbird-calopen:
+  @base="$HOME/.var/app/org.mozilla.thunderbird_esr/.thunderbird"; \
+  profile=$(awk '/^\[/ { install = /^\[Install/ } install && /^Default=/ { sub(/^Default=/, ""); sub(/\r$/, ""); print; exit }' "$base/profiles.ini") && \
+  test -n "$profile" && \
+  { case "$profile" in /*) ;; *) profile="$base/$profile" ;; esac; } && \
+  mkdir -p "$profile/extensions" && \
+  /usr/bin/zip -FS -j "$profile/extensions/calopen@akaliff.xpi" omarchy/plugins/akaliff.clock/thunderbird/* && \
+  echo 'Restart Thunderbird and click Enable on the "Calendar opener" prompt (first install only).'
+
 install-fonts:
   @echo "Installing JetBrains Mono Nerd Font..."
   @if ! fc-list | grep -qi "JetBrainsMono Nerd"; then \

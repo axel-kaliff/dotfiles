@@ -118,10 +118,38 @@ def weekly(profile: Path) -> None:
 def test_weekly_keeps_wall_time_across_dst(profile: Path) -> None:
     weekly(profile)
     assert occurrences(profile, date(2026, 10, 18), date(2026, 11, 9)) == [
-        {"date": "2026-10-18", "time": "09:00", "title": "Meeting"},
-        {"date": "2026-10-25", "time": "09:00", "title": "Meeting"},
-        {"date": "2026-11-01", "time": "09:00", "title": "Meeting"},
-        {"date": "2026-11-08", "time": "09:00", "title": "Meeting"},
+        {
+            "date": "2026-10-18",
+            "time": "09:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "weekly",
+            "rid": "20261018T070000Z",
+        },
+        {
+            "date": "2026-10-25",
+            "time": "09:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "weekly",
+            "rid": "20261025T080000Z",
+        },
+        {
+            "date": "2026-11-01",
+            "time": "09:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "weekly",
+            "rid": "20261101T080000Z",
+        },
+        {
+            "date": "2026-11-08",
+            "time": "09:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "weekly",
+            "rid": "20261108T080000Z",
+        },
     ]
 
 
@@ -145,8 +173,22 @@ def test_excluded_moved_and_cancelled_occurrences(profile: Path) -> None:
         status="CANCELLED",
     )
     assert occurrences(profile, date(2026, 10, 18), date(2026, 11, 9)) == [
-        {"date": "2026-10-18", "time": "09:00", "title": "Meeting"},
-        {"date": "2026-11-02", "time": "13:00", "title": "Moved"},
+        {
+            "date": "2026-10-18",
+            "time": "09:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "weekly",
+            "rid": "20261018T070000Z",
+        },
+        {
+            "date": "2026-11-02",
+            "time": "13:00",
+            "title": "Moved",
+            "calendar": "enabled",
+            "id": "weekly",
+            "rid": "20261101T080000Z",
+        },
     ]
 
 
@@ -162,11 +204,32 @@ def test_floating_all_day_spans_dates(profile: Path) -> None:
         database="local.sqlite",
     )
     assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 10)) == [
-        {"date": "2026-10-07", "time": "", "title": "Holiday"},
-        {"date": "2026-10-08", "time": "", "title": "Holiday"},
+        {
+            "date": "2026-10-07",
+            "time": "",
+            "title": "Holiday",
+            "calendar": "enabled",
+            "id": "holiday",
+            "rid": "20261007",
+        },
+        {
+            "date": "2026-10-08",
+            "time": "",
+            "title": "Holiday",
+            "calendar": "enabled",
+            "id": "holiday",
+            "rid": "20261007",
+        },
     ]
     assert occurrences(profile, date(2026, 10, 8), date(2026, 10, 9)) == [
-        {"date": "2026-10-08", "time": "", "title": "Holiday"},
+        {
+            "date": "2026-10-08",
+            "time": "",
+            "title": "Holiday",
+            "calendar": "enabled",
+            "id": "holiday",
+            "rid": "20261007",
+        },
     ]
 
 
@@ -178,7 +241,16 @@ def test_pending_delete(profile: Path, offline: int | None) -> None:
     expected = (
         []
         if offline == 4
-        else [{"date": "2026-10-07", "time": "09:00", "title": "Meeting"}]
+        else [
+            {
+                "date": "2026-10-07",
+                "time": "09:00",
+                "title": "Meeting",
+                "calendar": "enabled",
+                "id": "deleted",
+                "rid": "20261007T070000Z",
+            }
+        ]
     )
     assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == expected
 
@@ -193,7 +265,14 @@ def test_disabled_calendar(profile: Path) -> None:
     )
     add_event(profile, "shared", "2026-10-07T11:00", "2026-10-07T12:00")
     assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == [
-        {"date": "2026-10-07", "time": "11:00", "title": "Meeting"},
+        {
+            "date": "2026-10-07",
+            "time": "11:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "shared",
+            "rid": "20261007T090000Z",
+        },
     ]
 
 
@@ -222,8 +301,36 @@ def test_sorting_floating_and_calendar_uid_isolation(profile: Path) -> None:
         profile, "cancelled", "2026-10-07T08:00", "2026-10-07T09:00", status="CANCELLED"
     )
     assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == [
-        {"date": "2026-10-07", "time": "", "title": "Meeting"},
-        {"date": "2026-10-07", "time": "09:00", "title": "Meeting"},
-        {"date": "2026-10-07", "time": "12:00", "title": "Alpha"},
-        {"date": "2026-10-07", "time": "12:00", "title": "Zulu"},
+        {
+            "date": "2026-10-07",
+            "time": "",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "all-day",
+            "rid": "20261007",
+        },
+        {
+            "date": "2026-10-07",
+            "time": "09:00",
+            "title": "Meeting",
+            "calendar": "enabled",
+            "id": "floating",
+            "rid": "20261007T090000",
+        },
+        {
+            "date": "2026-10-07",
+            "time": "12:00",
+            "title": "Alpha",
+            "calendar": "second",
+            "id": "same",
+            "rid": "20261007T100000Z",
+        },
+        {
+            "date": "2026-10-07",
+            "time": "12:00",
+            "title": "Zulu",
+            "calendar": "enabled",
+            "id": "same",
+            "rid": "20261007T100000Z",
+        },
     ]

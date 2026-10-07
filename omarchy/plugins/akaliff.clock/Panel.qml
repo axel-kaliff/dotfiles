@@ -100,6 +100,16 @@ Panel {
     Qt.callLater(root.startEvents)
   }
 
+  // Thunderbird has no CLI flag for one event; the calopen add-on in
+  // thunderbird/ (just install-thunderbird-calopen) handles this URL instead.
+  function openInThunderbird(event) {
+    root.close()
+    Quickshell.execDetached(["flatpak", "run", "org.mozilla.thunderbird_esr",
+      "net.thunderbird://calopen/?cal=" + encodeURIComponent(event.calendar)
+        + "&id=" + encodeURIComponent(event.id)
+        + "&rid=" + encodeURIComponent(event.rid)])
+  }
+
   Process {
     id: eventsProc
     stdout: StdioCollector { id: eventsStdout; waitForEnd: true }
@@ -838,31 +848,44 @@ Panel {
                 Repeater {
                   model: agendaDay.modelData.events
 
-                  Row {
+                  Item {
                     id: agendaEvent
                     required property var modelData
                     width: parent.width
-                    spacing: Style.space(8)
+                    height: eventTitle.implicitHeight
 
                     Text {
                       id: eventTime
                       width: Style.space(70)
                       anchors.baseline: eventTitle.baseline
                       text: agendaEvent.modelData.time || "ALL DAY"
-                      color: Qt.darker(root.contentForeground, 1.5)
+                      color: eventMouse.containsMouse
+                        ? Style.hoverStateColor(root.contentForeground, Color.accent)
+                        : Qt.darker(root.contentForeground, 1.5)
                       font.family: root.contentFontFamily
                       font.pixelSize: agendaEvent.modelData.time ? Style.font.body : Style.font.caption
                     }
 
                     Text {
                       id: eventTitle
-                      width: parent.width - eventTime.width - parent.spacing
+                      x: eventTime.width + Style.space(8)
+                      width: parent.width - x
                       text: agendaEvent.modelData.title
-                      color: root.contentForeground
+                      color: eventMouse.containsMouse
+                        ? Style.hoverStateColor(root.contentForeground, Color.accent)
+                        : root.contentForeground
                       font.family: root.contentFontFamily
                       font.pixelSize: Style.font.body
                       elide: Text.ElideRight
                       maximumLineCount: 1
+                    }
+
+                    MouseArea {
+                      id: eventMouse
+                      anchors.fill: parent
+                      hoverEnabled: true
+                      cursorShape: Qt.PointingHandCursor
+                      onClicked: root.openInThunderbird(agendaEvent.modelData)
                     }
                   }
                 }
