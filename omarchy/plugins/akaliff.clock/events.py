@@ -16,7 +16,7 @@ from typing import TypedDict
 from zoneinfo import ZoneInfo
 
 import recurring_ical_events
-from icalendar import Calendar, Event
+from icalendar import Calendar, Component, Event
 
 
 class Occurrence(TypedDict):
@@ -34,7 +34,7 @@ def stored_date(value: int, zone: str, all_day: bool) -> date | datetime:
     return instant.date() if all_day else instant
 
 
-def event_from_row(row: sqlite3.Row, connection: sqlite3.Connection) -> Event:
+def event_from_row(row: sqlite3.Row, connection: sqlite3.Connection) -> Component:
     lines = []
     if row["flags"] & 16 and row["recurrence_id"] is None:
         for recurrence in connection.execute(
@@ -42,9 +42,7 @@ def event_from_row(row: sqlite3.Row, connection: sqlite3.Connection) -> Event:
             (row["id"], row["cal_id"]),
         ):
             lines.append(recurrence[0].replace("\r\n ", "").rstrip("\r\n"))
-    event = Event.from_ical(
-        "BEGIN:VEVENT\r\n" + "\r\n".join(lines) + "\r\nEND:VEVENT\r\n"
-    )
+    event = Event.from_ical("\r\n".join(["BEGIN:VEVENT", *lines, "END:VEVENT"]))
     event.add("uid", row["id"])
     event.add("summary", row["title"])
     if row["ical_status"] is not None:
@@ -66,7 +64,7 @@ def event_from_row(row: sqlite3.Row, connection: sqlite3.Connection) -> Event:
     return event
 
 
-def event_occurrences(event: Event, start: date, end: date) -> list[Occurrence]:
+def event_occurrences(event: Component, start: date, end: date) -> list[Occurrence]:
     if event.get("status") == "CANCELLED":
         return []
     title = str(event["summary"])
