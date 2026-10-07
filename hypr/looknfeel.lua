@@ -59,10 +59,15 @@
 -- (the Omarchy default).
 hl.curve("appleSpring", { type = "spring", mass = 1, stiffness = 520, dampening = 38 })
 hl.curve("appleExit", { type = "bezier", points = { { 0.3, 0 }, { 0.8, 0.15 } } })
+-- Three times appleSpring's pace, same bounce (stiffness x9, damping x3): for
+-- windowsMove, which is what slides the scrolling tape when focus moves.
+hl.curve("appleSpringFast", { type = "spring", mass = 1, stiffness = 4680, dampening = 114 })
 
 hl.animation({ leaf = "windows", enabled = true, speed = 1.5, spring = "appleSpring" })
 hl.animation({ leaf = "windowsIn", enabled = true, speed = 1.5, spring = "appleSpring", style = "popin 90%" })
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 0.75, bezier = "appleExit", style = "popin 90%" })
+-- windowsMove has no scroll-only sibling, so dwindle moves and resizes speed up too.
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 1.5, spring = "appleSpringFast" })
 hl.animation({ leaf = "layersIn", enabled = true, speed = 1.5, spring = "appleSpring", style = "fade" })
 hl.animation({ leaf = "layersOut", enabled = true, speed = 0.75, bezier = "appleExit", style = "fade" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 1.5, spring = "appleSpring", style = "slidefadevert 15%" })

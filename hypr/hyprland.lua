@@ -58,11 +58,29 @@ o.window("org.gnome.Loupe", { tag = "+floating-window" })
 o.window("org.gnome.Loupe", { tag = "-default-opacity" })
 o.window("org.gnome.Loupe", { opacity = "1 1" })
 
--- Slack and Thunderbird each keep a workspace of their own. Not `silent`:
--- opening either one, or a Thunderbird compose window, takes you there rather
--- than opening it out of sight. Both autostart, so login ends on one of them.
-o.window("com.slack.Slack", { workspace = "9" })
-o.window("org.mozilla.thunderbird_esr", { workspace = "8" })
--- The obsidian-work vault gets 7. Every Obsidian window shares one class, so
--- the vault is told apart by the title, which names it from the moment it opens.
-o.window({ class = "md.obsidian.Obsidian", initial_title = ".*obsidian-work - Obsidian.*" }, { workspace = "7" })
+-- Apps with a workspace of their own. Not `silent`: opening one, or a
+-- Thunderbird compose window, takes you there rather than opening it out of
+-- sight. Every Obsidian window shares one class, so the obsidian-work vault is
+-- told apart by the title, which names it from the moment it opens.
+local homes = {
+  { match = { class = "com.slack.Slack" }, workspace = "9" },
+  { match = { class = "org.mozilla.thunderbird_esr" }, workspace = "8" },
+  { match = { class = "md.obsidian.Obsidian", initial_title = ".*obsidian-work - Obsidian.*" }, workspace = "7" },
+}
+for _, home in ipairs(homes) do
+  hl.window_rule({ match = home.match, workspace = home.workspace })
+end
+
+-- All three also open at login, where following them would leave the view on
+-- whichever started last. For the first minute after Hyprland starts, a
+-- `silent` twin of each rule wins instead (the later rule wins), then a timer
+-- turns the twins off. An app that starts slower than that just takes you to it.
+hl.on("hyprland.start", function()
+  local quiet = {}
+  for _, home in ipairs(homes) do
+    table.insert(quiet, hl.window_rule({ match = home.match, workspace = home.workspace .. " silent" }))
+  end
+  hl.timer(function()
+    for _, rule in ipairs(quiet) do rule:set_enabled(false) end
+  end, { timeout = 60000, type = "oneshot" })
+end)

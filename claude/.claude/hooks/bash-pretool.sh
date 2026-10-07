@@ -67,6 +67,13 @@ if echo "$command" | grep -qE 'sudo\s+(rm|pip)'; then
   exit 2
 fi
 
+# pkill -f matches full command lines, and the shell running this command has
+# the pattern in its own, so it kills itself mid-script. Kill by PID instead.
+if echo "$command" | grep -qE '(^|[;&|(`[:space:]])pkill([[:space:]]+[^;&|]*)?[[:space:]](-[a-zA-Z0-9]*f[a-zA-Z0-9]*|--full)([[:space:]]|$)'; then
+  echo "BLOCKED: pkill -f also matches this command's own shell and kills it. Find the PIDs (pgrep without -f, \$!, or the app's own listing) and kill those." >&2
+  exit 2
+fi
+
 # --- Pre-format staged files before git commit ---
 
 if echo "$command" | grep -qE 'git\s+commit' && ! echo "$command" | grep -qE '\-\-amend'; then
