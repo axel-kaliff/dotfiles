@@ -57,3 +57,9 @@ o.window("org.omarchy.yazi", { tag = "+floating-window" })
 o.window("org.gnome.Loupe", { tag = "+floating-window" })
 o.window("org.gnome.Loupe", { tag = "-default-opacity" })
 o.window("org.gnome.Loupe", { opacity = "1 1" })
+
+-- Slack and Thunderbird each keep a workspace of their own. Not `silent`:
+-- opening either one, or a Thunderbird compose window, takes you there rather
+-- than opening it out of sight. Both autostart, so login ends on one of them.
+o.window("com.slack.Slack", { workspace = "9" })
+o.window("org.mozilla.thunderbird_esr", { workspace = "8" })
