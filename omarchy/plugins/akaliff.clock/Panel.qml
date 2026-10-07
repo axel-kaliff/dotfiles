@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.Commons
 import qs.Ui
 import "Model.js" as Model
@@ -8,9 +9,8 @@ import "Model.js" as Model
 // sit beside the weather panel — same hero-over-detail composition, same
 // spacing scale, same small-caps labels.
 //
-// The grid is a read-out rather than a picker: today is the only marked
-// day, and the only thing that moves is which month is on screen —
-// chevrons, the scroll wheel, and the arrow keys all step it.
+// The grid marks today and Thunderbird event days. The agenda stays pinned
+// to today while chevrons, the scroll wheel, and arrow keys step the month.
 //
 // BarWidget.qml owns the bar label and hands this panel the button to
 // anchor against.
@@ -68,6 +68,51 @@ Panel {
   readonly property var weekdays: Model.weekdayOrder(weekStart)
   readonly property var weeks: Model.monthGrid(viewYear, viewMonth, weekStart, todayKey)
 
+  // ---- One query covers the visible grid and the agenda, even when the
+  //      month on screen is far from today. Refresh only on open or change.
+  property var events: []
+  readonly property var eventDays: {
+    var days = {}
+    for (var i = 0; i < events.length; i++) days[events[i].date] = true
+    return days
+  }
+  readonly property var agenda: Model.agendaDays(events, today)
+  readonly property string eventWindow: {
+    var first = weeks[0].days[0].key
+    var lastWeek = weeks[weeks.length - 1]
+    var last = lastWeek.days[lastWeek.days.length - 1]
+    var gridEnd = Model.keyForDate(new Date(last.year, last.month, last.day + 1))
+    var agendaEnd = Model.keyForDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 8))
+    return (first < todayKey ? first : todayKey) + "/" + (gridEnd > agendaEnd ? gridEnd : agendaEnd)
+  }
+  onEventWindowChanged: {
+    if (root.opened) root.reloadEvents()
+  }
+
+  function startEvents() {
+    var bounds = root.eventWindow.split("/")
+    eventsProc.command = ["uv", "run", "--script", Qt.resolvedUrl("events.py").toString().replace(/^file:\/\//, ""), bounds[0], bounds[1]]
+    eventsProc.running = true
+  }
+
+  function reloadEvents() {
+    eventsProc.running = false
+    Qt.callLater(root.startEvents)
+  }
+
+  Process {
+    id: eventsProc
+    stdout: StdioCollector { id: eventsStdout; waitForEnd: true }
+    stderr: StdioCollector { id: eventsStderr; waitForEnd: true }
+    onExited: function(exitCode) {
+      if (exitCode === 0) {
+        root.events = JSON.parse(eventsStdout.text)
+      } else {
+        console.warn(eventsStderr.text)
+        root.events = []
+      }
+    }
+  }
 
   // Guarded so the widget renders before the bar is injected (the bar-widget
   // contract instantiates it bare).
@@ -83,6 +128,7 @@ Panel {
   function open() {
     refresh()
     root.controller.show()
+    root.reloadEvents()
     // Set after showing, not before: showing hands the popout coordinator
     // over, which closes whichever panel was open, and that close clears the
     // shared flag. Deferring means the panel taking over always wins, while
@@ -668,6 +714,19 @@ Panel {
                         font.pixelSize: Style.font.body
                         font.bold: modelData.today
                       }
+
+                      Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: Style.space(2)
+                        width: Style.space(4)
+                        height: width
+                        radius: width / 2
+                        visible: root.eventDays[modelData.key] === true
+                        color: modelData.inMonth
+                          ? Style.selectedStateColor(root.contentForeground, Color.accent)
+                          : Qt.darker(Style.selectedStateColor(root.contentForeground, Color.accent), 2.2)
+                      }
                     }
                   }
                 }
@@ -740,6 +799,83 @@ Panel {
                 fontFamily: root.contentFontFamily
                 onClicked: root.moveMonth(1)
               }
+            }
+          }
+
+          // ---- The next eight days stay visible below month navigation;
+          //      the existing scroll area carries a longer agenda.
+          Column {
+            width: gridColumn.width
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: Style.space(8)
+
+            Rectangle {
+              width: parent.width
+              height: Style.spacing.hairline
+              color: root.contentForeground
+              opacity: 0.1
+            }
+
+            Repeater {
+              model: root.agenda
+
+              Column {
+                id: agendaDay
+                required property var modelData
+                width: parent.width
+                spacing: Style.space(4)
+
+                Text {
+                  text: agendaDay.modelData.offset === 0 ? "TODAY"
+                    : agendaDay.modelData.offset === 1 ? "TOMORROW"
+                    : Qt.formatDate(agendaDay.modelData.date, "ddd d").toUpperCase().replace(/\.$/, "")
+                  color: Qt.darker(root.contentForeground, 1.5)
+                  font.family: root.contentFontFamily
+                  font.pixelSize: Style.font.bodySmall
+                  font.letterSpacing: 1
+                }
+
+                Repeater {
+                  model: agendaDay.modelData.events
+
+                  Row {
+                    id: agendaEvent
+                    required property var modelData
+                    width: parent.width
+                    spacing: Style.space(8)
+
+                    Text {
+                      id: eventTime
+                      width: Style.space(70)
+                      anchors.baseline: eventTitle.baseline
+                      text: agendaEvent.modelData.time || "ALL DAY"
+                      color: Qt.darker(root.contentForeground, 1.5)
+                      font.family: root.contentFontFamily
+                      font.pixelSize: agendaEvent.modelData.time ? Style.font.body : Style.font.caption
+                    }
+
+                    Text {
+                      id: eventTitle
+                      width: parent.width - eventTime.width - parent.spacing
+                      text: agendaEvent.modelData.title
+                      color: root.contentForeground
+                      font.family: root.contentFontFamily
+                      font.pixelSize: Style.font.body
+                      elide: Text.ElideRight
+                      maximumLineCount: 1
+                    }
+                  }
+                }
+              }
+            }
+
+            Text {
+              visible: root.agenda.length === 0
+              text: "NO EVENTS THIS WEEK"
+              color: Qt.darker(root.contentForeground, 1.5)
+              font.family: root.contentFontFamily
+              font.pixelSize: Style.font.bodySmall
+              font.letterSpacing: 1
             }
           }
         }

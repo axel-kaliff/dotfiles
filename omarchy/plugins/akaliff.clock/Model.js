@@ -262,6 +262,19 @@ function monthGrid(year, month, weekStart, todayKey) {
   return weeks
 }
 
+// Group the agenda by local calendar days, including both ends of a DST
+// change without assuming that each day lasts twenty-four hours.
+function agendaDays(events, today) {
+  var days = []
+  for (var offset = 0; offset < 8; offset++) {
+    var date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
+    var key = keyForDate(date)
+    var entries = events.filter(function(event) { return event.date === key })
+    if (entries.length > 0) days.push({ date: date, offset: offset, events: entries })
+  }
+  return days
+}
+
 function stepMonth(year, month, delta) {
   var target = new Date(year, Number(month) + Number(delta), 1)
   return { year: target.getFullYear(), month: target.getMonth() }
@@ -269,6 +282,7 @@ function stepMonth(year, month, delta) {
 
 if (typeof module !== "undefined") {
   module.exports = {
+    agendaDays: agendaDays,
     dateKey: dateKey,
     keyForDate: keyForDate,
     normalizedWeekStart: normalizedWeekStart,
