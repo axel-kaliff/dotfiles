@@ -6,7 +6,16 @@
 -- confine the band to maximized windows, leaving scrolling workspaces unsqueezed.
 -- Omarchy's misc.on_focus_under_fullscreen = 1 transfers the maximized slot on
 -- focus; binds.movefocus_cycles_fullscreen = true lets SUPER+H/L cycle it.
--- The global state survives hyprctl reload, but resets on a Hyprland restart.
+-- The mode is kept in a flag file, so it survives reloads and restarts.
+-- A reload starts a fresh Lua state, so the mode cannot live in a global.
+
+local flag = require("default.hypr.paths").state_home .. "/omarchy/toggles/center-mode"
+local function flag_set()
+  local file = io.open(flag)
+  if file then file:close() end
+  return file ~= nil
+end
+local on = flag_set()
 
 local band_rules = {}
 -- Read before applying: reload resets options before running the config again.
@@ -25,7 +34,7 @@ local function add_band(monitor)
 end
 
 local function band(window)
-  if not _G.center_mode or not window or window.floating then return end
+  if not on or not window or window.floating then return end
   local workspace = window.workspace
   if not workspace or workspace.tiled_layout ~= "dwindle" or workspace.has_fullscreen then return end
   hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "set", window = window }))
@@ -36,13 +45,14 @@ local function apply()
   for _, monitor in ipairs(hl.get_monitors()) do add_band(monitor) end
 end
 
-if _G.center_mode then apply() end
+if on then apply() end
 hl.on("window.active", band)
-hl.on("monitor.added", function(monitor) if _G.center_mode then add_band(monitor) end end)
+hl.on("monitor.added", function(monitor) if on then add_band(monitor) end end)
 
 local function toggle()
-  _G.center_mode = not _G.center_mode
-  if _G.center_mode then
+  on = not on
+  if on then
+    local file = assert(io.open(flag, "w")); file:close()
     apply()
     local window = hl.get_active_window()
     if window and window.workspace and window.workspace.tiled_layout == "scrolling" then
@@ -50,6 +60,7 @@ local function toggle()
     end
     band(window)
   else
+    os.remove(flag)
     hl.config({ scrolling = { focus_fit_method = fit, fullscreen_on_one_column = one_column } })
     for _, rule in ipairs(band_rules) do rule:set_enabled(false) end
     band_rules = {}
@@ -59,7 +70,7 @@ local function toggle()
       end
     end
   end
-  hl.exec_cmd("omarchy-notification-send -g 󰡌 'Center mode " .. (_G.center_mode and "on" or "off") .. "'")
+  hl.exec_cmd("omarchy-notification-send -g 󰡌 'Center mode " .. (on and "on" or "off") .. "'")
 end
 
 o.bind("SUPER + ALT + C", "Center mode", toggle)
