@@ -63,3 +63,6 @@ o.window("org.gnome.Loupe", { opacity = "1 1" })
 -- than opening it out of sight. Both autostart, so login ends on one of them.
 o.window("com.slack.Slack", { workspace = "9" })
 o.window("org.mozilla.thunderbird_esr", { workspace = "8" })
+-- The obsidian-work vault gets 7. Every Obsidian window shares one class, so
+-- the vault is told apart by the title, which names it from the moment it opens.
+o.window({ class = "md.obsidian.Obsidian", initial_title = ".*obsidian-work - Obsidian.*" }, { workspace = "7" })
