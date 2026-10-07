@@ -7,7 +7,7 @@
   "bar": {
     "position": "top",
     "transparent": false,
-    "centerAnchor": "omarchy.clock",
+    "centerAnchor": "akaliff.clock",
     "layout": {
       "left": [
         {
@@ -32,7 +32,7 @@
           "id": "pneuma.safeeyes"
         },
         {
-          "id": "omarchy.clock",
+          "id": "akaliff.clock",
           "format": "yyyy-MM-dd HH:mm",
           "formatAlt": "d MMMM 'W'ww yyyy",
           "verticalFormat": "HH\n—\nmm"

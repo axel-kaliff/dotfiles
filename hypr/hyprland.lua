@@ -34,6 +34,8 @@ require_optional.module("hypr.scratchpads")
 require_optional.module("hypr.privacy")
 -- After looknfeel: it corrects the blur values looknfeel just set.
 require_optional.module("hypr.power")
+-- After looknfeel: it saves the scroll settings it overrides.
+require_optional.module("hypr.center")
 
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
