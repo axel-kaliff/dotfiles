@@ -78,12 +78,11 @@ Panel {
   }
   readonly property var agenda: Model.agendaDays(events, today)
   readonly property string eventWindow: {
-    var first = weeks[0].days[0].key
     var lastWeek = weeks[weeks.length - 1]
     var last = lastWeek.days[lastWeek.days.length - 1]
     var gridEnd = Model.keyForDate(new Date(last.year, last.month, last.day + 1))
     var agendaEnd = Model.keyForDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 8))
-    return (first < todayKey ? first : todayKey) + "/" + (gridEnd > agendaEnd ? gridEnd : agendaEnd)
+    return todayKey + "/" + (gridEnd > agendaEnd ? gridEnd : agendaEnd)
   }
   onEventWindowChanged: {
     if (root.opened) root.reloadEvents()

@@ -122,7 +122,20 @@ def event_occurrences(
     raise TypeError("DTSTART must be a date or datetime")
 
 
-def occurrences(profile_dir: Path, start: date, end: date) -> list[Occurrence]:
+def has_ended(dtend: date | datetime, now: datetime) -> bool:
+    match dtend:
+        case datetime() as instant:
+            if instant.tzinfo is not None:
+                return instant <= now
+            return instant <= now.astimezone().replace(tzinfo=None)
+        case date() as day:
+            return day <= now.astimezone().date()
+    raise TypeError("DTEND must be a date or datetime")
+
+
+def occurrences(
+    profile_dir: Path, start: date, end: date, now: datetime
+) -> list[Occurrence]:
     disabled = set()
     pattern = re.compile(r'user_pref\("calendar\.registry\.(.+)\.disabled",\s*true\);')
     with (profile_dir / "prefs.js").open() as prefs:
@@ -148,6 +161,8 @@ def occurrences(profile_dir: Path, start: date, end: date) -> list[Occurrence]:
     result: list[Occurrence] = []
     for cal_id, calendar in calendars.items():
         for event in recurring_ical_events.of(calendar).between(start, end):
+            if has_ended(event.decoded("dtend"), now):
+                continue
             result.extend(event_occurrences(event, cal_id, start, end))
     return sorted(result, key=lambda item: (item["date"], item["time"], item["title"]))
 
@@ -165,6 +180,7 @@ def main() -> None:
                 profile,
                 date.fromisoformat(sys.argv[1]),
                 date.fromisoformat(sys.argv[2]),
+                datetime.now(tz=UTC),
             )
         )
     )

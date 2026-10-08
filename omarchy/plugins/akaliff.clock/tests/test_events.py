@@ -10,6 +10,8 @@ import pytest
 
 from events import occurrences
 
+NOW = datetime(2026, 10, 1, tzinfo=UTC)
+
 SCHEMA = """CREATE TABLE cal_events (
     cal_id TEXT,
     id TEXT,
@@ -117,7 +119,7 @@ def weekly(profile: Path) -> None:
 
 def test_weekly_keeps_wall_time_across_dst(profile: Path) -> None:
     weekly(profile)
-    assert occurrences(profile, date(2026, 10, 18), date(2026, 11, 9)) == [
+    assert occurrences(profile, date(2026, 10, 18), date(2026, 11, 9), NOW) == [
         {
             "date": "2026-10-18",
             "time": "09:00",
@@ -172,7 +174,7 @@ def test_excluded_moved_and_cancelled_occurrences(profile: Path) -> None:
         recurrence_id="2026-11-08T09:00",
         status="CANCELLED",
     )
-    assert occurrences(profile, date(2026, 10, 18), date(2026, 11, 9)) == [
+    assert occurrences(profile, date(2026, 10, 18), date(2026, 11, 9), NOW) == [
         {
             "date": "2026-10-18",
             "time": "09:00",
@@ -203,7 +205,7 @@ def test_floating_all_day_spans_dates(profile: Path) -> None:
         title="Holiday",
         database="local.sqlite",
     )
-    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 10)) == [
+    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 10), NOW) == [
         {
             "date": "2026-10-07",
             "time": "",
@@ -221,7 +223,7 @@ def test_floating_all_day_spans_dates(profile: Path) -> None:
             "rid": "20261007",
         },
     ]
-    assert occurrences(profile, date(2026, 10, 8), date(2026, 10, 9)) == [
+    assert occurrences(profile, date(2026, 10, 8), date(2026, 10, 9), NOW) == [
         {
             "date": "2026-10-08",
             "time": "",
@@ -252,7 +254,7 @@ def test_pending_delete(profile: Path, offline: int | None) -> None:
             }
         ]
     )
-    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == expected
+    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8), NOW) == expected
 
 
 def test_disabled_calendar(profile: Path) -> None:
@@ -264,7 +266,7 @@ def test_disabled_calendar(profile: Path) -> None:
         profile, "shared", "2026-10-07T09:00", "2026-10-07T10:00", calendar="hidden"
     )
     add_event(profile, "shared", "2026-10-07T11:00", "2026-10-07T12:00")
-    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == [
+    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8), NOW) == [
         {
             "date": "2026-10-07",
             "time": "11:00",
@@ -279,7 +281,7 @@ def test_disabled_calendar(profile: Path) -> None:
 def test_timed_event_outside_window(profile: Path) -> None:
     add_event(profile, "before", "2026-10-06T23:00", "2026-10-07T01:00")
     add_event(profile, "after", "2026-10-08T00:00", "2026-10-08T01:00")
-    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == []
+    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8), NOW) == []
 
 
 def test_sorting_floating_and_calendar_uid_isolation(profile: Path) -> None:
@@ -300,7 +302,7 @@ def test_sorting_floating_and_calendar_uid_isolation(profile: Path) -> None:
     add_event(
         profile, "cancelled", "2026-10-07T08:00", "2026-10-07T09:00", status="CANCELLED"
     )
-    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8)) == [
+    assert occurrences(profile, date(2026, 10, 7), date(2026, 10, 8), NOW) == [
         {
             "date": "2026-10-07",
             "time": "",
@@ -334,3 +336,59 @@ def test_sorting_floating_and_calendar_uid_isolation(profile: Path) -> None:
             "rid": "20261007T100000Z",
         },
     ]
+
+
+def test_ended_timed_events_are_removed(profile: Path) -> None:
+    add_event(profile, "ended", "2026-10-07T09:00", "2026-10-07T10:00")
+    add_event(profile, "ongoing", "2026-10-07T10:00", "2026-10-07T11:00")
+    add_event(profile, "future", "2026-10-07T15:00", "2026-10-07T16:00")
+    now = datetime(2026, 10, 7, 10, 30, tzinfo=ZoneInfo("Europe/Stockholm"))
+    result = occurrences(profile, date(2026, 10, 7), date(2026, 10, 8), now)
+    assert [event["id"] for event in result] == ["ongoing", "future"]
+
+
+def test_ended_recurring_occurrence_is_removed(profile: Path) -> None:
+    weekly(profile)
+    now = datetime(2026, 10, 18, 10, 30, tzinfo=ZoneInfo("Europe/Stockholm"))
+    result = occurrences(profile, date(2026, 10, 18), date(2026, 11, 9), now)
+    assert [event["date"] for event in result] == [
+        "2026-10-25",
+        "2026-11-01",
+        "2026-11-08",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("now", "expected"),
+    [
+        ("2026-10-07T23:30+02:00", ["holiday"]),
+        ("2026-10-08T00:30+02:00", []),
+    ],
+)
+def test_all_day_event_ends_at_local_midnight(
+    profile: Path, now: str, expected: list[str]
+) -> None:
+    add_event(profile, "holiday", "2026-10-07", "2026-10-08", zone="floating", flags=8)
+    result = occurrences(
+        profile, date(2026, 10, 7), date(2026, 10, 8), datetime.fromisoformat(now)
+    )
+    assert [event["id"] for event in result] == expected
+
+
+@pytest.mark.parametrize(
+    ("now", "expected"),
+    [
+        ("2026-10-07T10:00+02:00", []),
+        ("2026-10-07T09:59+02:00", ["floating"]),
+    ],
+)
+def test_floating_timed_event_ends_at_local_wall_time(
+    profile: Path, now: str, expected: list[str]
+) -> None:
+    add_event(
+        profile, "floating", "2026-10-07T09:00", "2026-10-07T10:00", zone="floating"
+    )
+    result = occurrences(
+        profile, date(2026, 10, 7), date(2026, 10, 8), datetime.fromisoformat(now)
+    )
+    assert [event["id"] for event in result] == expected
