@@ -58,6 +58,13 @@ o.window("org.gnome.Loupe", { tag = "+floating-window" })
 o.window("org.gnome.Loupe", { tag = "-default-opacity" })
 o.window("org.gnome.Loupe", { opacity = "1 1" })
 
+-- Thunderbird's event view (opened from the clock popup's agenda) has no
+-- parent window, so it would tile. It is the only Thunderbird window that
+-- maps without a title: the main, compose, message and event-edit windows
+-- all set one in their markup. Float at the size the dialog asks for;
+-- Omarchy's floating-window tag would force 875x600 around fixed-size content.
+o.window({ class = "org.mozilla.thunderbird_esr", initial_title = "^$" }, { float = true, center = true })
+
 -- Apps with a workspace of their own. Not `silent`: opening one, or a
 -- Thunderbird compose window, takes you there rather than opening it out of
 -- sight. Every Obsidian window shares one class, so the obsidian-work vault is
