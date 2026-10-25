@@ -16,5 +16,5 @@ Type=oneshot
 ExecStart=/bin/sh -c 'exec /usr/bin/rsync -a --delete --stats \
   --backup --backup-dir="/var/bulk/workstation-history/$(date +%%Y-%%m-%%d)" \
   "$HOME/Documents" "$HOME/Music" "$HOME/Pictures" \
-  core@192.168.0.14:/var/bulk/workstation/'
+  core@192.168.1.158:/var/bulk/workstation/'
 TimeoutStartSec=12h
