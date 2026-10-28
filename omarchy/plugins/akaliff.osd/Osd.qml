@@ -137,9 +137,11 @@ Item {
     // never blocks clicks to the desktop below it.
     mask: Region {}
 
-    // Glass: the card takes the shared popup surface (background alpha and
-    // rim from shell.toml) and sits on one soft drop shadow, kept under the
-    // omarchy-osd layer rule's ignore_alpha so the blur stays on the card.
+    // Glass: keep the popup colour and rim from shell.toml, with alpha fixed
+    // at 0.75 for Liquid Glass on its own terms; the compositor's hyprglass
+    // plugin draws the glass underneath. The 0.3 black shadow stays below
+    // omarchy-osd's ignore_alpha and the plugin's 0.5 contour cutoff,
+    // keeping glass and blur on the card.
     RectangularShadow {
       anchors.fill: card
       radius: card.radius
@@ -156,7 +158,7 @@ Item {
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.bottom: parent.bottom
       anchors.bottomMargin: Style.space(67)
-      color: Color.popups.background
+      color: Util.alpha(Color.popups.background, 0.75)
       borderSpec: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2)))
       radius: Style.cornerRadius
       opacity: root.opened ? 1 : 0
