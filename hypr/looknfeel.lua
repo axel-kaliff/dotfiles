@@ -253,7 +253,9 @@ hl.layer_rule({ match = { namespace = "omarchy-notifications" }, animation = "sl
 
 -- Liquid Glass after cosmic-forge's shader (verified 2026-10-28):
 -- https://github.com/motixo/cosmic-forge-shaders/blob/main/shaders/liquid-glass.frag
--- hyprglass v0.8.1 is the pin for Hyprland 0.56.1. The optics approximate
+-- hyprglass v0.11.0 is pinned upstream to Hyprland 0.56.2; it builds against
+-- 0.56.1's headers because the only plugin-visible header change is one added
+-- non-virtual renderer method, leaving layout unchanged. The optics approximate
 -- that shader's defaults: mostly sharp backdrop, strong inward edge lens,
 -- about 5px of dispersion, no tint or centre dome. Hyprglass's 50px refraction
 -- cap weakens the lens versus cosmic-forge's pull of up to 40% of the pane inward.
@@ -291,6 +293,31 @@ if hyprglass_file then
       vibrancy_darkness = 0.3,
       adaptive_dim = 0.0,
       adaptive_boost = 0.0,
+      layers = { enabled = true },
     })
+
+    -- The bar's flat, unrounded full-width strip is 0.62 alpha: glass covers it
+    -- all and the lens follows its edges; 0.5 matches its blur cutoff.
+    -- Full-screen layers draw rounded cards (0.72-0.9 alpha) over a 0.35 scrim
+    -- or nothing; some cards have shadows at <=0.3. Contour gives each card its
+    -- own edge, lens and highlights instead of the screen rectangle. A 0.5
+    -- cutoff excludes scrims and shadows but keeps every card.
+    -- omarchy-keyboard-panel hosts the bar's dropdowns (clock, power, network,
+    -- ...); pneuma-window-menu is the right-click window menu. Glassed layers
+    -- replace Hyprland blur (layers.manage_blur defaults on), so their
+    -- ignore_alpha rules above only matter without the plugin. The bar's xdg
+    -- popups (tooltips, tray and media cards) never get plugin glass and keep
+    -- blur_popups.
+    hg.layer("omarchy-bar", { mask_threshold = 0.5 })
+    for _, ns in ipairs({
+      "omarchy-menu",
+      "omarchy-clipboard",
+      "omarchy-emojis",
+      "omarchy-reminders",
+      "omarchy-keyboard-panel",
+      "pneuma-window-menu",
+    }) do
+      hg.layer(ns, { mask_mode = "contour", mask_threshold = 0.5 })
+    end
   end
 end
