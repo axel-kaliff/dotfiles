@@ -298,10 +298,14 @@ if hyprglass_file then
 
     -- The bar's flat, unrounded full-width strip is 0.62 alpha: glass covers it
     -- all and the lens follows its edges; 0.5 matches its blur cutoff.
-    -- Full-screen layers draw rounded cards (0.72-0.9 alpha) over a 0.35 scrim
-    -- or nothing; some cards have shadows at <=0.3. Contour gives each card its
-    -- own edge, lens and highlights instead of the screen rectangle. A 0.5
-    -- cutoff excludes scrims and shadows but keeps every card.
+    -- Full-screen layers draw rounded cards (0.66-0.9 alpha) over a 0.35 scrim
+    -- or nothing; toasts are 0.66. Toasts, OSD and switcher have soft black
+    -- shadows at <=0.3, so 0.5 keeps them out. Contour gives each card its own
+    -- edge, lens and highlights instead of the screen rectangle; 0.5 excludes
+    -- the 0.35 scrims but keeps every card. Polkit needs 0.7 to exclude its
+    -- 0.5 scrim under an ~0.86 card. pneuma-dock exists only in easy mode.
+    -- omarchy-network-qr stays unglassed: no translucent card, only an opaque
+    -- QR code on a 0.78 scrim.
     -- omarchy-keyboard-panel hosts the bar's dropdowns (clock, power, network,
     -- ...); pneuma-window-menu is the right-click window menu. Glassed layers
     -- replace Hyprland blur (layers.manage_blur defaults on), so their
@@ -316,8 +320,13 @@ if hyprglass_file then
       "omarchy-reminders",
       "omarchy-keyboard-panel",
       "pneuma-window-menu",
+      "omarchy-notifications",
+      "omarchy-osd",
+      "pneuma-switcher",
+      "pneuma-dock",
     }) do
       hg.layer(ns, { mask_mode = "contour", mask_threshold = 0.5 })
     end
+    hg.layer("omarchy-polkit", { mask_mode = "contour", mask_threshold = 0.7 })
   end
 end
