@@ -250,3 +250,47 @@ hl.layer_rule({ match = { namespace = "pneuma-overview" }, no_anim = true })
 
 -- Toasts enter from the screen edge like macOS notifications.
 hl.layer_rule({ match = { namespace = "omarchy-notifications" }, animation = "slide right" })
+
+-- Liquid Glass after cosmic-forge's shader (verified 2026-10-28):
+-- https://github.com/motixo/cosmic-forge-shaders/blob/main/shaders/liquid-glass.frag
+-- hyprglass v0.8.1 is the pin for Hyprland 0.56.1. The optics approximate
+-- that shader's defaults: mostly sharp backdrop, strong inward edge lens,
+-- about 5px of dispersion, no tint or centre dome. Hyprglass's 50px refraction
+-- cap weakens the lens versus cosmic-forge's pull of up to 40% of the pane inward.
+-- Tone copies the frost above so glassed windows match blurred shell surfaces;
+-- globals beat per-theme tone because theme slots default to sentinels (PluginConfig.cpp).
+-- Glass sits under the window and needs translucent backgrounds to show: A/B
+-- screenshots found it invisible at Ghostty background-opacity 0.92, subtle at 0.75, clear at 0.5.
+-- The .so is built against this exact Hyprland and stays machine-local, outside
+-- the repo, because these dotfiles also serve a host without it. hl.plugin.load
+-- is declarative, so it must run on every config pass to keep the plugin loaded;
+-- the config API exists only on the pass after the load.
+local hyprglass_path = os.getenv("HOME") .. "/.local/lib/hyprland/hyprglass.so"
+local hyprglass_file = io.open(hyprglass_path, "r")
+if hyprglass_file then
+  hyprglass_file:close()
+  hl.permission({ binary = (hyprglass_path:gsub("%.", "\\.")), type = "plugin", mode = "allow" })
+  hl.plugin.load(hyprglass_path)
+  if hl.plugin.hyprglass then
+    local hg = hl.plugin.hyprglass
+    hg.config({
+      default_theme = light and "light" or "dark",
+      blur_strength = 0.5,
+      blur_iterations = 2,
+      refraction_strength = 1.0,
+      edge_thickness = 0.1,
+      lens_distortion = 0.0,
+      chromatic_aberration = 0.3,
+      fresnel_strength = 0.4,
+      specular_strength = 0.6,
+      tint_color = 0x00000000,
+      brightness = light and 1.05 or 0.9,
+      contrast = 0.88,
+      saturation = 1.0,
+      vibrancy = 0.28,
+      vibrancy_darkness = 0.3,
+      adaptive_dim = 0.0,
+      adaptive_boost = 0.0,
+    })
+  end
+end
