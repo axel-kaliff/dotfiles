@@ -15,7 +15,7 @@ confirm-close-surface = false
 # custom-shader-animation = true
 
 # --- Font ---
-font-family = Illinois Mono
+font-family = Geist Mono
 font-family = JetBrains Mono
 # Lateralus ships JetBrainsMono only as the Nerd Font family (distinct
 # fontconfig name) — without this fallback ghostty lands on Noto Serif there.

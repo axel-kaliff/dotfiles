@@ -106,19 +106,9 @@ hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 0.7, bezier = "al
 -- background luminance.
 local light = o.shell_succeeds('[ "$(omarchy-theme-color mode)" = light ]')
 
--- The monospace font the rest of the desktop uses (`omarchy font set` writes
--- it to fontconfig), so Hyprland's own chrome -- group tabs, the
--- not-responding dialog -- matches instead of falling back to Sans.
-local function monospace_font()
-  local handle = io.popen("fc-match monospace -f '%{family}' 2>/dev/null")
-  if not handle then
-    return "monospace"
-  end
-  local family = (handle:read("*l") or ""):match("^([^,]+)") or ""
-  handle:close()
-  return family ~= "" and family or "monospace"
-end
-local font = monospace_font()
+-- Hyprland's own chrome -- group tabs, the not-responding dialog -- in the
+-- same serif as the Omarchy shell (~/.config/fontconfig/conf.d).
+local font = "Geist Serif"
 local rim_active = light
   and { colors = { "rgba(00000059)", "rgba(00000033)" }, angle = 90 }
   or { colors = { "rgba(ffffff73)", "rgba(ffffff26)" }, angle = 90 }
