@@ -100,9 +100,6 @@
   },
   "plugins": [
     {
-      "id": "akaliff.icons"
-    },
-    {
       "id": "akaliff.notifications"
     },
     {
