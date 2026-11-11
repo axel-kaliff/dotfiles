@@ -5,9 +5,8 @@
 #
 # The compositor half is hypr/toggles/easy-mode.lua. Omarchy sources every .lua
 # file in ~/.local/state/omarchy/toggles/hypr/ after the rest of the config, so
-# this script only has to copy that file in, or take it out, and reload. The
-# dock plugin watches the same path, which is why one command flips both halves
-# and why neither of them needs to know about the other.
+# this script only has to copy that file in, or take it out, and reload.
+# Omarchy's dock appears by itself on floating workspaces.
 
 set -euo pipefail
 
@@ -16,6 +15,8 @@ config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 flag="$state_home/omarchy/toggles/hypr/easy-mode.lua"
 source_file="$config_home/hypr/toggles/easy-mode.lua"
 saved_buttons="$state_home/pneuma/easy-mode-buttons"
+layout_default="$state_home/omarchy/workspace-layouts/default.lua"
+saved_layout="$state_home/pneuma/easy-mode-layout-default.lua"
 
 # The shell half. omarchy/shell-easy.json holds a `bar` subtree to swap in and a
 # `removePlugins` list to drop -- the eye-break overlays are not something to
@@ -25,6 +26,7 @@ saved_buttons="$state_home/pneuma/easy-mode-buttons"
 shell_json="$config_home/omarchy/shell.json"
 easy_shell="$config_home/omarchy/shell-easy.json"
 saved_shell="$state_home/pneuma/easy-mode-shell.json"
+saved_target="$state_home/pneuma/easy-mode-shell-target"
 
 # That path is a symlink into the dotfiles repo, which a 15-minute timer
 # auto-commits and pushes to every machine (scripts/dotfiles-sync.sh). Left
@@ -32,47 +34,28 @@ saved_shell="$state_home/pneuma/easy-mode-shell.json"
 # config, and the copy that undoes it lives in ~/.local/state, which does not
 # travel -- so no other machine can put it back. Marking the file skip-worktree
 # for the duration keeps `git add -A` off it; HEAD stays the real config.
-shell_repo=$(git -C "$(dirname "$(realpath "$shell_json")")" rev-parse --show-toplevel 2>/dev/null || true)
+# The shell's atomic writes replace the stow link with a plain file, so keep
+# using its original target to find the repo when easy mode ends.
+if [[ -f $saved_target ]]; then
+  target=$(<"$saved_target")
+else
+  target=$(realpath "$shell_json")
+fi
 
 track_shell() {
+  local shell_repo
+  shell_repo=$(git -C "$(dirname "$target")" rev-parse --show-toplevel 2>/dev/null || true)
   [[ -n $shell_repo ]] || return 0
-  git -C "$shell_repo" update-index "$1" -- "$(realpath --relative-to="$shell_repo" "$shell_json")"
+  git -C "$shell_repo" update-index "$1" -- "$(realpath --relative-to="$shell_repo" "$target")"
 }
 
 # macOS keeps the window buttons on the left. Minimize is deliberately absent:
 # Hyprland ignores xdg_toplevel.set_minimized, so that button would be a dead
-# control. Minimizing lives on the dock (right-click an icon) and on SUPER + M.
+# control. SUPER + M minimizes, and the dock brings the window back.
 easy_buttons='close,maximize:'
 button_key=(org.gnome.desktop.wm.preferences button-layout)
 
 is_on() { [[ -f $flag ]]; }
-
-# Window rules are applied when a window opens, so the rules in easy-mode.lua
-# only reach windows opened from now on. These two bring the windows that are
-# already on screen across with them. `window.float` is a toggle, hence the
-# state guard on each one.
-float_open_windows() {
-  hyprctl eval '
-    for _, w in ipairs(hl.get_windows()) do
-      if not w.floating then hl.dispatch(hl.dsp.window.float({ window = w })) end
-    end' >/dev/null
-}
-
-# The reverse, minus the windows Omarchy floats on purpose whatever the mode --
-# pickers, 1Password, the TUI apps. They carry the `floating-window` tag, which
-# is reported with a trailing marker when the tag was applied by a rule.
-tile_open_windows() {
-  hyprctl eval '
-    for _, w in ipairs(hl.get_windows()) do
-      local keep_floating = false
-      for _, tag in ipairs(w.tags or {}) do
-        if tostring(tag):match("^floating%-window") then keep_floating = true end
-      end
-      if w.floating and not keep_floating then
-        hl.dispatch(hl.dsp.window.float({ window = w }))
-      end
-    end' >/dev/null
-}
 
 apply_easy_shell() {
   [[ -f $easy_shell ]] || return 0
@@ -110,7 +93,13 @@ enable() {
   if ! is_on; then
     gsettings get "${button_key[@]}" >"$saved_buttons"
     cp "$shell_json" "$saved_shell"
+    realpath "$shell_json" >"$saved_target"
+    if [[ -f $layout_default ]]; then
+      cp "$layout_default" "$saved_layout"
+    fi
   fi
+  mkdir -p "${layout_default%/*}"
+  printf '%s\n' 'o.workspace_mode({ default = "floating" })' >"$layout_default"
   cp "$source_file" "$flag"
   gsettings set "${button_key[@]}" "$easy_buttons"
   track_shell --skip-worktree
@@ -119,6 +108,11 @@ enable() {
 
 disable() {
   rm -f "$flag"
+  if [[ -f $saved_layout ]]; then
+    mv "$saved_layout" "$layout_default"
+  else
+    rm -f "$layout_default"
+  fi
   if [[ -s $saved_buttons ]]; then
     gsettings set "${button_key[@]}" "$(<"$saved_buttons")"
     rm -f "$saved_buttons"
@@ -128,11 +122,16 @@ disable() {
   # Restoring the whole file, not just the bar subtree: this is the copy taken
   # before easy mode touched it, so the stowed shell.json comes back byte for
   # byte. Bar edits made *during* easy mode are discarded with it.
+  # Atomic shell saves can detach the stow link: restore the repo file and
+  # reconnect it, so later edits still reach the file the sync timer tracks.
   if [[ -s $saved_shell ]]; then
-    cp "$saved_shell" "$shell_json"
-    rm -f "$saved_shell"
+    cp "$saved_shell" "$target"
+    if [[ ! -L $shell_json || $(realpath "$shell_json") != "$target" ]]; then
+      ln -sfn --relative "$target" "$shell_json"
+    fi
   fi
   track_shell --no-skip-worktree
+  rm -f "$saved_shell" "$saved_target"
 }
 
 case "${1:-toggle}" in
@@ -152,11 +151,10 @@ case "${1:-toggle}" in
 esac
 
 hyprctl reload >/dev/null
+omarchy-shell -q omarchy.dock refresh >/dev/null
 
 if is_on; then
-  float_open_windows
   notify-send -u low "Easy mode on" "Windows float, the dock is out, and clicking focuses."
 else
-  tile_open_windows
   notify-send -u low "Easy mode off" "Back to tiling."
 fi

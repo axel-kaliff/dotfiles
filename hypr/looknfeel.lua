@@ -293,7 +293,8 @@ if hyprglass_file then
     -- shadows at <=0.3, so 0.5 keeps them out. Contour gives each card its own
     -- edge, lens and highlights instead of the screen rectangle; 0.5 excludes
     -- the 0.35 scrims but keeps every card. Polkit needs 0.7 to exclude its
-    -- 0.5 scrim under an ~0.86 card. pneuma-dock exists only in easy mode.
+    -- 0.5 scrim under an ~0.86 card. omarchy-dock shows only on floating
+    -- workspaces, which easy mode makes every workspace.
     -- omarchy-network-qr stays unglassed: no translucent card, only an opaque
     -- QR code on a 0.78 scrim.
     -- omarchy-keyboard-panel hosts the bar's dropdowns (clock, power, network,
@@ -313,7 +314,7 @@ if hyprglass_file then
       "omarchy-notifications",
       "omarchy-osd",
       "pneuma-switcher",
-      "pneuma-dock",
+      "omarchy-dock",
     }) do
       hg.layer(ns, { mask_mode = "contour", mask_threshold = 0.5 })
     end
