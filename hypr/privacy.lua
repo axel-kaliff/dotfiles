@@ -1,12 +1,16 @@
 -- What leaves the machine and what may read the screen.
 
--- Shell surfaces that carry private text stay out of shared screens:
--- notifications (message previews) and the clipboard history. Hyprland paints
--- nothing where they are in the screencopy stream.
+-- Keep clipboard history out of shared screens and silence notifications below.
+-- Omarchy 4.5 keeps their layer mapped, so blanking it would leave a black strip
+-- in every share.
 hl.layer_rule({
-  match = { namespace = "^(omarchy-notifications|omarchy-clipboard)$" },
+  match = { namespace = "^omarchy-clipboard$" },
   no_screen_share = true,
 })
+
+-- Release only DND enabled here; the runtime flag survives reloads, not reboots.
+local dnd_hold = [[sh -c '[ "$(omarchy-shell notifications isDnd)" = off ] && omarchy-shell notifications setDnd on >/dev/null && touch "$XDG_RUNTIME_DIR/omarchy-share-dnd"']]
+local dnd_release = [[sh -c 'rm "$XDG_RUNTIME_DIR/omarchy-share-dnd" 2>/dev/null && omarchy-shell notifications setDnd off >/dev/null']]
 
 -- Hold off the idle lock while a screen share is running, so a long call or
 -- a presentation never locks the screen mid-sentence. Only sessions that last
@@ -28,6 +32,7 @@ local hold_timer = nil
 
 hl.on("screenshare.state", function(active)
   if active then
+    hl.exec_cmd(dnd_hold)
     if hold_timer then
       hold_timer:set_enabled(false)
     end
@@ -40,6 +45,7 @@ hl.on("screenshare.state", function(active)
     return
   end
 
+  hl.exec_cmd(dnd_release)
   if hold_timer then
     hold_timer:set_enabled(false)
     hold_timer = nil
