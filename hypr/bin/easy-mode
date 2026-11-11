@@ -15,8 +15,9 @@ config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 flag="$state_home/omarchy/toggles/hypr/easy-mode.lua"
 source_file="$config_home/hypr/toggles/easy-mode.lua"
 saved_buttons="$state_home/pneuma/easy-mode-buttons"
-layout_default="$state_home/omarchy/workspace-layouts/default.lua"
-saved_layout="$state_home/pneuma/easy-mode-layout-default.lua"
+layouts_dir="$state_home/omarchy/workspace-layouts"
+layout_default="$layouts_dir/default.lua"
+saved_layouts="$state_home/pneuma/easy-mode-workspace-layouts"
 
 # The shell half. omarchy/shell-easy.json holds a `bar` subtree to swap in and a
 # `removePlugins` list to drop -- the eye-break overlays are not something to
@@ -94,11 +95,15 @@ enable() {
     gsettings get "${button_key[@]}" >"$saved_buttons"
     cp "$shell_json" "$saved_shell"
     realpath "$shell_json" >"$saved_target"
-    if [[ -f $layout_default ]]; then
-      cp "$layout_default" "$saved_layout"
+    # A workspace with its own layout ignores the floating default, and 4.5
+    # saves one on every layout cycle, so set the saved layouts aside while
+    # easy mode is on. Layouts chosen during easy mode are discarded with it,
+    # like bar edits.
+    if [[ -d $layouts_dir ]]; then
+      mv "$layouts_dir" "$saved_layouts"
     fi
   fi
-  mkdir -p "${layout_default%/*}"
+  mkdir -p "$layouts_dir"
   printf '%s\n' 'o.workspace_mode({ default = "floating" })' >"$layout_default"
   cp "$source_file" "$flag"
   gsettings set "${button_key[@]}" "$easy_buttons"
@@ -108,10 +113,9 @@ enable() {
 
 disable() {
   rm -f "$flag"
-  if [[ -f $saved_layout ]]; then
-    mv "$saved_layout" "$layout_default"
-  else
-    rm -f "$layout_default"
+  rm -rf "$layouts_dir"
+  if [[ -d $saved_layouts ]]; then
+    mv "$saved_layouts" "$layouts_dir"
   fi
   if [[ -s $saved_buttons ]]; then
     gsettings set "${button_key[@]}" "$(<"$saved_buttons")"
