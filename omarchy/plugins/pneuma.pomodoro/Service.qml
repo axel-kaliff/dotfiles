@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "Model.js" as Model
+import "Link.js" as Link
 
 // Singleton pomodoro engine. Declared as a `service` kind so the shell loads
 // exactly one of these per session: a bar surface exists per monitor, so an
@@ -303,6 +304,7 @@ Item {
   Component.onCompleted: {
     ensureStateDir.running = true
     Qt.callLater(function () { stateFile.reload() })
+    Link.service = root
   }
 
   // --------------------------------------------------------------- IPC

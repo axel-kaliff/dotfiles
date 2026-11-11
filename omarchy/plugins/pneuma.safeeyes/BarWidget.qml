@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Commons
 import qs.Ui
+import "Link.js" as Link
 
 // A pause/resume toggle for the eye-break engine that lives visually inside
 // the omarchy.indicators cluster: place it directly beside that widget in
@@ -10,15 +11,12 @@ BarWidget {
   id: root
   moduleName: "pneuma.safeeyes"
 
-  // serviceFor() is a function call, not a property, so a binding on it would
-  // never re-evaluate once the shell finishes constructing the service.
-  // Resolve by identity and retry until it exists (mirrors pneuma.pomodoro).
+  // The service registers itself in Link.js once constructed, so the widget
+  // retries until it is there.
   property var eyes: null
 
   function resolveService() {
-    var found = bar && bar.shell && typeof bar.shell.serviceFor === "function"
-      ? bar.shell.serviceFor(root.moduleName)
-      : null
+    var found = Link.service
     if (found && found !== eyes) eyes = found
   }
 

@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
 import "Model.js" as Model
+import "Link.js" as Link
 
 // Eye-break engine ported from soramanew/safeeyes (the caelestia desktop's
 // break app): a short look-away break on a fixed cadence, every fourth break
@@ -160,7 +161,10 @@ Item {
     onTriggered: root.enable()
   }
 
-  Component.onCompleted: scheduleNext()
+  Component.onCompleted: {
+    scheduleNext()
+    Link.service = root
+  }
 
   // ------------------------------------------------------------------ IPC
 

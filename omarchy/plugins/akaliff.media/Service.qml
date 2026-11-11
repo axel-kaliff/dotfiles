@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import "MediaModel.js" as MediaModel
+import "Link.js" as Link
 
 Item {
   id: root
@@ -460,7 +461,10 @@ Item {
   // syncPlayingOrder only depends on the set of players and each player's
   // isPlaying state: onPlayersChanged covers players appearing/disappearing,
   // and the Instantiator wires isPlayingChanged for each live player.
-  Component.onCompleted: root.syncPlayingOrder()
+  Component.onCompleted: {
+    root.syncPlayingOrder()
+    Link.service = root
+  }
   onPlayersChanged: root.syncPlayingOrder()
 
   Instantiator {

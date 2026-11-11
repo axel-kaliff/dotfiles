@@ -2,12 +2,28 @@ import QtQuick
 import Quickshell
 import qs.Ui
 import qs.Commons
+import "Link.js" as Link
 
 BarWidget {
   id: root
   moduleName: "akaliff.media"
 
-  readonly property var mediaService: bar?.shell?.serviceFor(root.moduleName)
+  property var mediaService: null
+
+  function resolveService() {
+    var found = Link.service
+    if (found && found !== mediaService) mediaService = found
+  }
+
+  onBarChanged: resolveService()
+
+  Timer {
+    interval: 400
+    repeat: true
+    running: root.mediaService === null
+    onTriggered: root.resolveService()
+  }
+
   readonly property var activePlayer: mediaService ? mediaService.activePlayer : null
   readonly property var sourcePlayers: mediaService ? mediaService.sourcePlayers : []
 
@@ -77,7 +93,10 @@ BarWidget {
     onTriggered: root.adoptCurrent()
   }
 
-  Component.onCompleted: syncShown()
+  Component.onCompleted: {
+    resolveService()
+    syncShown()
+  }
   onHasMediaChanged: syncShown()
   onTitleChanged: syncShown()
   onArtistChanged: syncShown()

@@ -4,6 +4,7 @@ import Quickshell.Io
 import qs.Commons
 import qs.Ui
 import "Model.js" as Model
+import "Link.js" as Link
 
 // The bar pill and its transport popup. Deliberately stateless: every value
 // painted here is read off the `pneuma.pomodoro` service singleton, so both
@@ -12,18 +13,15 @@ BarWidget {
   id: root
   moduleName: "pneuma.pomodoro"
 
-  // serviceFor() is a function call, not a property, so a binding on it would
-  // never re-evaluate once the shell finishes constructing the service.
-  // Resolve it once and retry until it exists.
+  // The service registers itself in Link.js once constructed, so the widget
+  // retries until it is there.
   property var pomo: null
 
   // Keyed on identity rather than "have we resolved yet": a plugin code reload
   // builds a fresh service, and a widget that kept the old handle would push
   // its settings into a dead object and read a frozen countdown.
   function resolveService() {
-    var found = bar && bar.shell && typeof bar.shell.serviceFor === "function"
-      ? bar.shell.serviceFor(root.moduleName)
-      : null
+    var found = Link.service
     if (!found || found === pomo) return
     pomo = found
     pushSettings()
