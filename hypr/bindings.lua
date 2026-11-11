@@ -38,6 +38,7 @@ hl.unbind("SUPER + L") -- was: Toggle workspace layout
 
 o.bind("SUPER + ALT + J", "Toggle window split", hl.dsp.layout("togglesplit"))
 o.bind("SUPER + SHIFT + ALT + K", "Keybindings", "omarchy-menu-keybindings")
+hl.unbind("SUPER + ALT + L") -- was: Cycle workspace layout back
 o.bind("SUPER + ALT + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
 
 -- Cheat sheet on SUPER + ALT + K shows zellij, not tmux -- zellij is the
@@ -131,6 +132,7 @@ o.bind("SUPER + SHIFT + L", "Move window right", move_window("r"))
 -- Input language switching on SUPER + SHIFT + SPACE (cycles kb_layout, see
 -- input.lua); the top-bar toggle it displaces moves to SUPER + SHIFT + T.
 hl.unbind("SUPER + SHIFT + SPACE") -- was: Toggle top bar
+hl.unbind("SUPER + SHIFT + T") -- was: Activity
 o.bind_toggle("SUPER + SHIFT + T", "Toggle top bar", "bar")
 o.bind("SUPER + SHIFT + SPACE", "Next keyboard layout", "hyprctl switchxkblayout all next")
 
@@ -294,3 +296,68 @@ hl.bind("SUPER + mouse:273", open_window_menu, { click = true, description = "Wi
 -- SUPER combo does not toggle the overview on the way out of the shortcut;
 -- the swipe gestures and Escape close it just the same.
 hl.bind("SUPER + Super_L", function() hl.exec_cmd("omarchy-shell -q pneuma.overview toggle") end, { release = true })
+
+-- Swap windows in matching workspace slots so each monitor keeps its own block.
+hl.unbind("SUPER + SHIFT + ALT + LEFT")  -- was: Move workspace to left monitor
+hl.unbind("SUPER + SHIFT + ALT + RIGHT") -- was: Move workspace to right monitor
+hl.unbind("SUPER + SHIFT + ALT + UP")    -- was: Move workspace to up monitor
+hl.unbind("SUPER + SHIFT + ALT + DOWN")  -- was: Move workspace to down monitor
+
+local function swap_workspace_with_monitor(direction)
+  return function()
+    local workspace = hl.get_active_workspace()
+    local source = hl.get_active_monitor()
+    local target = hl.get_monitor(direction)
+    if not workspace or workspace.special or workspace.id < 1 or not source or not target
+      or target.name == source.name then
+      return
+    end
+
+    local from = workspace.id
+    local to = o.workspaces.workspace_id(target, (from - 1) % o.workspaces.slots + 1)
+    if to == from then
+      hl.dispatch(hl.dsp.workspace.move({ workspace = tostring(from), monitor = target.name }))
+      o.workspaces.reconcile()
+      return
+    end
+
+    local focused = hl.get_active_window()
+    local outgoing = hl.get_workspace_windows(tostring(from))
+    local destination = hl.get_workspace(to)
+    local incoming = destination and hl.get_workspace_windows(tostring(to)) or {}
+
+    if destination and destination.monitor and destination.monitor.name ~= target.name then
+      hl.dispatch(hl.dsp.workspace.move({ workspace = tostring(to), monitor = target.name }))
+      destination = hl.get_workspace(to)
+    end
+
+    if destination then
+      target:set_workspace({ workspace = destination.name })
+    else
+      hl.dispatch(hl.dsp.focus({ monitor = target.name }))
+      hl.dispatch(hl.dsp.focus({ workspace = tostring(to) }))
+    end
+
+    for _, window in ipairs(outgoing) do
+      hl.dispatch(hl.dsp.window.move({ workspace = tostring(to), follow = false, window = "address:" .. window.address }))
+    end
+    for _, window in ipairs(incoming) do
+      hl.dispatch(hl.dsp.window.move({ workspace = tostring(from), follow = false, window = "address:" .. window.address }))
+    end
+
+    if focused then
+      for _, window in ipairs(outgoing) do
+        if window.address == focused.address then
+          hl.dispatch(hl.dsp.focus({ window = "address:" .. focused.address }))
+          return
+        end
+      end
+    end
+    hl.dispatch(hl.dsp.focus({ monitor = target.name }))
+  end
+end
+
+o.bind("SUPER + SHIFT + ALT + LEFT", "Swap workspace with left monitor", swap_workspace_with_monitor("l"))
+o.bind("SUPER + SHIFT + ALT + RIGHT", "Swap workspace with right monitor", swap_workspace_with_monitor("r"))
+o.bind("SUPER + SHIFT + ALT + UP", "Swap workspace with up monitor", swap_workspace_with_monitor("u"))
+o.bind("SUPER + SHIFT + ALT + DOWN", "Swap workspace with down monitor", swap_workspace_with_monitor("d"))

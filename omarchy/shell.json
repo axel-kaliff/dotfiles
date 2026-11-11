@@ -21,7 +21,6 @@
         {
           "id": "omarchy.indicators",
           "items": [
-            "Dictation",
             "ScreenRecording",
             "Reminder",
             "NightLight",

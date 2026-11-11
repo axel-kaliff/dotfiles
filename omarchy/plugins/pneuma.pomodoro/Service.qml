@@ -74,6 +74,7 @@ Item {
     : 0
 
   readonly property string notifyBin: (omarchyPath !== "" ? omarchyPath + "/bin/" : "") + "omarchy-notification-send"
+  readonly property string shellBin: (omarchyPath !== "" ? omarchyPath + "/bin/" : "") + "omarchy-shell"
 
   // ------------------------------------------------------------ focus mode
 
@@ -81,27 +82,17 @@ Item {
   onFocusTickingChanged: syncDnd()
   onFocusDndChanged: syncDnd()
 
-  // The notification daemon runs in this same shell process, so DND is a
-  // property write on its service rather than a round trip through IPC. The
-  // clone keeps the first-party id in the registry; the fallback covers a
-  // shell that registers it under the clone's own id.
-  function notificationService() {
-    if (!shell || typeof shell.serviceFor !== "function") return null
-    return shell.serviceFor("omarchy.notifications") || shell.serviceFor("akaliff.notifications")
-  }
-
+  // DND belongs to the notifications plugin, whose service object Omarchy
+  // no longer lets other plugins reach, so this hold goes over its IPC.
   function syncDnd() {
-    var service = notificationService()
-    if (!service) return
     if (focusTicking && focusDnd) {
-      if (!dndHeld && !service.doNotDisturb) {
-        service.setDoNotDisturb(true)
-        dndHeld = true
-        scheduleSave()
+      if (!dndHeld && !dndProc.running) {
+        dndProc.command = ["sh", "-c", "[ \"$(\"$1\" notifications isDnd)\" = off ] && \"$1\" notifications setDnd on >/dev/null && echo held", "sh", root.shellBin]
+        dndProc.running = true
       }
     } else if (dndHeld) {
       dndHeld = false
-      service.setDoNotDisturb(false)
+      Quickshell.execDetached([root.shellBin, "notifications", "setDnd", "off"])
       scheduleSave()
     }
   }
@@ -299,6 +290,19 @@ Item {
   Process {
     id: ensureStateDir
     command: ["mkdir", "-p", root.stateDir]
+  }
+
+  Process {
+    id: dndProc
+    stdout: StdioCollector {
+      onStreamFinished: {
+        if (text.trim() === "held") {
+          root.dndHeld = true
+          root.scheduleSave()
+          root.syncDnd()
+        }
+      }
+    }
   }
 
   Component.onCompleted: {
