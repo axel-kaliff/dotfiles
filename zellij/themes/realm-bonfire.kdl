@@ -1,0 +1,129 @@
+// realm-bonfire (Dark Souls) from github.com/wizseh/terminal-realms zellij-themes/realm-bonfire.kdl (MIT)
+themes {
+    realm-bonfire {
+        text_unselected {
+            base 255 174 1
+            background 9 9 9
+            emphasis_0 254 135 0
+            emphasis_1 255 214 2
+            emphasis_2 254 69 0
+            emphasis_3 255 95 0
+        }
+        text_selected {
+            base 255 226 190
+            background 26 13 8
+            emphasis_0 254 135 0
+            emphasis_1 255 214 2
+            emphasis_2 254 69 0
+            emphasis_3 255 95 0
+        }
+        ribbon_unselected {
+            base 255 174 1
+            background 26 13 8
+            emphasis_0 254 69 0
+            emphasis_1 255 214 2
+            emphasis_2 254 135 0
+            emphasis_3 255 95 0
+        }
+        ribbon_selected {
+            base 8 8 8
+            background 254 135 0
+            emphasis_0 26 13 8
+            emphasis_1 254 69 0
+            emphasis_2 255 214 2
+            emphasis_3 255 95 0
+        }
+        table_title {
+            base 254 135 0
+            background 9 9 9
+            emphasis_0 255 214 2
+            emphasis_1 254 69 0
+            emphasis_2 255 174 1
+            emphasis_3 255 95 0
+        }
+        table_cell_unselected {
+            base 255 174 1
+            background 9 9 9
+            emphasis_0 254 135 0
+            emphasis_1 255 214 2
+            emphasis_2 254 69 0
+            emphasis_3 255 95 0
+        }
+        table_cell_selected {
+            base 255 226 190
+            background 26 13 8
+            emphasis_0 254 135 0
+            emphasis_1 255 214 2
+            emphasis_2 254 69 0
+            emphasis_3 255 95 0
+        }
+        list_unselected {
+            base 255 174 1
+            background 9 9 9
+            emphasis_0 254 135 0
+            emphasis_1 255 214 2
+            emphasis_2 254 69 0
+            emphasis_3 255 95 0
+        }
+        list_selected {
+            base 255 226 190
+            background 26 13 8
+            emphasis_0 254 135 0
+            emphasis_1 255 214 2
+            emphasis_2 254 69 0
+            emphasis_3 255 95 0
+        }
+        frame_unselected {
+            base 122 58 18
+            background 9 9 9
+            emphasis_0 255 174 1
+            emphasis_1 254 135 0
+            emphasis_2 254 69 0
+            emphasis_3 255 214 2
+        }
+        frame_selected {
+            base 254 135 0
+            background 9 9 9
+            emphasis_0 255 214 2
+            emphasis_1 254 69 0
+            emphasis_2 255 174 1
+            emphasis_3 255 95 0
+        }
+        frame_highlight {
+            base 254 69 0
+            background 9 9 9
+            emphasis_0 255 214 2
+            emphasis_1 254 135 0
+            emphasis_2 255 174 1
+            emphasis_3 255 95 0
+        }
+        exit_code_success {
+            base 254 135 0
+            background 9 9 9
+            emphasis_0 255 214 2
+            emphasis_1 254 135 0
+            emphasis_2 254 69 0
+            emphasis_3 255 174 1
+        }
+        exit_code_error {
+            base 230 0 1
+            background 9 9 9
+            emphasis_0 255 214 2
+            emphasis_1 254 135 0
+            emphasis_2 254 69 0
+            emphasis_3 255 174 1
+        }
+        multiplayer_user_colors {
+            player_1 254 135 0
+            player_2 254 69 0
+            player_3 255 214 2
+            player_4 255 174 1
+            player_5 255 95 0
+            player_6 255 226 190
+            player_7 122 58 18
+            player_8 230 0 1
+            player_9 254 135 0
+            player_10 254 69 0
+        }
+    }
+}

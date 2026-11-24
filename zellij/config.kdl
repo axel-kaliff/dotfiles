@@ -370,9 +370,9 @@ load_plugins {
 // Shell: fish preferred (use full path — Zellij needs a binary, not a script)
 default_shell "/home/linuxbrew/.linuxbrew/bin/fish"
 
-// Palette lives in themes/nordfox.kdl, which zellij auto-loads from the config
-// dir — it used to be inlined here and in config.r2d2.kdl, two copies to drift.
-theme "nordfox"
+// Palette lives in themes/realm-bonfire.kdl (Dark Souls, from
+// wizseh/terminal-realms), which zellij auto-loads from the config dir.
+theme "realm-bonfire"
 pane_frames true
 // 0.45 default became "titles" (a single title line per pane); keep the
 // classic full rounded border — flip to "titles" to try the new look

@@ -3,6 +3,8 @@ command = /home/linuxbrew/.linuxbrew/bin/fish
 #theme = Mariana
 #theme = Relaxed
 #theme = control-room
+# Dark Souls bonfire palette, themes/bonfire (from wizseh/terminal-realms).
+theme = bonfire
 title = Ghostty 👻
 # No header bar: the compositor draws nothing either, as on Hyprland.
 window-decoration = none
@@ -38,7 +40,6 @@ copy-on-select = clipboard
 # --- Cursor ---
 cursor-style = bar
 cursor-style-blink = false
-cursor-color = cell-foreground
 mouse-hide-while-typing = true
 cursor-click-to-move = true
 
