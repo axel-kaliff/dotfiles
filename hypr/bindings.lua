@@ -136,19 +136,28 @@ hl.unbind("SUPER + SHIFT + T") -- was: Activity
 o.bind_toggle("SUPER + SHIFT + T", "Toggle top bar", "bar")
 o.bind("SUPER + SHIFT + SPACE", "Next keyboard layout", "hyprctl switchxkblayout all next")
 
--- File manager: yazi (TUI) instead of Nautilus.
+-- File manager: flea where the image ships it (pneuma build/42-flea.sh), yazi elsewhere.
 -- Nautilus stays installed as the GUI fallback -- it is still the xdg handler
 -- for inode/directory, so "open containing folder" from other apps uses it.
 hl.unbind("SUPER + SHIFT + F")       -- was: File manager (nautilus)
 hl.unbind("SUPER + ALT + SHIFT + F") -- was: File manager cwd (nautilus-cwd)
 
--- Persistent session: yazi-session restores the last instance's tabs
--- (auto-saved on quit by the projects.yazi plugin, see yazi/init.lua).
-o.bind("SUPER + SHIFT + F", "File manager",
-  "omarchy-launch-or-focus-tui --app-id=org.omarchy.yazi "
-  .. os.getenv("HOME") .. "/.config/hypr/bin/yazi-session")
-o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
-  os.getenv("HOME") .. "/.config/hypr/bin/yazi-cwd")
+local flea_file = io.open("/usr/bin/flea", "r")
+if flea_file then
+  flea_file:close()
+  o.bind("SUPER + SHIFT + F", "File manager",
+    'omarchy-launch-or-focus com.thisisgm.flea "flea --gui"')
+  o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
+    'flea --gui "$(omarchy-cmd-terminal-cwd)"')
+else
+  -- Persistent session: yazi-session restores the last instance's tabs
+  -- (auto-saved on quit by the projects.yazi plugin, see yazi/init.lua).
+  o.bind("SUPER + SHIFT + F", "File manager",
+    "omarchy-launch-or-focus-tui --app-id=org.omarchy.yazi "
+    .. os.getenv("HOME") .. "/.config/hypr/bin/yazi-session")
+  o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
+    os.getenv("HOME") .. "/.config/hypr/bin/yazi-cwd")
+end
 
 -- MX Keys screenshot button. The keyboard sends the Windows snipping-tool
 -- combo (Left Win + Shift + S) in firmware; altwin:swap_lalt_lwin in input.lua
