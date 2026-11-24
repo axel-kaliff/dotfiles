@@ -19,9 +19,10 @@ README\.md
 CHEATSHEET\.md
 docs
 
-# Omarchy's shell saves shell.json by renaming a new file over the path, which
-# would replace a stow link; dotfiles-sync.sh copies the live file back instead.
+# App-owned files: the app saves them by renaming a new file over the path,
+# which would replace a stow link; dotfiles-sync.sh copies the live file back.
 ^/omarchy/shell\.json$
+^/omarchy/shell\.toml$
 
 # Packages stowed separately, to ~ rather than ~/.config
 bash

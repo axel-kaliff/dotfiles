@@ -54,13 +54,16 @@ if ((deleted_count > MAX_AUTO_DELETIONS)); then
     exit 1
 fi
 
-# omarchy/shell.json is not stowed (.stow-local-ignore): the live file the shell
+# App-owned files are not stowed (.stow-local-ignore): the live file the app
 # writes is the truth, and the repo keeps a copy for history and new machines.
-live_shell_json="$HOME/.config/omarchy/shell.json"
-if [ -f "$live_shell_json" ] && [ ! -L "$live_shell_json" ] \
-    && ! cmp -s "$live_shell_json" omarchy/shell.json; then
-    cp "$live_shell_json" omarchy/shell.json
-fi
+for pair in "$HOME/.config/omarchy/shell.json:omarchy/shell.json" \
+    "$HOME/.config/omarchy/shell.toml:omarchy/shell.toml" \
+    "$HOME/.claude/settings.json:claude/.claude/settings.json"; do
+    live=${pair%%:*} repo=${pair#*:}
+    if [ -f "$live" ] && [ ! -L "$live" ] && ! cmp -s "$live" "$repo"; then
+        cp "$live" "$repo"
+    fi
+done
 
 # Auto-commit any local changes
 if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then

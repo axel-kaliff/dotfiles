@@ -1,0 +1,3 @@
+# App-owned: Claude Code saves settings.json by renaming over the path, which
+# would replace a stow link; dotfiles-sync.sh copies the live file back.
+^/\.claude/settings\.json$
