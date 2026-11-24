@@ -12,7 +12,7 @@ sync: && deploy
   @git -C ~/dotfiles pull --rebase --autostash
 
 # Stow + select correct machine config
-deploy: stow-dotfiles configure-zellij link-omarchy-skills
+deploy: stow-dotfiles seed-omarchy-shell configure-zellij link-omarchy-skills
   @echo "Deploy complete for {{hostname}}"
 
 # Headless-server deploy (the homeserver's dotfiles-sync unit selects this via
@@ -27,6 +27,11 @@ deploy-server:
   done; \
   ln -sfn "$HOME/dotfiles/starship.toml" "$HOME/.config/starship.toml" || exit 1
   @echo "Deploy complete for {{hostname}} (server allowlist)"
+
+# omarchy/shell.json is not stowed (.stow-local-ignore): seed it on a machine
+# that has none, and never overwrite the live file the shell owns.
+seed-omarchy-shell:
+  @[ -e "$HOME/.config/omarchy/shell.json" ] || { mkdir -p "$HOME/.config/omarchy" && cp "$HOME/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json" && echo "Seeded omarchy shell.json"; }
 
 # Link every omarchy default skill (omarchy, diagnose-crash, ...) into
 # ~/.claude/skills. Created here rather than tracked as symlinks in the claude
