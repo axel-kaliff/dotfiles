@@ -403,7 +403,7 @@ end
 
 # fzf: use fd backend, reverse layout, previews, scroll bindings
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --strip-cwd-prefix'
-set -gx FZF_DEFAULT_OPTS '--layout=reverse --border=rounded --height=~80% --min-height=20 --info=inline-right --scroll-off=3 --cycle --bind=ctrl-/:toggle-preview --bind=ctrl-u:preview-half-page-up --bind=ctrl-d:preview-half-page-down --bind=ctrl-space:toggle+down'
+set -gx FZF_DEFAULT_OPTS '--layout=reverse --border=rounded --height=~80% --min-height=20 --info=inline-right --scroll-off=3 --cycle --bind=ctrl-/:toggle-preview --bind=ctrl-u:preview-half-page-up --bind=ctrl-d:preview-half-page-down --bind=ctrl-space:toggle+down --color=fg:250,hl:208,fg+:255,bg+:236,hl+:214,prompt:208,pointer:214,marker:214,info:95,border:95,spinner:214'
 set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
 set -gx FZF_CTRL_T_OPTS '--preview "[ -d {} ] && eza --all --icons --tree --level=2 --color=always {} || bat --color=always --style=numbers,changes --line-range=:200 {}" --preview-window=right:55%:hidden --bind=ctrl-/:toggle-preview'
 set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --strip-cwd-prefix'

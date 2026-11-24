@@ -1,0 +1,49 @@
+// bonfire realm
+//  Tab "Bonfire": Firelink Shrine (your shell with the realm screen) | The Forge (nvim) over Embers + Vitals
+//  Tab "Camp":    Wanderer | Unclaimed over Skies (weather) + Ashfall + The Bard (music)
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=1 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+    tab name="Bonfire" focus=true split_direction="vertical" {
+        pane size="43%" borderless=true name="Firelink Shrine" focus=true command="/home/linuxbrew/.linuxbrew/bin/fish"
+        pane split_direction="horizontal" {
+            pane size="65%" name="The Forge" command="nvim"
+            pane split_direction="vertical" {
+                pane size="42%" name="Embers" command="sh" {
+                    args "-c" "exec python3 \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/embers\" --fps 7"
+                }
+                pane name="Vitals" command="sh" {
+                    args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/stats\""
+                }
+            }
+        }
+    }
+    tab name="Camp" split_direction="horizontal" {
+        pane size="60%" split_direction="vertical" {
+            pane name="Wanderer" command="sh" {
+                args "-c" "REALM_QUIET=1 exec /home/linuxbrew/.linuxbrew/bin/fish"
+            }
+            pane name="Unclaimed" command="sh" {
+                args "-c" "REALM_QUIET=1 exec /home/linuxbrew/.linuxbrew/bin/fish"
+            }
+        }
+        pane split_direction="vertical" {
+            pane size="33%" name="Skies" command="sh" {
+                args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/skies\""
+            }
+            pane size="34%" name="Ashfall" command="sh" {
+                args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/ashfall\""
+            }
+            pane name="The Bard" command="sh" {
+                args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/bard\""
+            }
+        }
+    }
+}

@@ -1,0 +1,179 @@
+#!/usr/bin/perl
+# Ashfall: a small coiled-sword bonfire under a ruined skyline. Embers rise, ash drifts down.
+# Fits whatever pane it is in. Ctrl+C to stop.   ASHFALL_FPS=20 (frames per second)
+use strict; use warnings; use utf8;
+use Time::HiRes qw(time sleep);
+binmode STDOUT, ':encoding(UTF-8)'; $| = 1;
+
+my $FPS = $ENV{ASHFALL_FPS} || 20;
+my ($R, $C) = (24, 60);
+sub get_size {
+    my $s = `stty size </dev/tty 2>/dev/null`;
+    if (defined $s && $s =~ /(\d+)\s+(\d+)/ && $1 > 0) { ($R, $C) = ($1, $2) }
+    elsif ($ENV{LINES}) { ($R, $C) = ($ENV{LINES}, $ENV{COLUMNS}) }
+}
+my $quit = 0; my $resized = 0;
+$SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { $quit = 1 };
+$SIG{WINCH} = sub { $resized = 1 };
+my $TEST = $ENV{ASHFALL_TEST} || 0;     # render N frames and stop (for testing)
+print "\e[?1049h\e[?25l\e[2J" unless $TEST;
+END { print "\e[0m\e[?25h\e[?1049l" unless $TEST }
+
+sub mix { my ($a, $b, $k) = @_; $k = 0 if $k < 0; $k = 1 if $k > 1; [ map { $a->[$_] + ($b->[$_] - $a->[$_]) * $k } 0 .. 2 ] }
+sub rgb { my ($c) = @_; join ';', map { my $v = int($_ + .5); $v < 0 ? 0 : $v > 255 ? 255 : $v } @$c }
+
+# ---------- scene, rebuilt on resize ----------
+my (@sky, $FX, $FW, $FH, $FY, $GY, @fire, @stars, @embers, @ash, $MX, $MY);
+my @RUIN = (44, 33, 31);   my @RUIN_LIT = (120, 46, 18);
+sub build {
+    get_size();
+    $GY = $R - 1;                                  # ground row
+    $FW = int($C / 4); $FW = 9 if $FW < 9; $FW = 19 if $FW > 19; $FW |= 1;
+    $FH = $R >= 14 ? 5 : ($R >= 10 ? 4 : 3);
+    $FX = int(($C - $FW) / 2); $FY = $GY - $FH;   # fire box top-left
+    @fire = map { [ (0) x $FW ] } 1 .. $FH * 2;
+    # skyline: arches on the left, broken towers on the right, gap in the middle for the fire
+    @sky = ();
+    srand(41);
+    my $maxh = int($R * .55); $maxh = 3 if $maxh < 3;
+    for my $x (0 .. $C - 1) {
+        my $d = abs($x - $C / 2) / ($C / 2);          # 0 centre .. 1 edge
+        my $h;
+        if ($x < $C / 2) {
+            my $p = $x % 8; my $seg = int($x / 8);
+            my $base = int($maxh * .75); $base = 2 if $base < 2;
+            my $broken = ($seg * 7 + 3) % 5 == 0;           # some lintels have fallen
+            $h = ($p < 2) ? $base + ($seg % 2) : ($broken ? 0 : -$base);   # negative: lintel over an arch opening
+        } else {
+            my $seg = int($x / 4);
+            srand(1000 + $seg); my $tall = int($maxh * (.35 + .65 * $d) * (.55 + rand(.45)));
+            $h = $tall;
+            $h += 2 if ($x % 4 == 1 && rand() < .5);   # spires
+        }
+        $h = 0 if $d < .28;                            # clear ground around the fire
+        push @sky, $h;
+    }
+    srand();
+    @stars = map { [ int(rand($C)), int(rand($R * .5)), rand(6.28) ] } 1 .. int($C * $R / 90) + 3;
+    $MX = int($C * .78); $MY = 1;
+    @embers = (); @ash = ();
+}
+build();
+
+my @FIREPAL = ([0,0,0],[60,12,4],[110,22,6],[160,36,8],[200,58,10],[232,88,14],[250,120,22],[255,155,40],[255,190,70],[255,222,120],[255,244,190]);
+
+my $t0 = time; my $frame = 0;
+while (not $quit) {
+    if ($resized) { $resized = 0; build(); print "\e[2J" }
+    my $t = time - $t0;
+    my (@ch, @co);
+    for my $y (0 .. $R - 1) { $ch[$y] = [ (' ') x $C ]; $co[$y] = [ (undef) x $C ] }
+    my $put = sub { my ($x, $y, $c, $col, $bg) = @_; return if $x < 0 || $y < 0 || $x >= $C || $y >= $R; $ch[$y][$x] = $c; $co[$y][$x] = '38;2;' . rgb($col) . (defined $bg ? ';48;2;' . rgb($bg) : ';49') };
+
+    # fire simulation (doom-fire style), stepped at half the frame rate for a calmer burn
+    my $flick = .85 + .15 * sin($t * 3.2) * sin($t * 1.4);
+    if ($frame % 2 == 0) {
+    for my $x (0 .. $FW - 1) {
+        my $edge = 1 - abs($x - ($FW - 1) / 2) / (($FW - 1) / 2 + 1);
+        $fire[2 * $FH - 1][$x] = int(10 * ($edge ** 1.1) * (.8 + rand(.2)) + .5);
+    }
+    my $PH = 2 * $FH;
+    for my $y (0 .. $PH - 2) {
+        for my $x (0 .. $FW - 1) {
+            my $sx = $x + int(rand(3)) - 1; $sx = 0 if $sx < 0; $sx = $FW - 1 if $sx >= $FW;
+            my $edge = abs($x - ($FW - 1) / 2) / (($FW - 1) / 2 + 1);
+            my $v = $fire[$y + 1][$sx] - int(rand(1.0 + 2.6 * $edge + 10 / $PH));
+            $fire[$y][$x] = $v < 0 ? 0 : $v;
+        }
+    }
+    }
+    my $glow = .55 + .45 * $flick;
+
+    # stars and moon
+    for my $s (@stars) {
+        my $b = .35 + .3 * sin($t * .7 + $s->[2]);
+        $put->($s->[0], $s->[1], $b > .55 ? '+' : '.', [150 * $b + 40, 130 * $b + 35, 120 * $b + 40]);
+    }
+    if ($C > 30 && $R > 8) {
+        my $mc = [190, 162, 122]; my $dk = [150, 124, 92];
+        my @m = (' ▄██▄ ', '██████', ' ▀██▀ ');
+        for my $r (0 .. 2) { for my $c (0 .. 5) { my $g = substr($m[$r], $c, 1); next if $g eq ' ';
+            $put->($MX + $c, $MY + $r, $g, (($r == 1 && ($c == 1 || $c == 4)) || ($r == 0 && $c == 3)) ? $dk : $mc) } }
+    }
+
+    # ash drifting down
+    if (rand() < $C / 70) { push @ash, { x => rand($C), y => 0, vy => .02 + rand(.045), ph => rand(6.28), b => .5 + rand(.5) } }
+    @ash = grep { $_->{y} < $GY } @ash;
+    for my $a (@ash) {
+        $a->{y} += $a->{vy}; $a->{x} += .05 * sin($t * .5 + $a->{ph});
+        $put->(int($a->{x}), int($a->{y}), $a->{b} > .8 ? '·' : '.', [110 * $a->{b}, 102 * $a->{b}, 96 * $a->{b}]);
+    }
+
+    # ruined skyline, lit by the fire
+    for my $x (0 .. $C - 1) {
+        my $h = $sky[$x]; next unless $h;
+        my $d = abs($x - $C / 2) / ($C / 2);
+        my $col = mix(\@RUIN, \@RUIN_LIT, (1 - $d) ** 2 * $glow * .9);
+        if ($h > 0) {
+            for my $k (0 .. $h - 1) { $put->($x, $GY - 1 - $k, ($k == $h - 1 && $x % 4 == 1 && $x >= $C / 2) ? '▲' : '█', $col) }
+        } else {
+            $put->($x, $GY + $h, '█', $col); $put->($x, $GY + $h + 1, '▀', $col);   # lintel of an arch
+        }
+    }
+    # ground
+    for my $x (0 .. $C - 1) {
+        my $d = abs($x - $C / 2) / ($C / 2);
+        $put->($x, $GY, '▀', mix([38, 26, 22], [150, 60, 18], (1 - $d) ** 3 * $glow));
+    }
+
+    # fire
+    for my $y (0 .. $FH - 1) {
+        for my $x (0 .. $FW - 1) {
+            my ($a, $b) = ($fire[2 * $y][$x], $fire[2 * $y + 1][$x]);
+            my $off = abs($x - ($FW - 1) / 2) / (($FW - 1) / 2 + .5);       # flame tapers toward the tip
+            $a = 0 if $a < 2 || $off > .3 + .7 * (2 * $y) / (2 * $FH);
+            $b = 0 if $b < 2 || $off > .3 + .7 * (2 * $y + 1) / (2 * $FH);
+            next if $a < 1 && $b < 1;
+            if ($a < 1)    { $put->($FX + $x, $FY + $y, '▄', $FIREPAL[$b]) }
+            elsif ($b < 1) { $put->($FX + $x, $FY + $y, '▀', $FIREPAL[$a]) }
+            else           { $put->($FX + $x, $FY + $y, '▀', $FIREPAL[$a], $FIREPAL[$b]) }
+        }
+    }
+    # coiled sword in the flames
+    my $sx = int($C / 2);
+    my $steel = mix([150, 140, 130], [255, 170, 80], .35 * $glow);
+    $put->($sx, $FY - 2, 'o', [120, 96, 70]);
+    $put->($sx - 1, $FY - 1, '═', $steel); $put->($sx, $FY - 1, '╬', $steel); $put->($sx + 1, $FY - 1, '═', $steel);
+    for my $k (0 .. $FH - 2) { $put->($sx, $FY + $k, '║', mix($steel, [255, 140, 40], $k / $FH)) }
+    # stones around the fire
+    for my $x ($FX - 1, $FX + $FW) { $put->($x, $GY, '▄', mix([60, 44, 38], [170, 70, 20], $glow * .7)) }
+
+    # embers rising
+    for (1 .. 1) { push @embers, { x => $FX + $FW / 2 + (rand($FW) - $FW / 2) * .7, y => $FY + 1, vy => .07 + rand(.14), ph => rand(6.28), life => 1 } if rand() < .25 }
+    @embers = grep { $_->{life} > 0 && $_->{y} > 0 } @embers;
+    for my $e (@embers) {
+        $e->{y} -= $e->{vy}; $e->{x} += .18 * sin($t * 1.1 + $e->{ph}) + .02;
+        $e->{life} -= .006 + rand(.008);
+        my $l = $e->{life};
+        my $col = $l > .66 ? mix([255, 120, 30], [255, 220, 120], ($l - .66) * 3) : mix([90, 22, 6], [255, 120, 30], $l * 1.5);
+        $put->(int($e->{x}), int($e->{y}), $l > .8 ? '•' : $l > .35 ? '·' : '.', $col);
+    }
+
+    # draw
+    my $out = "\e[?2026h";
+    for my $y (0 .. $R - 1) {
+        $out .= "\e[" . ($y + 1) . ";1H";
+        my $prev = '';
+        for my $x (0 .. $C - 1) {
+            my $c = $co[$y][$x];
+            if (defined $c && $c ne $prev) { $out .= "\e[${c}m"; $prev = $c }
+            elsif (not defined $c && $prev =~ /48;2/) { $out .= "\e[49m"; $prev = "" }
+            $out .= $ch[$y][$x];
+        }
+    }
+    $out .= "\e[0m\e[?2026l";
+    print $out;
+    $frame++;
+    last if $TEST && $frame >= $TEST;
+    my $d = $t0 + $frame / $FPS - time; sleep($d) if $d > 0;
+}

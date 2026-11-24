@@ -1,0 +1,155 @@
+#!/usr/bin/perl
+# The Bard: shows what Spotify or Apple Music is playing, with controls, plus optional dark-ambient radio.
+#   space  play / pause      n  next      b  previous      r  radio (cycles stations, then off)
+# The radio needs mpv:  brew install mpv
+use strict; use warnings; use utf8;
+use Time::HiRes qw(time sleep);
+binmode STDOUT, ':encoding(UTF-8)'; $| = 1;
+
+my @STATIONS = (
+  ['Drone Zone',   'https://ice.somafm.com/dronezone'],
+  ['Dark Zone',    'https://ice.somafm.com/darkzone'],
+  ['Groove Salad', 'https://ice.somafm.com/groovesalad'],
+);
+my $E = "\e[";
+sub fg { "${E}38;2;$_[0];$_[1];$_[2]m" }
+my %K = (amber => fg(255,176,40), orange => fg(255,128,24), ember => fg(214,72,20), dim => fg(120,100,90),
+         text => fg(228,200,160), steel => fg(150,140,135), dark => fg(70,56,50));
+my $R0 = "${E}0m";
+my $REALM_NAME = ($ENV{REALM} || `cat "$ENV{HOME}/.config/terminal-realms/current" 2>/dev/null` || ""); chomp $REALM_NAME;
+my $FROST = $REALM_NAME =~ /^frost/; my $MONO = $REALM_NAME =~ /^mainframe/;
+%K = (%K, amber => fg(156,196,240), orange => fg(240,180,90), ember => fg(111,200,208), dim => fg(98,112,140),
+          text => fg(200,211,230), steel => fg(140,152,176), dark => fg(40,50,70)) if $FROST;
+%K = (%K, amber => fg(235,235,235), orange => fg(200,200,200), ember => fg(150,150,150), dim => fg(100,100,100),
+          text => fg(214,214,214), steel => fg(140,140,140), dark => fg(44,44,44)) if $MONO;
+# a realm can bring its own look: realms/<name>/panes.pl returns { K => {...}, idle => '...', title => '...', eq => sub {...} }
+my $OV = do { my $f = ($ENV{REALM_HOME} || "$ENV{HOME}/.config/terminal-realms") . "/realms/$REALM_NAME/panes.pl"; -f $f ? do $f : undef };
+%K = (%K, %{ $OV->{K} }) if $OV && $OV->{K};
+my $TEST = $ENV{BARD_TEST};
+
+my $quit = 0; $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { $quit = 1 };
+my $radio_pid; my $station = -1;
+unless ($TEST) { system('stty -icanon -echo min 0 time 0 </dev/tty 2>/dev/null'); print "${E}?1049h${E}?25l" }
+END { kill 'TERM', $radio_pid if $radio_pid; unless ($TEST) { system('stty sane </dev/tty 2>/dev/null'); print "${R0}${E}?25h${E}?1049l" } }
+
+sub size { my $s = `stty size </dev/tty 2>/dev/null`; return ($1, $2) if defined $s && $s =~ /(\d+)\s+(\d+)/ && $1 > 0; return ($ENV{LINES} || 10, $ENV{COLUMNS} || 42) }
+sub running { my $n = shift; system("pgrep -x '$n' >/dev/null 2>&1") == 0 }
+sub have_mpv { system('command -v mpv >/dev/null 2>&1') == 0 }
+
+sub player {
+    return 'Spotify' if running('Spotify');
+    return 'Music' if running('Music');
+    return;
+}
+sub now_playing {     # -> {app, state, title, artist, album, pos, dur}
+    if ($TEST) { return { app => 'Spotify', state => 'playing', title => 'Ashen Lullaby', artist => 'An Ancient Composer', album => 'Songs for the Hollow', pos => 83, dur => 225 } }
+    my $app = player() or return;
+    my $as = qq{tell application "$app"
+  if player state is stopped then return "stopped"
+  set t to current track
+  return (player state as string) & "\x1f" & (name of t) & "\x1f" & (artist of t) & "\x1f" & (album of t) & "\x1f" & ((player position) as integer) & "\x1f" & ((duration of t) as integer)
+end tell};
+    open my $fh, '-|', 'osascript', '-e', $as or return { app => $app, state => 'stopped' };
+    local $/; my $o = <$fh> // ''; close $fh; chomp $o;
+    utf8::decode($o);
+    return { app => $app, state => 'stopped' } if $o eq '' || $o eq 'stopped';
+    my ($st, $ti, $ar, $al, $po, $du) = split /\x1f/, $o;
+    $du = int($du / 1000) if $app eq 'Spotify' && $du && $du > 20000;     # Spotify reports milliseconds
+    return { app => $app, state => $st, title => $ti, artist => $ar, album => $al, pos => $po, dur => $du };
+}
+sub control { my ($app, $cmd) = @_; return unless $app; system('osascript', '-e', qq{tell application "$app" to $cmd}); }
+
+sub radio_next {
+    if ($radio_pid) { kill 'TERM', $radio_pid; waitpid($radio_pid, 0); undef $radio_pid }
+    return unless have_mpv();
+    $station++;
+    if ($station >= @STATIONS) { $station = -1; return }
+    my $pid = fork();
+    if (defined $pid && $pid == 0) {
+        open STDIN, '<', '/dev/null'; open STDOUT, '>', '/dev/null'; open STDERR, '>', '/dev/null';
+        exec 'mpv', '--no-video', '--really-quiet', '--volume=70', $STATIONS[$station][1]; exit 1;
+    }
+    $radio_pid = $pid;
+}
+
+sub mmss { my $s = shift // 0; sprintf('%d:%02d', int($s / 60), $s % 60) }
+sub fit { my ($s, $w) = @_; my $out = ''; my $n = 0; for my $tok (split /(\e\[[0-9;]*m)/, $s) { if ($tok =~ /^\e\[/) { $out .= $tok; next } for my $ch (split //, $tok) { if ($n >= $w) { return $out } $out .= $ch; $n++ } } $out }
+sub clip { my ($s, $w) = @_; $s //= ''; length($s) > $w ? substr($s, 0, $w - 1) . '…' : $s }
+
+my @eq = map { rand() } 1 .. 64;
+my $msg = ''; my $msg_until = 0;
+sub flash { $msg = shift; $msg_until = time + 3 }
+
+sub draw {
+    my ($np, $t) = @_;
+    my ($R, $C) = size();
+    my $W = $C - 4; $W = 10 if $W < 10;
+    my @L;
+    my $src = $np ? $np->{app} : ($station >= 0 ? 'Radio' : '');
+    my $head = "$K{ember}♪ $K{amber}" . ($OV && $OV->{title} ? $OV->{title} : $MONO ? "RADIO" : "THE BARD");
+    my $right = $src ? "$K{dim}$src" : '';
+    my $gap = $C - 10 - length($src) - 1; $gap = 1 if $gap < 1;
+    push @L, $head . (' ' x $gap) . $right, '';
+    my $playing = 0;
+    if ($np && $np->{state} ne 'stopped') {
+        $playing = $np->{state} eq 'playing';
+        push @L, "  $K{amber}\e[1m" . clip($np->{title}, $W) . "\e[22m",
+                 "  $K{text}" . clip($np->{artist}, $W),
+                 "  $K{dim}" . clip($np->{album}, $W);
+    } elsif ($station >= 0) {
+        $playing = 1;
+        push @L, "  $K{amber}\e[1m" . clip("SomaFM · $STATIONS[$station][0]", $W) . "\e[22m",
+                 "  $K{text}live radio", "  $K{dim}r for the next station";
+    } else {
+        push @L, "  $K{text}" . ($OV && $OV->{idle} ? $OV->{idle} : $MONO ? "Dead air." : $FROST ? "Silence at the lodge." : "Silence at the bonfire."),
+                 "  $K{dim}Play something in Spotify or Music,",
+                 "  $K{dim}or press " . (have_mpv() ? 'r for radio.' : 'space to open a player.');
+    }
+    # equalizer
+    my $bars = $W; $bars = 40 if $bars > 40;
+    my @g = (' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█');
+    my $eqs = '';
+    for my $i (0 .. $bars - 1) {
+        if ($playing) { my $target = rand() * (.5 + .5 * sin($t * 2 + $i * .5) ** 2); $eq[$i] += ($target - $eq[$i]) * .5 }
+        else { $eq[$i] *= .8 }
+        my $v = int($eq[$i] * 8 + .5); $v = 1 if $v < 1;
+        my $k = $i / ($bars || 1);
+        my ($r, $gg, $b) = $OV && $OV->{eq} ? $OV->{eq}->($k) : $MONO ? ((int(230 - 120 * $k)) x 3) : $FROST ? (int(100 + 60 * $k), int(214 - 100 * $k), int(170 + 50 * $k)) : (255, int(200 - 130 * $k), int(60 - 50 * $k));
+        $eqs .= ($playing ? fg($r, $gg, $b) : $K{dark}) . $g[$v];
+    }
+    push @L, '', "  $eqs";
+    if ($np && $np->{dur}) {
+        my $pw = $W - 12; $pw = 4 if $pw < 4;
+        my $f = int($pw * ($np->{pos} / $np->{dur})); $f = $pw if $f > $pw;
+        push @L, "  $K{text}" . mmss($np->{pos}) . " $K{orange}" . ('━' x $f) . "$K{dark}" . ('─' x ($pw - $f)) . " $K{text}" . mmss($np->{dur});
+    } else { push @L, '' }
+    push @L, '';
+    if (time < $msg_until) { push @L, "  $K{ember}$msg" }
+    else { push @L, "  $K{orange}␣$K{dim} play  $K{orange}n$K{dim} next  $K{orange}b$K{dim} back  $K{orange}r$K{dim} radio" }
+    # keep the key hints on the bottom row
+    my $hint = pop @L; while (@L < $R - 1) { push @L, '' } splice(@L, $R - 1); push @L, $hint;
+    my $out = "${E}?2026h${E}H";
+    for my $y (0 .. $R - 1) { $out .= fit($L[$y] // '', $C) . "$R0${E}K" . ($y < $R - 1 ? "\r\n" : '') }
+    print $out . "${E}?2026l";
+}
+
+my ($np, $last_poll, $t0) = (undef, 0, time);
+while (not $quit) {
+    if (time - $last_poll > 1) { $np = now_playing(); $last_poll = time }
+    draw($np, time - $t0);
+    last if $TEST;
+    my $rin = ''; vec($rin, fileno(STDIN), 1) = 1;
+    next unless select(my $r = $rin, undef, undef, .12);
+    my $k = ''; sysread(STDIN, $k, 8); $k = substr($k, 0, 1);
+    my $app = $np ? $np->{app} : player();
+    if ($k eq ' ') {
+        if ($app) { control($app, 'playpause') }
+        elsif (-d '/Applications/Spotify.app') { system('open', '-g', '-a', 'Spotify'); flash('Opening Spotify...') }
+        else { system('open', '-g', '-a', 'Music'); flash('Opening Music...') }
+    }
+    elsif ($k eq 'n') { control($app, 'next track') }
+    elsif ($k eq 'b' || $k eq 'p') { control($app, 'previous track') }
+    elsif ($k eq 'r') { if (have_mpv()) { radio_next(); flash($station >= 0 ? "Radio: $STATIONS[$station][0]" : 'Radio off') } else { flash('Radio needs mpv: brew install mpv') } }
+    $last_poll = 0;
+    if ($radio_pid && waitpid($radio_pid, 1) > 0) { undef $radio_pid; $station = -1; flash('Radio stopped (no connection?)') }
+}

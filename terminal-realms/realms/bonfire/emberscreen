@@ -1,0 +1,206 @@
+#!/usr/bin/perl
+# emberscreen: pixel-art bonfire header for the bonfire theme. A coiled sword in a crackling fire on a
+# mound of ash and bone, DARK and SOULS in a pixel font on either side, embers rising.
+# Driven by realms/bonfire/screen.sh (pinned-screen contract shared by every realm).
+#   EMBER_PIN=paint|anim   EMBER_SECS=25   EMBER_MH=<left pad>   BOXTXT=<box rows>
+#   EMBER_FLARE=1 bright burst at the start   EMBER_DIED=1 dim the scene and fade in YOU DIED
+use strict; use warnings; use utf8;
+use Time::HiRes qw(time sleep);
+binmode STDOUT, ':encoding(UTF-8)'; $| = 1;
+
+my $PIN = $ENV{EMBER_PIN} || 'paint';
+my $SECS = $ENV{EMBER_SECS} || 25; my $MH = $ENV{EMBER_MH} || 0;
+my $FPS = $ENV{EMBER_FPS} || 15;
+my $FLARE = $ENV{EMBER_FLARE} ? 1 : 0; my $DIED = $ENV{EMBER_DIED} ? 1 : 0;
+my $BOX = $ENV{BOXTXT} // ''; utf8::decode($BOX);
+my $SHELLPID = $ENV{REALM_SHELL} || 0; my $PIDFILE = $ENV{PIDFILE} || '';
+my $TEST = $ENV{EMBER_TEST} || 0;
+my $TITLE = $ENV{EMBER_TITLE} || 'none';   # extra text title: side | below | none (the pixel letters are always drawn)
+my $quit = 0; $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { $quit = 1 };
+if ($PIN eq 'anim' && $PIDFILE && open(my $pf, '>', $PIDFILE)) { print $pf $$; close $pf }
+END { if ($PIN eq 'anim' && $PIDFILE && open(my $pf, '<', $PIDFILE)) { my $p = <$pf>; close $pf; unlink $PIDFILE if defined $p && $p == $$ } }
+
+sub mix { my ($a, $b, $k) = @_; $k = 0 if $k < 0; $k = 1 if $k > 1; [ map { $a->[$_] + ($b->[$_] - $a->[$_]) * $k } 0 .. 2 ] }
+sub rgb { join ';', map { my $v = int($_ + .5); $v < 0 ? 0 : $v > 255 ? 255 : $v } @{ $_[0] } }
+sub scale { my ($c, $k) = @_; [ map { $_ * $k } @$c ] }
+
+my ($C, $R) = (61, 12); my $PH = $R * 2;
+
+# 4x5 pixel font
+my %F = (
+ D => ['111.','1..1','1..1','1..1','111.'], A => ['.11.','1..1','1111','1..1','1..1'],
+ R => ['111.','1..1','111.','1.1.','1..1'], K => ['1..1','1.1.','11..','1.1.','1..1'],
+ S => ['.111','1...','.11.','...1','111.'], O => ['.11.','1..1','1..1','1..1','.11.'],
+ U => ['1..1','1..1','1..1','1..1','.11.'], L => ['1...','1...','1...','1...','1111'],
+ Y => ['1..1','1..1','.11.','.1..','.1..'], I => ['111.','.1..','.1..','.1..','111.'],
+ E => ['1111','1...','111.','1...','1111'],
+);
+sub word_pixels {   # list of [x, y, row] for a word drawn at (x0, y0)
+    my ($w, $x0, $y0) = @_; my @p; my $x = $x0;
+    for my $ch (split //, $w) {
+        if ($ch eq ' ') { $x += 3; next }
+        my $g = $F{$ch};
+        for my $r (0 .. 4) { for my $c (0 .. 3) { push @p, [$x + $c, $y0 + $r, $r] if substr($g->[$r], $c, 1) eq '1' } }
+        $x += 5;
+    }
+    return @p;
+}
+# letter colours, top row to bottom row. EMBER_LETTERS=bone | gold | steel | fire
+my %LETTERS = (
+  bone  => [[236, 228, 212], [222, 212, 192], [204, 192, 170], [184, 170, 148], [160, 146, 124]],
+  gold  => [[238, 214, 156], [222, 190, 126], [204, 164, 98], [180, 136, 76], [150, 108, 58]],
+  steel => [[214, 214, 218], [192, 192, 198], [170, 168, 174], [168, 140, 120], [178, 104, 64]],
+  fire  => [[255, 215, 0], [255, 200, 0], [255, 135, 0], [245, 95, 0], [230, 40, 0]],
+);
+my @WORDCOL = @{ $LETTERS{$ENV{EMBER_LETTERS} || 'steel'} || $LETTERS{steel} };
+# DARK and SOULS in the same letter shapes as the original bubble art, now solid
+my @DARK  = ('##...#..##..#.#', '#.#.#.#.#.#.#.#', '#.#.###.##..##.', '#.#.#.#.#.#.#.#', '##..#.#.#.#.#.#');
+my @SOULS = ('.##..#..#.#.#....##', '#...#.#.#.#.#...#..', '.#..#.#.#.#.#....#.', '..#.#.#.#.#.#.....#', '##...#..###.###.##.');
+sub bitmap { my ($rows, $x0, $y0) = @_; my @p;
+    for my $r (0 .. $#$rows) { for my $c (0 .. length($rows->[$r]) - 1) { push @p, [$x0 + $c, $y0 + $r, $r] if substr($rows->[$r], $c, 1) eq '#' } }
+    return @p }
+my @dark  = bitmap(\@DARK, 5, 9);
+my @souls = bitmap(\@SOULS, 41, 9);
+my @died  = word_pixels('YOU DIED', 12, 9);
+
+# the mound of ash and bone, and the fire box
+my $CX = 30; my $FW = 13; my $FPH = 13; my $FX = $CX - 6; my $BASE = 20;
+my @mound;
+srand(3);
+for my $y (19 .. 23) {
+    my $hw = 3 + ($y - 19) * 1.6;
+    for my $x (int($CX - $hw) .. int($CX + $hw)) {
+        my $c = rand() < .12 ? [150, 145, 135] : ($x + $y) % 3 ? [70, 64, 62] : [96, 90, 86];
+        push @mound, [$x, $y, $c];
+    }
+}
+my @ash; push @ash, [$_, 23, [52, 46, 46]] for 4 .. 56;
+srand();
+my @fire = map { [ (0) x $FW ] } 1 .. $FPH;
+my @FP = ([0,0,0],[60,12,4],[110,22,6],[160,36,8],[200,58,10],[232,88,14],[250,120,22],[255,155,40],[255,190,70],[255,222,120],[255,244,190]);
+my @embers;
+
+my $t0 = time; my $frame = 0;
+while (1) {
+    my $t = time - $t0 + ($ENV{EMBER_TOFF} || 0);
+    my $flick = .85 + .15 * sin($t * 3.2) * sin($t * 1.4);
+    my $fl = $FLARE && $t < 3 ? (($t / .1) > 1 ? 1 : $t / .1) * exp(-$t / .9) : 0;
+    my $dd = 0;
+    if ($DIED && $t < 3.4) { my $i = $t / .6; $i = 1 if $i > 1; my $o = (3.4 - $t) / 1.2; $o = 1 if $o > 1; $dd = $i < $o ? $i : $o }
+    my $dim = 1 - .75 * $dd;
+
+    for my $warm (1 .. ($frame == 0 ? 30 : ($frame % 2 == 0 ? 1 : 0))) {   # calm fire, stepped at half rate (warmed up on the first frame)
+        for my $x (0 .. $FW - 1) {
+            my $edge = 1 - abs($x - ($FW - 1) / 2) / (($FW - 1) / 2 + 1);
+            my $v = int(10 * ($edge ** 1.1) * (.8 + rand(.2)) + .5 + 2 * $fl); $v = 10 if $v > 10;
+            $fire[$FPH - 1][$x] = $v;
+        }
+        for my $y (0 .. $FPH - 2) { for my $x (0 .. $FW - 1) {
+            my $sx = $x + int(rand(3)) - 1; $sx = 0 if $sx < 0; $sx = $FW - 1 if $sx >= $FW;
+            my $edge = abs($x - ($FW - 1) / 2) / (($FW - 1) / 2 + 1);
+            my $v = $fire[$y + 1][$sx] - int(rand(1.0 + 2.6 * $edge + 10 / $FPH));
+            $fire[$y][$x] = $v < 0 ? 0 : $v;
+        } }
+    }
+    # pixel layer
+    my @pix = map { [ (undef) x $C ] } 1 .. $PH;
+    my $put = sub { my ($x, $y, $c) = @_; $pix[$y][$x] = $c if $x >= 0 && $y >= 0 && $x < $C && $y < $PH };
+    $put->(@$_) for @ash;
+    for my $m (@mound) {
+        my ($x, $y, $c) = @$m;
+        my $d = sqrt((($x - $CX) / 2) ** 2 + ($y - 18) ** 2) / 6;
+        $put->($x, $y, scale(mix($c, [200, 90, 30], (1 - $d) * .5 * $flick + .2 * $fl), $dim));
+    }
+    for my $y (0 .. $FPH - 1) { for my $x (0 .. $FW - 1) {
+        my $v = $fire[$y][$x]; next if $v < 2;
+        my $off = abs($x - ($FW - 1) / 2) / (($FW - 1) / 2 + .5);
+        next if $off > .3 + .7 * $y / $FPH;
+        my $c = $FP[$v]; $c = scale($c, 1 + .3 * $fl) if $fl;
+        $put->($FX + $x, $BASE - $FPH + 1 + $y, scale($c, $dim));
+    } }
+    # coiled sword: twisted blade, crossguard, grip and pommel
+    my $steel = mix([150, 146, 142], [255, 170, 90], .3 * $flick);
+    for my $y (6 .. $BASE) {
+        my $k = (($y - 6) / ($BASE - 6)) ** .8 * .85;
+        my ($l, $d) = (mix($steel, [235, 110, 40], $k), mix(scale($steel, .55), [160, 60, 20], $k));
+        if ($y % 2) { $put->($CX, $y, scale($l, $dim)); $put->($CX + 1, $y, scale($d, $dim)) }
+        else        { $put->($CX, $y, scale($d, $dim)); $put->($CX + 1, $y, scale($l, $dim)) }
+    }
+    $put->($_, 5, scale([84, 74, 64], $dim)) for $CX - 2 .. $CX + 3;
+    $put->($_, 4, scale([60, 52, 46], $dim)) for $CX, $CX + 1;
+    $put->($CX, $_, scale([92, 70, 50], $dim)) for 2, 3;
+    $put->($CX, 1, scale([150, 120, 80], $dim));
+    # the words, with a slow shimmer; they fade out when YOU DIED shows
+    my $wfade = $dd > 0 ? 1 - ($dd / .35 > 1 ? 1 : $dd / .35) : 1;
+    for my $p (@dark, @souls) {                   # soft ember shadow under the letters
+        my ($x, $y) = @$p; my $k = .9 * $wfade;
+        next;   # (shadow off: crisper letters)
+    }
+    for my $p (@dark, @souls) {
+        my ($x, $y, $r) = @$p;
+        my $k = (1 + .1 * sin($t * 1.5 + $x * .14 + $r * .6) + .35 * $fl) * $wfade;
+        $put->($x, $y, scale($WORDCOL[$r], $k)) if $k > .03;
+    }
+    if ($dd > 0) { $put->($_->[0], $_->[1], [215 * $dd, 12 * $dd, 6 * $dd]) for @died }
+
+    # cells
+    my (@ch, @co);
+    for my $y (0 .. $R - 1) { for my $x (0 .. $C - 1) {
+        my ($a, $b) = ($pix[2 * $y][$x], $pix[2 * $y + 1][$x]);
+        if ($a && $b) { $ch[$y][$x] = '▀'; $co[$y][$x] = '38;2;' . rgb($a) . ';48;2;' . rgb($b) }
+        elsif ($a)    { $ch[$y][$x] = '▀'; $co[$y][$x] = '38;2;' . rgb($a) . ';49' }
+        elsif ($b)    { $ch[$y][$x] = '▄'; $co[$y][$x] = '38;2;' . rgb($b) . ';49' }
+        else          { $ch[$y][$x] = ' '; $co[$y][$x] = undef }
+    } }
+    if ($TITLE ne 'none' && $wfade > .03) {
+        my $sh = .9 + .1 * sin($t * .8);
+        my $gold = scale(mix([200, 182, 140], [255, 205, 120], .25 * $flick + .4 * $fl), $sh * $wfade);
+        my @spots = $TITLE eq 'below' ? ([int(($C - 19) / 2), 11, 'D A R K   S O U L S'])
+                                      : ([4, 5, 'D  A  R  K'], [$C - 4 - 13, 5, 'S  O  U  L  S']);
+        for my $sp (@spots) {
+            my ($x0, $y, $txt) = @$sp; my @l = split //, $txt;
+            for my $i (0 .. $#l) { next if $l[$i] eq ' '; $ch[$y][$x0 + $i] = $l[$i]; $co[$y][$x0 + $i] = '1;38;2;' . rgb($gold) . ';49' }
+        }
+        if ($TITLE eq 'side') {    # thin rules under each word
+            for my $sp (@spots) { my ($x0, $y, $txt) = @$sp; for my $i (-1 .. length($txt)) { $ch[$y + 1][$x0 + $i] = '─'; $co[$y + 1][$x0 + $i] = '38;2;' . rgb(scale([120, 60, 30], $wfade)) . ';49' } }
+        }
+    }
+    if ($PIN eq 'paint' && not $TEST) { @embers = map { { x => $CX + rand(8) - 4, y => rand(5), vy => 0, ph => rand(6), life => .3 + rand(.6) } } 1 .. 6 }
+    push @embers, { x => $CX + (rand($FW) - $FW / 2) * .5, y => 5, vy => .06 + rand(.12), ph => rand(6.28), life => 1 } if rand() < .3 + .5 * $fl;
+    @embers = grep { $_->{life} > 0 && $_->{y} > 0 } @embers;
+    for my $e (@embers) {
+        $e->{y} -= $e->{vy}; $e->{x} += .18 * sin($t * 1.1 + $e->{ph}) + .02; $e->{life} -= .006 + rand(.008);
+        my ($x, $y) = (int($e->{x}), int($e->{y})); next if $x < 0 || $x >= $C || $y < 0 || $y >= $R;
+        next if defined $co[$y][$x];
+        my $l = $e->{life};
+        my $col = $l > .66 ? mix([255, 120, 30], [255, 220, 120], ($l - .66) * 3) : mix([90, 22, 6], [255, 120, 30], $l * 1.5);
+        $ch[$y][$x] = $l > .8 ? '•' : $l > .35 ? '·' : '.'; $co[$y][$x] = '38;2;' . rgb(scale($col, $dim)) . ';49';
+    }
+
+    my $o = "\e[?2026h\e7";
+    for my $y (0 .. $R - 1) {
+        $o .= "\e[" . ($y + 1) . ";1H" . (' ' x $MH);
+        my $prev = '';
+        for my $x (0 .. $C - 1) {
+            my $c = $co[$y][$x];
+            if (defined $c) { if ($c ne $prev) { $o .= "\e[${c}m"; $prev = $c } }
+            elsif ($prev ne '') { $o .= "\e[0m"; $prev = '' }
+            $o .= $ch[$y][$x];
+        }
+        $o .= "\e[0m\e[K";
+    }
+    if ($PIN eq 'paint' or $frame % 40 == 0) {
+        my @b = split /\n/, $BOX;
+        $o .= "\e[" . ($R + 1 + $_) . ";1H" . $b[$_] . "\e[0m\e[K" for 0 .. $#b;
+    }
+    $o .= "\e8\e[?2026l";
+    my $ok = print $o;
+    $frame++;
+    last if $TEST && $frame >= $TEST;
+    last if $PIN eq 'paint' && not $TEST;
+    last if not $ok or $quit or $t >= $SECS;
+    last if $SHELLPID && $frame % 40 == 0 && not kill(0, $SHELLPID);
+    my $d = $t0 + $frame / $FPS - time; sleep($d) if $d > 0 and not $TEST;
+}
+# settle: one calm frame so the screen rests on the plain bonfire
+if ($PIN eq 'anim' && ($DIED || $FLARE) && not $quit) { }

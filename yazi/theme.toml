@@ -1,2 +1,82 @@
-[flavor]
-dark = "catppuccin-mocha"
+# bonfire (Dark Souls) theme from github.com/wizseh/terminal-realms realms/bonfire/yazi/theme.toml @ bed69fa4ac0e (MIT)
+[mgr]
+cwd = { fg = "#ff8700", bold = true }
+find_keyword = { fg = "#ffaa00", bold = true, italic = true }
+find_position = { fg = "#ff5f1f", bold = true }
+marker_copied = { fg = "#ffaa00", bg = "#ffaa00" }
+marker_cut = { fg = "#e60000", bg = "#e60000" }
+marker_marked = { fg = "#ff5f1f", bg = "#ff5f1f" }
+marker_selected = { fg = "#ff8700", bg = "#ff8700" }
+count_copied = { fg = "#080808", bg = "#ffaa00" }
+count_cut = { fg = "#080808", bg = "#e60000" }
+count_selected = { fg = "#080808", bg = "#ff8700" }
+border_symbol = "│"
+border_style = { fg = "#5a2a14" }
+
+[indicator]
+parent = { fg = "#080808", bg = "#5a4a42" }
+current = { fg = "#080808", bg = "#ff8700", bold = true }
+preview = { underline = true }
+
+[tabs]
+active = { fg = "#080808", bg = "#ff8700", bold = true }
+inactive = { fg = "#ff8700", bg = "#1a0d08" }
+
+[mode]
+normal_main = { fg = "#080808", bg = "#ff8700", bold = true }
+normal_alt = { fg = "#ff8700", bg = "#1a0d08" }
+select_main = { fg = "#080808", bg = "#ffaa00", bold = true }
+select_alt = { fg = "#ffaa00", bg = "#1a0d08" }
+unset_main = { fg = "#080808", bg = "#e60000", bold = true }
+unset_alt = { fg = "#e60000", bg = "#1a0d08" }
+
+[status]
+perm_type = { fg = "#ff8700" }
+perm_read = { fg = "#ffaa00" }
+perm_write = { fg = "#e60000" }
+perm_exec = { fg = "#ff5f1f" }
+perm_sep = { fg = "#5a4a42" }
+progress_label = { fg = "#e8dccb", bold = true }
+progress_normal = { fg = "#ff8700", bg = "#1a0d08" }
+progress_error = { fg = "#e60000", bg = "#1a0d08" }
+
+[input]
+border = { fg = "#ff8700" }
+title = { fg = "#ff8700" }
+value = { fg = "#e8dccb" }
+selected = { reversed = true }
+
+[confirm]
+border = { fg = "#ff8700" }
+title = { fg = "#ff8700", bold = true }
+btn_yes = { fg = "#080808", bg = "#ff8700", bold = true }
+btn_no = { fg = "#e8dccb" }
+
+[which]
+mask = { bg = "#1a0d08" }
+cand = { fg = "#ffaa00" }
+rest = { fg = "#5a4a42" }
+desc = { fg = "#ff8700" }
+separator_style = { fg = "#5a4a42" }
+
+[tasks]
+border = { fg = "#ff8700" }
+title = { fg = "#ff8700" }
+hovered = { fg = "#080808", bg = "#ff8700" }
+
+[help]
+border = { fg = "#ff8700" }
+chord = { fg = "#ffaa00" }
+action = { fg = "#e8dccb" }
+hovered = { fg = "#080808", bg = "#ff8700" }
+
+[filetype]
+rules = [
+  { url = "*/", fg = "#ff8700", bold = true },
+  { mime = "image/*", fg = "#ffaa00" },
+  { mime = "{audio,video}/*", fg = "#ff5f1f" },
+  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive}", fg = "#e60000" },
+  { url = "*", is = "exec", fg = "#e60000", bold = true },
+  { url = "*", is = "link", fg = "#ff5f1f", italic = true },
+  { url = "*", fg = "#e8dccb" },
+]

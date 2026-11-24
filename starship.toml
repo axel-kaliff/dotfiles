@@ -3,45 +3,31 @@
 command_timeout = 500
 scan_timeout = 30
 
+add_newline = false
+
 format = """
-[](red)\
-$os\
-$username\
-$hostname\
-[](fg:red bg:peach)\
-$directory\
-[](fg:peach bg:yellow)\
-$git_branch\
-$git_status\
-[](fg:yellow bg:green)\
-$nodejs\
-$python\
-$rust\
-$golang\
-$java\
-$lua\
-$c\
-$package\
-[](fg:green bg:sapphire)\
-$docker_context\
-$container\
-$kubernetes\
-$conda\
-[](fg:sapphire bg:mauve)\
-$shlvl\
-$sudo\
-[](fg:mauve)\
+[╭─](peach)[](crust)[  ](fg:peach bg:crust)\
+($username$hostname[ ](fg:peach bg:crust))\
+($git_branch$git_status$git_state[](fg:peach bg:crust))\
+($nodejs$python$rust$golang$java$lua$c$package[](fg:peach bg:crust))\
+($docker_context$container$kubernetes$conda[](fg:peach bg:crust))\
+($shlvl$sudo[](fg:peach bg:crust))\
+$status\
+[](crust)\
 $line_break\
+[╰─](peach)[](peach)\
+$directory\
+[](peach) \
 $character"""
 
-right_format = """$cmd_duration$status$jobs$time"""
+right_format = """$cmd_duration$jobs$time"""
 
-palette = 'nordfox'
+palette = 'bonfire'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  IDENTITY (red)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [os]
-disabled = false
-style = "bg:red fg:crust"
+disabled = true
+style = "bg:crust fg:peach"
 format = '[ $symbol ]($style)'
 
 [os.symbols]
@@ -63,14 +49,14 @@ Windows = ""
 
 [username]
 show_always = false
-style_user = "bg:red fg:crust"
-style_root = "bg:red fg:crust bold"
+style_user = "bg:crust fg:peach"
+style_root = "bg:crust fg:peach bold"
 format = '[ $user]($style)'
 
 [hostname]
 ssh_only = true
 ssh_symbol = " "
-style = "bg:red fg:crust"
+style = "bg:crust fg:peach"
 format = '[ $ssh_symbol$hostname]($style)'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  DIRECTORY (peach)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -96,15 +82,15 @@ read_only_style = "bg:peach fg:crust"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  GIT (yellow)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [git_branch]
 symbol = ""
-style = "bg:yellow"
-format = '[[ $symbol $branch ](fg:crust bg:yellow)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $branch ](fg:green bg:crust)]($style)'
 truncation_length = 24
 truncation_symbol = "…"
 
 [git_status]
 disabled = false
-style = "bg:yellow"
-format = '[[($all_status$ahead_behind )](fg:crust bg:yellow)]($style)'
+style = "bg:crust"
+format = '[[($all_status$ahead_behind )](fg:green bg:crust)]($style)'
 ahead = "⇡${count}"
 behind = "⇣${count}"
 diverged = "⇡${ahead_count}⇣${behind_count}"
@@ -118,8 +104,8 @@ stashed = "≡"
 
 [git_state]
 disabled = false
-style = "bg:yellow"
-format = '[[\($state( $progress_current/$progress_total)\) ](fg:crust bg:yellow)]($style)'
+style = "bg:crust"
+format = '[[\($state( $progress_current/$progress_total)\) ](fg:green bg:crust)]($style)'
 rebase = "REBASE"
 merge = "MERGE"
 revert = "REVERT"
@@ -131,69 +117,69 @@ am_or_rebase = "AM/REBASE"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  LANGUAGES (green)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [nodejs]
 symbol = "󰎙"
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 
 [python]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol $version( \($virtualenv\)) ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version( \($virtualenv\)) ](fg:peach bg:crust)]($style)'
 pyenv_version_name = false
 python_binary = "python"
 
 [rust]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 
 [golang]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 
 [java]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 
 [lua]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 
 [c]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 
 [package]
 disabled = false
 symbol = "󰏗"
-style = "bg:green"
-format = '[[ $symbol $version ](fg:crust bg:green)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $version ](fg:peach bg:crust)]($style)'
 display_private = false
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  CONTEXT (sapphire)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [docker_context]
 symbol = ""
-style = "bg:sapphire"
-format = '[[ $symbol $context ](fg:crust bg:sapphire)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $context ](fg:peach bg:crust)]($style)'
 only_with_files = true
 
 [container]
-style = "bg:sapphire"
-format = '[[ 󰡨 $name ](fg:crust bg:sapphire)]($style)'
+style = "bg:crust"
+format = '[[ 󰡨 $name ](fg:peach bg:crust)]($style)'
 
 [kubernetes]
 disabled = false
 symbol = "󱃾"
-style = "bg:sapphire"
-format = '[[ $symbol $context( \($namespace\)) ](fg:crust bg:sapphire)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $context( \($namespace\)) ](fg:peach bg:crust)]($style)'
 
 [conda]
 symbol = ""
-style = "bg:sapphire"
-format = '[[ $symbol $environment ](fg:crust bg:sapphire)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $environment ](fg:peach bg:crust)]($style)'
 ignore_base = true
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  STATE (mauve)  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -201,15 +187,15 @@ ignore_base = true
 disabled = false
 threshold = 2
 symbol = ""
-style = "bg:mauve"
-format = '[[ $symbol $shlvl ](fg:crust bg:mauve)]($style)'
+style = "bg:crust"
+format = '[[ $symbol $shlvl ](fg:peach bg:crust)]($style)'
 repeat = false
 
 [sudo]
 disabled = false
 symbol = ""
-style = "bg:mauve"
-format = '[[ $symbol ](fg:crust bg:mauve)]($style)'
+style = "bg:crust"
+format = '[[ $symbol ](fg:peach bg:crust)]($style)'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  RIGHT SIDE  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
 [cmd_duration]
@@ -223,13 +209,15 @@ min_time_to_notify = 60000
 
 [status]
 disabled = false
-style = "fg:red bold"
-symbol = "✘"
-success_symbol = ""
-format = '[ $symbol $status ]($style)'
+style = "bg:crust fg:red"
+success_style = "bg:crust fg:peach"
+symbol = " YOU DIED"
+success_symbol = ""
+format = '[ $symbol ]($style)'
 recognize_signal_code = true
-map_symbol = true
+map_symbol = false
 pipestatus = true
+pipestatus_format = '[ $symbol ]($style)'
 
 [jobs]
 disabled = false
@@ -260,10 +248,38 @@ vimcmd_replace_symbol = '[❮](bold fg:lavender)'
 vimcmd_visual_symbol = '[❮](bold fg:yellow)'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~  PALETTE  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+[palettes.bonfire]
+red = "#e60000"
+peach = "#fb7e14"
+yellow = "#ffb000"
+green = "#D4E157"
+teal = "#c9a66b"
+sky = "#e8c88a"
+sapphire = "#d9822b"
+blue = "#d9822b"
+lavender = "#fb7e14"
+mauve = "#b5503a"
+pink = "#ff7a5c"
+rosewater = "#e8dccb"
+flamingo = "#f5ebdc"
+maroon = "#e03a1e"
+text = "#e8dccb"
+subtext1 = "#d9cbb8"
+subtext0 = "#c9a66b"
+overlay2 = "#a3795f"
+overlay1 = "#875f5f"
+overlay0 = "#5a4a42"
+surface2 = "#4a3026"
+surface1 = "#38231b"
+surface0 = "#1a0d08"
+base = "#080808"
+mantle = "#090909"
+crust = "#292929"
+
 # Nordfox (EdenEast/nightfox.nvim), matching the nvim, zellij and fish themes —
 # the prompt was the odd one out on Catppuccin Mocha. The catppuccin key names
 # are kept deliberately so every format string above works unchanged; only the
-# values differ. yazi is still Catppuccin: its theme is a packaged flavor.
+# values differ.
 [palettes.nordfox]
 # Accents
 red = "#bf616a"

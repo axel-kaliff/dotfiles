@@ -1,0 +1,172 @@
+#!/usr/bin/perl
+# Skies: weather for Wyoming, MI 49418 from Open-Meteo (free, no account). Refreshes every 10 minutes.
+# Press any key to refresh now. Ctrl+C to stop.
+use strict; use warnings; use utf8;
+use JSON::PP; use POSIX qw(floor);
+use Time::HiRes qw(time);
+binmode STDOUT, ':encoding(UTF-8)'; $| = 1;
+
+# Location: set REALM_PLACE, REALM_LAT and REALM_LON in ~/.config/terminal-realms/settings.zsh,
+# otherwise it is looked up once from your IP address (ipinfo.io) and cached.
+my ($PLACE, $LAT, $LON) = ($ENV{REALM_PLACE}, $ENV{REALM_LAT}, $ENV{REALM_LON});
+unless (defined $LAT && defined $LON && length $LAT && length $LON) {
+    my $cache = "$ENV{HOME}/.cache/terminal-realms/location";
+    my $line = -s $cache ? do { open my $f, '<', $cache; local $/; <$f> } : '';
+    unless ($line) {
+        my $loc = `curl -fsS --max-time 8 https://ipinfo.io/loc 2>/dev/null`; chomp $loc;
+        my $city = `curl -fsS --max-time 8 https://ipinfo.io/city 2>/dev/null`; chomp $city;
+        my $reg = `curl -fsS --max-time 8 https://ipinfo.io/region 2>/dev/null`; chomp $reg;
+        if ($loc =~ /^-?[\d.]+,-?[\d.]+$/) {
+            $line = "$loc|$city, $reg";
+            system('mkdir', '-p', "$ENV{HOME}/.cache/terminal-realms");
+            if (open my $f, '>', $cache) { print $f $line; close $f }
+        }
+    }
+    if ($line =~ /^(-?[\d.]+),(-?[\d.]+)\|(.*)$/) { ($LAT, $LON) = ($1, $2); $PLACE //= $3 }
+}
+($LAT, $LON) = (40.7128, -74.0060) unless defined $LAT && length $LAT;   # last resort: New York
+$PLACE = uc($PLACE // 'YOUR SKY');
+my $EVERY = 600;
+my $URL = "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON"
+  . "&current=temperature_2m,apparent_temperature,relative_humidity_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m"
+  . "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
+  . "&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5";
+
+my $E = "\e[";
+sub fg { "${E}38;2;$_[0];$_[1];$_[2]m" }
+my %K = (amber => fg(255,176,40), orange => fg(255,128,24), ember => fg(214,72,20), dim => fg(120,100,90),
+         text => fg(228,200,160), steel => fg(150,140,135), cloud => fg(168,160,156), rain => fg(110,150,200),
+         snow => fg(225,232,240), sun => fg(255,196,60), moon => fg(214,200,170), bolt => fg(255,226,90), fog => fg(140,132,128));
+my $R0 = "${E}0m";
+my $REALM_NAME = ($ENV{REALM} || `cat "$ENV{HOME}/.config/terminal-realms/current" 2>/dev/null` || ""); chomp $REALM_NAME;
+my $FROST = $REALM_NAME =~ /^frost/; my $MONO = $REALM_NAME =~ /^mainframe/;
+%K = (%K, amber => fg(156,196,240), orange => fg(240,180,90), ember => fg(111,200,208), dim => fg(98,112,140),
+          text => fg(200,211,230), steel => fg(140,152,176)) if $FROST;
+%K = (%K, amber => fg(235,235,235), orange => fg(200,200,200), ember => fg(150,150,150), dim => fg(100,100,100),
+          text => fg(214,214,214), steel => fg(140,140,140), cloud => fg(170,170,170), rain => fg(130,130,130),
+          snow => fg(230,230,230), sun => fg(245,245,245), moon => fg(200,200,200), bolt => fg(255,255,255), fog => fg(120,120,120)) if $MONO;
+
+my $TEST = $ENV{SKIES_TEST};
+my $quit = 0; $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { $quit = 1 };
+unless ($TEST) { system('stty -icanon -echo min 0 time 0 </dev/tty 2>/dev/null'); print "${E}?1049h${E}?25l" }
+END { unless ($TEST) { system('stty sane </dev/tty 2>/dev/null'); print "${R0}${E}?25h${E}?1049l" } }
+
+sub size { my $s = `stty size </dev/tty 2>/dev/null`; return ($1, $2) if defined $s && $s =~ /(\d+)\s+(\d+)/ && $1 > 0; return ($ENV{LINES} || 10, $ENV{COLUMNS} || 42) }
+
+# kind of sky from the WMO weather code
+sub kind {
+    my ($c, $day) = @_;
+    return $day ? 'sun' : 'moon' if $c <= 1;
+    return $day ? 'partly' : 'moon_cloud' if $c == 2;
+    return 'cloud' if $c == 3;
+    return 'fog' if $c == 45 || $c == 48;
+    return 'snow' if ($c >= 71 && $c <= 77) || $c == 85 || $c == 86;
+    return 'storm' if $c >= 95;
+    return 'rain';
+}
+my %WORDS = (0 => 'Clear', 1 => 'Mostly clear', 2 => 'Partly cloudy', 3 => 'Overcast', 45 => 'Fog', 48 => 'Freezing fog',
+  51 => 'Light drizzle', 53 => 'Drizzle', 55 => 'Heavy drizzle', 56 => 'Freezing drizzle', 57 => 'Freezing drizzle',
+  61 => 'Light rain', 63 => 'Rain', 65 => 'Heavy rain', 66 => 'Freezing rain', 67 => 'Freezing rain',
+  71 => 'Light snow', 73 => 'Snow', 75 => 'Heavy snow', 77 => 'Snow grains', 80 => 'Rain showers', 81 => 'Rain showers',
+  82 => 'Violent showers', 85 => 'Snow showers', 86 => 'Snow showers', 95 => 'Thunderstorm', 96 => 'Storm, hail', 99 => 'Storm, hail');
+my %LORE = (sun => 'Praise the sun!', moon => 'The moon watches the ruins.', partly => 'Light breaks through the ash.',
+  moon_cloud => 'A pale moon behind the smoke.', cloud => 'The sky hangs heavy and grey.', fog => 'Fog ahead. Tread carefully.',
+  rain => 'Rain falls on hollow and hale.', snow => 'Snow buries the old roads.', storm => 'The heavens rage. Seek shelter.');
+%LORE = (sun => 'Clear skies. Good day to wander.', moon => 'The moon lights the snow.', partly => 'Sun through the pines.',
+  moon_cloud => 'A pale moon behind the clouds.', cloud => 'Grey skies over the lodge.', fog => 'Fog in the valley. Stay close.',
+  rain => 'Rain on the cabin roof.', snow => 'Fresh snow on the trail.', storm => 'Storm coming. Bank the fire.') if $FROST;
+%LORE = (sun => 'Clear skies. Low latency.', moon => 'Night shift. The servers hum.', partly => 'Partly cloudy. Mostly online.',
+  moon_cloud => 'Clouds over the moon. Uplink holds.', cloud => 'Overcast. Packets still flowing.', fog => 'Fog. Low visibility, high uptime.',
+  rain => 'Rain on the window. Keep typing.', snow => 'Snow outside. Warm CPU inside.', storm => 'Storm warning. Save your work.') if $MONO;
+# a realm can bring its own look: realms/<name>/panes.pl returns { K => {...}, lore => {...}, icon => '…', marks => ['…','…'] }
+my $OV = do { my $f = ($ENV{REALM_HOME} || "$ENV{HOME}/.config/terminal-realms") . "/realms/$REALM_NAME/panes.pl"; -f $f ? do $f : undef };
+%K = (%K, %{ $OV->{K} }) if $OV && $OV->{K};
+%LORE = %{ $OV->{lore} } if $OV && $OV->{lore};
+my %GLYPH = (sun => ['☀','sun'], moon => ['☾','moon'], partly => ['⛅','sun'], moon_cloud => ['☁','cloud'], cloud => ['☁','cloud'],
+  fog => ['≡','fog'], rain => ['☂','rain'], snow => ['❄','snow'], storm => ['ϟ','bolt']);
+$GLYPH{partly} = ['☁','sun'];
+
+# 5-row, 13-column icons; rows paired with a colour. Rain and snow rows animate.
+sub icon {
+    my ($k, $ph) = @_;
+    my $sh = $ph % 2;
+    my @drops = $sh ? ("    ' ' ' '  ", "   ' ' ' '   ") : ("   ' ' ' '   ", "    ' ' ' '  ");
+    my @flakes = $sh ? ("    *  *  *  ", "   *  *  *   ") : ("   *  *  *   ", "    *  *  *  ");
+    my @rays = $sh ? ("    \\   /    ", "  ‒ (   ) ‒  ", "    /   \\    ") : ("    \\ | /    ", "  ─ (   ) ─  ", "    / | \\    ");
+    my %I = (
+      sun   => [[$rays[0],'sun'], ["     .-.     ",'sun'], [$rays[1],'sun'], ["     `-'     ",'sun'], [$rays[2],'sun']],
+      moon  => [["      _.._   ",'moon'], ["    .' .-'`  ",'moon'], ["   /  /      ",'moon'], ["   \\  '.___  ",'moon'], ["    '._  .-' ",'moon']],
+      partly=> [["   \\  /      ",'sun'], [" _ /\"\".-.    ",'sun'], ["   \\_(   ).  ",'cloud'], ["   /(___(__) ",'cloud'], ["             ",'cloud']],
+      moon_cloud=> [["    _..      ",'moon'], ["  .' .-.     ",'moon'], ["   \\_(   ).  ",'cloud'], ["    (___(__) ",'cloud'], ["             ",'cloud']],
+      cloud => [["             ",'cloud'], ["     .--.    ",'cloud'], ["  .-(    ).  ",'cloud'], [" (___.__)__) ",'cloud'], ["             ",'cloud']],
+      fog   => [["             ",'fog'], [" _ - _ - _ - ",'fog'], ["  _ - _ - _  ",'fog'], [" _ - _ - _ - ",'fog'], ["             ",'fog']],
+      rain  => [["     .-.     ",'cloud'], ["    (   ).   ",'cloud'], ["   (___(__)  ",'cloud'], [$drops[0],'rain'], [$drops[1],'rain']],
+      snow  => [["     .-.     ",'cloud'], ["    (   ).   ",'cloud'], ["   (___(__)  ",'cloud'], [$flakes[0],'snow'], [$flakes[1],'snow']],
+      storm => [["     .-.     ",'cloud'], ["    (   ).   ",'cloud'], ["   (___(__)  ",'cloud'], ["    ϟ' 'ϟ' ' ",'bolt'], ["   ' ϟ' ' ϟ  ",'bolt']],
+    );
+    return $I{$k};
+}
+
+sub compass { my $d = shift; my @p = qw(N NE E SE S SW W NW); $p[floor(($d + 22.5) / 45) % 8] }
+sub clock { my ($h, $m) = @_; my $ap = $h < 12 ? 'am' : 'pm'; my $hh = $h % 12 || 12; sprintf('%d:%02d%s', $hh, $m, $ap) }
+sub hm { my $iso = shift // ''; return '--' unless $iso =~ /T(\d+):(\d+)/; clock($1, $2) }
+sub dayname { my $iso = shift; return '???' unless $iso =~ /^(\d+)-(\d+)-(\d+)/; my @t = (0,0,12,$3,$2-1,$1-1900); my @n = qw(Sun Mon Tue Wed Thu Fri Sat); my $w = (localtime(POSIX::mktime(@t)))[6]; $n[$w] }
+sub vlen { my $s = shift; $s =~ s/\e\[[0-9;]*m//g; length $s }
+sub fit { my ($s, $w) = @_; my $out = ''; my $n = 0; for my $tok (split /(\e\[[0-9;]*m)/, $s) { if ($tok =~ /^\e\[/) { $out .= $tok; next } for my $ch (split //, $tok) { last if $n >= $w; $out .= $ch; $n++ } } $out }
+
+sub fetch {
+    my $json = $TEST ? do { local $/; open my $f, '<', $TEST or return; <$f> } : `curl -fsS --max-time 12 '$URL' 2>/dev/null`;
+    return unless $json; my $d = eval { decode_json($json) }; return $d && $d->{current} ? $d : undef;
+}
+
+sub draw {
+    my ($d, $ph, $status) = @_;
+    my ($R, $C) = size();
+    my @lines;
+    my @lt = localtime; my $now = clock($lt[2], $lt[1]);
+    my $title = "$K{ember}" . ($FROST ? '❄' : $MONO ? '▌' : $OV && $OV->{icon} ? $OV->{icon} : '☼') . " $K{amber}SKIES $K{dim}·$K{orange} $PLACE";
+    my $gap = $C - vlen($title) - length($now) - 1; $gap = 1 if $gap < 1;
+    push @lines, $title . (' ' x $gap) . "$K{dim}$now";
+    if (not $d) {
+        push @lines, '', "  $K{steel}The skies are veiled.", "  $K{dim}($status)", '', "  $K{dim}Press any key to try again.";
+    } else {
+        my $c = $d->{current}; my $dl = $d->{daily};
+        my $k = kind($c->{weather_code}, $c->{is_day});
+        my $ic = icon($k, $ph);
+        my @info = (
+          "$K{amber}" . sprintf('%d°', $c->{temperature_2m} + .5) . "$K{text}  " . ($WORDS{$c->{weather_code}} // '?'),
+          "$K{dim}feels $K{text}" . sprintf('%d°', $c->{apparent_temperature} + .5) . "$K{dim}  hum $K{text}" . sprintf('%d%%', $c->{relative_humidity_2m}),
+          "$K{dim}wind $K{text}" . sprintf('%d mph ', $c->{wind_speed_10m} + .5) . compass($c->{wind_direction_10m}),
+          "$K{sun}☀ $K{text}" . hm($dl->{sunrise}[0]) . "  $K{moon}☾ $K{text}" . hm($dl->{sunset}[0]),
+          '');
+        for my $i (0 .. 4) { push @lines, $K{$ic->[$i][1]} . $ic->[$i][0] . $info[$i] }
+        my $m = $OV && $OV->{marks} ? $OV->{marks}[0] : $FROST ? '✦' : $MONO ? '»' : '†'; my $m2 = $OV && $OV->{marks} ? $OV->{marks}[1] : $MONO ? '«' : $m;
+        push @lines, "  $K{ember}$m $K{dim}\e[3m$LORE{$k}\e[23m $K{ember}$m2";
+        my $room = $R - @lines; my $n = $room > 4 ? 4 : $room;
+        for my $i (0 .. $n - 1) {
+            my $g = $GLYPH{kind($dl->{weather_code}[$i], 1)};
+            my $pp = $dl->{precipitation_probability_max}[$i] // 0;
+            my $bar = ''; my $f = int($pp / 25 + .5); $bar = ('▮' x $f) . ('▯' x (4 - $f));
+            push @lines, sprintf("  %s%-5s %s%s  %s%3d°%s / %s%-3s  %s%s %s%3d%%",
+              $K{text}, ($i == 0 ? 'Today' : dayname($dl->{time}[$i])), $K{$g->[1]}, $g->[0],
+              $K{amber}, $dl->{temperature_2m_max}[$i] + .5, $K{dim}, $K{steel}, sprintf('%d°', $dl->{temperature_2m_min}[$i] + .5),
+              $K{rain}, $bar, $K{dim}, $pp);
+        }
+        $lines[-1] .= "   $K{dim}$status" if $status && @lines;
+    }
+    my $out = "${E}?2026h${E}H";
+    for my $y (0 .. $R - 1) { my $l = $lines[$y] // ''; $out .= fit($l, $C) . "$R0${E}K" . ($y < $R - 1 ? "\r\n" : '') }
+    print $out . "${E}?2026l";
+}
+
+my ($data, $last, $status, $ph) = (undef, 0, 'loading...', 0);
+while (not $quit) {
+    if (time - $last >= $EVERY) {
+        my $d = fetch(); $last = time;
+        if ($d) { $data = $d; $status = '' } else { $status = $data ? 'offline, showing last' : 'no connection' }
+    }
+    draw($data, $ph++, $status);
+    last if $TEST;
+    my $rin = ''; vec($rin, fileno(STDIN), 1) = 1;
+    if (select(my $r = $rin, undef, undef, .6)) { my $b; sysread(STDIN, $b, 16); $last = 0 }
+}
