@@ -253,11 +253,16 @@ hl.layer_rule({ match = { namespace = "omarchy-notifications" }, animation = "sl
 -- globals beat per-theme tone because theme slots default to sentinels (PluginConfig.cpp).
 -- Glass sits under the window and needs translucent backgrounds to show: A/B
 -- screenshots found it invisible at Ghostty background-opacity 0.92, subtle at 0.75, clear at 0.5.
--- The .so is built against this exact Hyprland and stays machine-local, outside
--- the repo, because these dotfiles also serve a host without it. hl.plugin.load
+-- The pneuma image builds the .so against its exact Hyprland (build/37-hyprglass.sh);
+-- a machine-local build went stale when the image rebuilt Hyprland and glass silently
+-- stopped loading (2026-11-24). A host without the image skips glass. hl.plugin.load
 -- is declarative, so it must run on every config pass to keep the plugin loaded;
 -- the config API exists only on the pass after the load.
-local hyprglass_path = os.getenv("HOME") .. "/.local/lib/hyprland/hyprglass.so"
+-- Apple-style additions (hyprglass README, v0.11.0): the per-theme adaptive tone
+-- (dim bright backdrops / lift dark ones) is left on rather than zeroed; a lens
+-- edge gives a crisp bent rim over a clear centre; frost keeps glass clear over the
+-- wallpaper and frosted over windows; light comes from the top for every highlight.
+local hyprglass_path = "/usr/lib64/hyprland/hyprglass.so"
 local hyprglass_file = io.open(hyprglass_path, "r")
 if hyprglass_file then
   hyprglass_file:close()
@@ -270,7 +275,14 @@ if hyprglass_file then
       blur_strength = 0.5,
       blur_iterations = 2,
       refraction_strength = 1.0,
-      edge_thickness = 0.1,
+      edge_thickness_px = 20,
+      edge_height = 28,
+      fresnel_reflection = 0.4,
+      refraction_spread = 0.3,
+      frost = 1.0,
+      focus_light = 0.5,
+      specular_angle = 0,
+      bevel_angle = 0,
       lens_distortion = 0.0,
       chromatic_aberration = 0.3,
       fresnel_strength = 0.4,
@@ -281,8 +293,6 @@ if hyprglass_file then
       saturation = 1.0,
       vibrancy = 0.28,
       vibrancy_darkness = 0.3,
-      adaptive_dim = 0.0,
-      adaptive_boost = 0.0,
       layers = { enabled = true },
     })
 
