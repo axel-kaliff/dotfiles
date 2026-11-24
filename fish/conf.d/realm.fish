@@ -3,6 +3,10 @@ status is-interactive; or return
 test -n "$REALM_HOME"; or set -g REALM_HOME "$HOME/.config/terminal-realms"
 set -gx REALM_HOME "$REALM_HOME"
 set -gx REALM bonfire
+# Skies pane weather location; without these it geolocates by IP (ipinfo.io).
+set -gx REALM_PLACE Stockholm
+set -gx REALM_LAT 59.3293
+set -gx REALM_LON 18.0686
 set -g REALM_DIR "$REALM_HOME/realms/bonfire"
 
 function wizseb

@@ -36,13 +36,13 @@ layout {
         }
         pane split_direction="vertical" {
             pane size="33%" name="Skies" command="sh" {
-                args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/skies\""
+                args "-c" "exec perl \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/skies\""
             }
             pane size="34%" name="Ashfall" command="sh" {
-                args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/ashfall\""
+                args "-c" "exec perl \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/ashfall\""
             }
             pane name="The Bard" command="sh" {
-                args "-c" "exec \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/bard\""
+                args "-c" "exec perl \"${REALM_HOME:-$HOME/.config/terminal-realms}/panes/bard\""
             }
         }
     }
