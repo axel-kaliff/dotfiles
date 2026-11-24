@@ -313,7 +313,11 @@ if hyprglass_file then
     -- ignore_alpha rules above only matter without the plugin. The bar's xdg
     -- popups (tooltips, tray and media cards) never get plugin glass and keep
     -- blur_popups.
-    hg.layer("omarchy-bar", { mask_threshold = 0.5 })
+    -- Glass goes where the layer's alpha exceeds mask_threshold: the glassy bar
+    -- caps its background at 0.35, so 0.5 left the bar body with no glass at all.
+    -- The bar's layer spans the whole screen, so contour puts the lens edge on the
+    -- bar's own outline rather than on the screen border.
+    hg.layer("omarchy-bar", { mask_mode = "contour", mask_threshold = 0.05 })
     for _, ns in ipairs({
       "omarchy-menu",
       "omarchy-clipboard",

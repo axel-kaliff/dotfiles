@@ -1,6 +1,6 @@
 {
   "bar": {
-    "background": "glassy",
+    "background": "opaque",
     "centerAnchor": "akaliff.clock",
     "id": "akaliff.bar",
     "layout": {
