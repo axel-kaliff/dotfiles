@@ -6,77 +6,77 @@
   },
   "bar": {
     "position": "top",
-    "transparent": false,
-    "centerAnchor": "akaliff.clock",
+    "background": "opaque",
     "layout": {
       "left": [
         {
-          "id": "pneuma.menu"
+          "id": "omarchy.menu"
         },
         {
-          "id": "akaliff.workspaces"
+          "id": "omarchy.workspaces"
+        }
+      ],
+      "centerBegin": [
+        {
+          "id": "omarchy.indicators"
         }
       ],
       "center": [
         {
-          "id": "omarchy.indicators",
-          "items": [
-            "ScreenRecording",
-            "Reminder",
-            "NightLight",
-            "StayAwake"
+          "id": "omarchy.clock",
+          "format": "dddd HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm"
+        }
+      ],
+      "centerEnd": [
+        {
+          "id": "omarchy.elsewhen",
+          "cities": [
+            {
+              "name": "Stockholm",
+              "zone": "Europe/Stockholm"
+            },
+            {
+              "name": "Dubai",
+              "zone": "Asia/Dubai"
+            },
+            {
+              "name": "Tokyo",
+              "zone": "Asia/Tokyo"
+            },
+            {
+              "name": "Los Angeles",
+              "zone": "America/Los_Angeles"
+            },
+            {
+              "name": "New York",
+              "zone": "America/New_York"
+            }
           ]
         },
         {
-          "id": "pneuma.safeeyes"
-        },
-        {
-          "id": "akaliff.clock",
-          "format": "ddd d MMM HH:mm",
-          "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n—\nmm"
-        },
-        {
-          "id": "pneuma.keyboard-layout",
-          "flags": {
-            "EN": "🇬🇧",
-            "SV": "🇸🇪"
-          }
+          "id": "omarchy.weather"
         },
         {
           "id": "omarchy.system-update"
-        },
-        {
-          "id": "omarchy.weather"
         }
       ],
       "right": [
         {
-          "id": "pneuma.clipboard"
+          "id": "omarchy.tray"
         },
         {
-          "id": "akaliff.tray"
+          "id": "omarchy.keyboard-layout"
         },
         {
-          "id": "pneuma.pomodoro",
-          "workMinutes": 10
-        },
-        {
-          "id": "akaliff.agents",
-          "providers": {
-            "codex": {
-              "enabled": false
-            }
-          }
+          "id": "omarchy.agents"
         },
         {
           "id": "omarchy.bluetooth"
         },
         {
           "id": "omarchy.network"
-        },
-        {
-          "id": "akaliff.media"
         },
         {
           "id": "omarchy.audio"
@@ -86,42 +86,21 @@
         },
         {
           "id": "omarchy.power"
-        },
-        {
-          "id": "pneuma.easy-mode"
         }
       ]
-    },
-    "id": "akaliff.bar"
-  },
-  "plugins": [
-    {
-      "id": "akaliff.notifications"
-    },
-    {
-      "id": "pneuma.safeeyes"
-    },
-    {
-      "id": "akaliff.osd"
-    },
-    {
-      "id": "pneuma.switcher"
-    },
-    {
-      "id": "pneuma.window-menu"
-    },
-    {
-      "id": "pneuma.overview"
     }
-  ],
-  "disabledPlugins": [
-    "omarchy.notifications",
-    "omarchy.media",
-    "omarchy.osd"
-  ],
-  "cloneSourceRestores": [
-    "akaliff.notifications",
-    "akaliff.media",
-    "akaliff.osd"
-  ]
+  },
+  "dock": {
+    "position": "bottom",
+    "pinned": [
+      "org.gnome.Nautilus",
+      "chromium",
+      "foot",
+      "omacalc",
+      "omawrite",
+      "X",
+      "YouTube"
+    ]
+  },
+  "plugins": []
 }
