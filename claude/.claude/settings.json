@@ -1,5 +1,202 @@
 {
+  "env": {
+    "ARCHSCORE_ROOT": "/home/akaliff/sics-cc-plugin",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "WebSearch",
+      "WebFetch",
+      "Bash(git push --force-with-lease:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -r:*)",
+      "Bash(git clean:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout -- :*)",
+      "Bash(git restore:*)"
+    ],
+    "ask": [
+      "Bash(gh pr create:*)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "skillOverrides": {
+    "rethink": "user-invocable-only"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/zellij/scripts/claude-status working",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/zellij/scripts/claude-status working",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/bash-pretool.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/protect-frozen.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/zellij/scripts/claude-status waiting",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/zellij/scripts/claude-status done",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/announce-handoff.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/akaliff/dotfiles/claude/.claude/hooks/python-check.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/akaliff/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "pyright-lsp@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": false,
+    "rust-analyzer-lsp@claude-plugins-official": false,
+    "ai-dev@sicsai-plugins": true,
+    "hyperstar@sicsai-plugins": false,
+    "sicsai@sicsai-plugins": true,
+    "clangd-lsp@claude-plugins-official": false,
+    "mattpocock-skills@claude-plugins-official": false,
+    "codex@openai-codex": true
+  },
+  "extraKnownMarketplaces": {
+    "zombiesnack-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "/space/personal/akaliff/zombiesnack/.claude/plugins"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
+  "outputStyle": "ADHD",
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "xhigh"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
   "theme": "dark",
+  "editorMode": "vim",
+  "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
-  "tui": "fullscreen"
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: Not queryable here — this directory has no git remotes configured (Repo facts shows no remotes); assume private",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: unknown — origin/HEAD unset, no remotes configured",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: No git remotes are configured in this working directory — no trusted source-control remote to scope to",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured — the repo-wide bucket name scan surfaced only generic/placeholder-looking names (bucket, bucket-name, my-bucket, mybucket, example-bucket, etc.) with no usage-corroboration from the per-project transcript section, and prefix clusters (bucket-*, my-*, some-*) are generic, not org-identifying",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar — note: sensitive-looking paths were found elsewhere under the home directory (.claude/.credentials.json, .config/gcloud/application_default_credentials.json, .config/gcloud/credentials.db, .config/sicsai/gcp-credentials.json, and secrets/env files under other project directories) but this project itself has no tracked files",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited — e.g. matches `prod-db`, not `producer`)",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development (mixed with personal/hobby system administration — evidence shows flatpak, podman, tailscale, virsh, virt-install, nmcli, networking/VM tooling used heavily outside Claude)",
+      "**Trusted repo**: This directory (/var/home/akaliff) has no tracked files and no configured git remotes — there is no trusted repo to scope to here",
+      "**Org-specific CLIs**: None configured",
+      "No \"routine under <user>/ prefix\" qualifiers were found for this project."
+    ]
+  }
 }
